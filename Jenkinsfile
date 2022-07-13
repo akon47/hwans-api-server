@@ -59,7 +59,7 @@ pipeline {
             steps {
                 echo 'Push Docker'
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub') {
+                    docker.withRegistry('', 'docker-hub') {
                         dockerImage.push()
                         dockerImage.push("latest")
                     }
