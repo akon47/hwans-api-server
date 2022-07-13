@@ -4,6 +4,7 @@ pipeline {
     environment {
         dockerImage = ''
         TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
+        IMAGE_NAME = 'akon47/hwans-api-server'
     }
 
     stages {
@@ -45,7 +46,7 @@ pipeline {
             steps {
                 echo 'Bulid Docker'
                 script {
-                    dockerImage = docker.build("akon47/hwans-api-server")
+                    dockerImage = docker.build("${IMAGE_NAME}")
                 }
             }
             post {
@@ -79,11 +80,11 @@ pipeline {
             steps {
                 echo 'Pull Docker Image & Docker Image Run'
                 sshagent(credentials: ['ssh']) {
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker pull akon47/hwans-api-server'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker pull ${IMAGE_NAME}'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -q --filter name=hwans-api-server | grep -q . && docker rm -f \$(docker ps -aq --filter name=hwans-api-server) || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --name hwans-api-server -p 1200:8080 akon47/hwans-api-server'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --name hwans-api-server -p 1200:8080 ${IMAGE_NAME}'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker images -qf dangling=true | xargs -I{} docker rmi {} || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker rmi akon47/hwans-api-server:${TAG} || true'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker rmi ${IMAGE_NAME}:${TAG} || true'"
                 }
             }
             post {
