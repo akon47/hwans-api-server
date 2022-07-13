@@ -45,7 +45,7 @@ pipeline {
             steps {
                 echo 'Bulid Docker'
                 script {
-                    dockerImage = docker.build("akon47/hwans-api-server:${TAG}")
+                    dockerImage = docker.build("hwans-api-server")
                 }
             }
             post {
@@ -60,15 +60,12 @@ pipeline {
                 echo 'Push Docker'
                 script {
                     docker.withRegistry('', 'docker-hub') {
-                        dockerImage.push()
+                        dockerImage.push("${TAG}")
                         dockerImage.push("latest")
                     }
                 }
             }
             post {
-                success {
-                    sh 'docker rmi $(docker images -q -f dangling=true) || true'
-                }
                 failure {
                     error 'This pipeline stops here...'
                 }
