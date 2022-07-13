@@ -45,7 +45,7 @@ pipeline {
             steps {
                 echo 'Bulid Docker'
                 script {
-                    dockerImage = docker.build('akon47/hwans-api-server')
+                    dockerImage = docker.build('akon47/hwans-api-server:${version}')
                 }
             }
             post {
@@ -60,7 +60,7 @@ pipeline {
                 echo 'Push Docker'
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'docker-hub') {
-                        dockerImage.push(version)
+                        dockerImage.push()
                         dockerImage.push("latest")
                     }
                 }
