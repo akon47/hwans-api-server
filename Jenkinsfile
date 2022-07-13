@@ -66,6 +66,9 @@ pipeline {
                 }
             }
             post {
+                success {
+                    sh 'docker rmi $(docker images -q -f dangling=true) || true'
+                }
                 failure {
                     error 'This pipeline stops here...'
                 }
