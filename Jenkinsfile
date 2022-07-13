@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         dockerImage = ''
-        version = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
+        TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -45,7 +45,7 @@ pipeline {
             steps {
                 echo 'Bulid Docker'
                 script {
-                    dockerImage = docker.build('akon47/hwans-api-server:${version}')
+                    dockerImage = docker.build("akon47/hwans-api-server:${TAG}")
                 }
             }
             post {
