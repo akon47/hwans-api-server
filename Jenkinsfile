@@ -77,11 +77,7 @@ pipeline {
                 echo 'Pull Docker Image & Docker Image Run'
                 sshagent(credentials: ['ssh']) {
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker pull akon47/hwans-api-server'"
-                    try {
-                        sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -q --filter name=hwans-api-server | grep -q . && docker rm -f \$(docker ps -aq --filter name=hwans-api-server)'"
-                    } catch(Exception e) {
-                        print('Container is not exist. (This exception is ignored)')
-                    }
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -q --filter name=hwans-api-server | grep -q . && docker rm -f $(docker ps -aq --filter name=hwans-api-server) || true'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --name hwans-api-server -p 1200:8080 hwans-api-server'"
                 }
             }
