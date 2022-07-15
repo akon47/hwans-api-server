@@ -33,7 +33,7 @@ pipeline {
         
         stage('Prepare') {
             steps {
-                echo 'Pre-Processing for prod project'
+                echo "Pre-Processing for ${ACTIVE_PROFILE} profile"
                 script {
                     prodProperties = readFile file: SPRING_PROD_PROPERTIES_PATH
                     prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL)
@@ -56,10 +56,8 @@ pipeline {
             steps {
                 echo 'Bulid Gradle'
                 dir('.') {
-                    sh """
-                        chmod +x gradlew
-                        SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE} ./gradlew clean build --info
-                    """
+                    sh 'chmod +x gradlew'
+                    sh "SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE} ./gradlew clean build --info"
                 }
             }
             post {
