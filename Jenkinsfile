@@ -25,7 +25,6 @@ pipeline {
                     prodProperties = prodProperties.replaceAll("{datasource-password}", SPRING_DATASOURCE_PASSWORD)
                     writeFile file: prodProperties, text: prodProperties
                 }
-                echo prodProperties;
             }
             post {
                 success {
