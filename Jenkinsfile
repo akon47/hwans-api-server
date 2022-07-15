@@ -5,15 +5,25 @@ pipeline {
         dockerImage = ''
         TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
         IMAGE_NAME = 'akon47/hwans-api-server'
+        SPRING_PROD_PROPERTIES_PATH = 'src/main/resources/application-prod.properties'
+        SPRING_DATASOURCE_URL = credentials('spring-datasource-url')
+        SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
+        SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
     }
 
     stages {
         stage('Prepare') {
             steps {
                 echo 'Clonning Repository'
-                git url: 'git@github.com:akon47/hwans-api-server.git',
-                    branch: 'master',
-                    credentialsId: 'git-hub'
+                git url: 'git@github.com:akon47/hwans-api-server.git', branch: 'master', credentialsId: 'git-hub'
+
+                echo 'Replace to prod information'
+                def prodProperties = readFile file: "${SPRING_PROD_PROPERTIES_PATH}"
+                prodProperties = prodProperties.replaceAll("{datasource-url}", SPRING_DATASOURCE_URL)
+                prodProperties = prodProperties.replaceAll("{datasource-username}", SPRING_DATASOURCE_USERNAME)
+                prodProperties = prodProperties.replaceAll("{datasource-password}", SPRING_DATASOURCE_PASSWORD)
+                writeFile file: prodProperties, text: prodProperties
+                echo prodProperties;
             }
             post {
                 success {

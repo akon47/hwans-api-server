@@ -5,12 +5,16 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+
 @Data
 @Accessors(chain = true)
 @ApiModel(description = "사용자 생성 Dto")
-public class UserCreateDto {
-
+public class UserCreateDto implements Serializable {
+    @ApiModelProperty(value = "사용자 로그인 Id", required = true, example = "kimhwan92")
+    String id;
+    @ApiModelProperty(value = "사용자 로그인 비밀번호", required = true, example = "12345")
+    String password;
     @ApiModelProperty(value = "사용자 이름", required = true, example = "김환")
-    String userName;
-
+    String name;
 }
