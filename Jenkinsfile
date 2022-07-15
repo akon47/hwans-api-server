@@ -54,7 +54,7 @@ pipeline {
                 dir('.') {
                     sh '''
                         chmod +x gradlew
-                        ./gradlew clean build --debug --scan --stacktrace
+                        ./gradlew clean build -Pprofile=prod
                     '''
                 }
             }
