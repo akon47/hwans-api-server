@@ -55,7 +55,7 @@ pipeline {
                 dir('.') {
                     sh '''
                         chmod +x gradlew
-                        ./gradlew clean build
+                        ./gradlew clean build -Dspring.profiles.active=prod
                     '''
                 }
             }
