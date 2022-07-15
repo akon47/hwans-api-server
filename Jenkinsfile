@@ -18,7 +18,7 @@ pipeline {
                 git url: 'git@github.com:akon47/hwans-api-server.git', branch: 'master', credentialsId: 'git-hub'
 
                 echo 'Replace to prod information'
-                def prodProperties = readFile file: "${SPRING_PROD_PROPERTIES_PATH}"
+                prodProperties = readFile file: "${SPRING_PROD_PROPERTIES_PATH}"
                 prodProperties = prodProperties.replaceAll("{datasource-url}", SPRING_DATASOURCE_URL)
                 prodProperties = prodProperties.replaceAll("{datasource-username}", SPRING_DATASOURCE_USERNAME)
                 prodProperties = prodProperties.replaceAll("{datasource-password}", SPRING_DATASOURCE_PASSWORD)
