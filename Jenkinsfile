@@ -56,10 +56,10 @@ pipeline {
             steps {
                 echo 'Bulid Gradle'
                 dir('.') {
-                    sh '''
+                    sh """
                         chmod +x gradlew
                         SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE} ./gradlew clean build --info
-                    '''
+                    """
                 }
             }
             post {
