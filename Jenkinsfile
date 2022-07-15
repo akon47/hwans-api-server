@@ -3,19 +3,22 @@ pipeline {
 
     environment {
         dockerImage = ''
-        TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
+        APP_NAME = 'hwans-api-server'
         IMAGE_NAME = 'akon47/hwans-api-server'
+        IMAGE_TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
         SPRING_PROD_PROPERTIES_PATH = 'src/main/resources/application-prod.properties'
         SPRING_DATASOURCE_URL = credentials('spring-datasource-url')
         SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
+        GITHUB_CREDENTIALS_ID = 'git-hub';
+        DOCKER_CREDENTIALS_ID = 'docker-hub';
     }
 
     stages {
         stage('Clone') {
             steps {
                 echo 'Clonning Repository'
-                git url: 'git@github.com:akon47/hwans-api-server.git', branch: 'master', credentialsId: 'git-hub'
+                git url: 'git@github.com:akon47/hwans-api-server.git', branch: 'master', credentialsId: GITHUB_CREDENTIALS_ID
             }
             post {
                 success {
@@ -54,7 +57,7 @@ pipeline {
                 dir('.') {
                     sh '''
                         chmod +x gradlew
-                        ./gradlew clean build -Pprofile=prod
+                        ./gradlew clean build
                     '''
                 }
             }
@@ -83,8 +86,8 @@ pipeline {
             steps {
                 echo 'Push Docker'
                 script {
-                    docker.withRegistry('', 'docker-hub') {
-                        dockerImage.push("${TAG}")
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push("${IMAGE_TAG}")
                         dockerImage.push("latest")
                     }
                 }
@@ -104,10 +107,10 @@ pipeline {
                 echo 'Pull Docker Image & Docker Image Run'
                 sshagent(credentials: ['ssh']) {
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker pull ${IMAGE_NAME}'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -q --filter name=hwans-api-server | grep -q . && docker rm -f \$(docker ps -aq --filter name=hwans-api-server) || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --name hwans-api-server -p 1200:8080 ${IMAGE_NAME}'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -q --filter name=${APP_NAME} | grep -q . && docker rm -f \$(docker ps -aq --filter name=${APP_NAME}) || true'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --name ${APP_NAME} -p 1200:8080 ${IMAGE_NAME}'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker images -qf dangling=true | xargs -I{} docker rmi {} || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker rmi ${IMAGE_NAME}:${TAG} || true'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true'"
                 }
             }
             post {
