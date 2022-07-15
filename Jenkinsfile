@@ -57,7 +57,7 @@ pipeline {
                 echo 'Bulid Gradle'
                 dir('.') {
                     sh 'chmod +x gradlew'
-                    sh "SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE} ./gradlew clean build --debug"
+                    sh "SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE} ./gradlew clean build -x test --info"
                 }
             }
             post {
