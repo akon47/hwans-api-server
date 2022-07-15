@@ -19,6 +19,11 @@ pipeline {
 
                 echo 'Replace to prod information'
                 script {
+                    echo "${SPRING_PROD_PROPERTIES_PATH}"
+                    echo "${SPRING_DATASOURCE_URL}"
+                    echo "${SPRING_DATASOURCE_USERNAME}"
+                    echo "${SPRING_DATASOURCE_PASSWORD}"
+                    
                     prodProperties = readFile file: "${SPRING_PROD_PROPERTIES_PATH}"
                     prodProperties = prodProperties.replaceAll("{datasource-url}", SPRING_DATASOURCE_URL)
                     prodProperties = prodProperties.replaceAll("{datasource-username}", SPRING_DATASOURCE_USERNAME)
