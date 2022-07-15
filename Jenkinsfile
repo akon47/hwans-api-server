@@ -57,7 +57,7 @@ pipeline {
                 dir('.') {
                     sh '''
                         chmod +x gradlew
-                        ./gradlew clean build
+                        ./gradlew clean build --exclude-task test
                     '''
                 }
             }
