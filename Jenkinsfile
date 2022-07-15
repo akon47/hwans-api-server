@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        dockerImage = ''
         TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
         IMAGE_NAME = 'akon47/hwans-api-server'
         SPRING_PROD_PROPERTIES_PATH = 'src/main/resources/application-prod.properties'
@@ -10,6 +9,9 @@ pipeline {
         SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
     }
+    
+    def dockerImage
+    def prodProperties
 
     stages {
         stage('Prepare') {
