@@ -32,9 +32,9 @@ pipeline {
                 echo 'Pre-Processing for prod project'
                 script {
                     prodProperties = readFile file: SPRING_PROD_PROPERTIES_PATH
-                    prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL")
-                    prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_USERNAME")
-                    prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_PASSWORD")
+                    prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL)
+                    prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_USERNAME)
+                    prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_PASSWORD)
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
             }
