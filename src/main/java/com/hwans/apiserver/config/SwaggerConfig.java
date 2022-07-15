@@ -27,7 +27,7 @@ public class SwaggerConfig {
         return new ApiInfoBuilder()
                 .title("Hwans-API-Server")
                 .description("API Description")
-                .version("1.0.0")
+                .version("v1")
                 .build();
     }
 
