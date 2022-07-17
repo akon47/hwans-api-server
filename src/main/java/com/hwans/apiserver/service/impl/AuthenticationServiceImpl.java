@@ -37,14 +37,14 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     private final PasswordEncoder passwordEncoder;
 
     private static final String NO_ACCOUNT_ID = "계정 Id 정보를 찾을 수 없습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
-    private static final String PASSWORD_NOT_MATCH = "계정 비밀번호가 잘못되었습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
+    private static final String NO_PASSWORD_MATCH = "계정 비밀번호가 잘못되었습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
 
     @Override
     public TokenDto authenticate(SigninDto signinDto) {
         Account foundAccount = accountRepository.findById(signinDto.getId())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
-        if (!passwordEncoder.matches(foundAccount.getPassword(), signinDto.getPassword())) {
-            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, PASSWORD_NOT_MATCH);
+        if (!passwordEncoder.matches(signinDto.getPassword(), foundAccount.getPassword())) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }
 
         UsernamePasswordAuthenticationToken authenticationToken =
