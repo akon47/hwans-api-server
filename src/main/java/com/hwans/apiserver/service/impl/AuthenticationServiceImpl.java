@@ -41,15 +41,14 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     @Override
     public TokenDto authenticate(SigninDto signinDto) {
-        Account foundAccount = accountRepository.findById(signinDto.getId())
+        var foundAccount = accountRepository.findById(signinDto.getId())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (!passwordEncoder.matches(signinDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }
 
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(signinDto.getId(), signinDto.getPassword());
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        var authenticationToken = new UsernamePasswordAuthenticationToken(signinDto.getId(), signinDto.getPassword());
+        var authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return tokenProvider.createToken(authentication);
     }
@@ -62,7 +61,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     }
 
     private UserDetails createUserDetails(Account account) {
-        List<SimpleGrantedAuthority> authorities = account.getRoles().stream()
+        var authorities = account.getRoles().stream()
                 .map(x -> new SimpleGrantedAuthority(x.getName()))
                 .collect(Collectors.toList());
         return new User(

@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
@@ -32,7 +33,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Override
     public AccountDto createAccount(AccountCreateDto accountCreateDto) {
-        Account account = accountMapper.toEntity(accountCreateDto);
+        var account = accountMapper.toEntity(accountCreateDto);
 
         // 이미 해당 계정 아이디가 존재할 경우
         if(accountRepository.existsById(account.getId())) {
@@ -42,14 +43,14 @@ public class AccountServiceImpl implements AccountService {
         account.getRoles().add(new Role("ROLE_USER"));
 
         // 새 사용자 계정 정보 저장
-        Optional<Account> savedAccount = Optional.ofNullable(accountRepository.save(account));
+        var savedAccount = Optional.ofNullable(accountRepository.save(account));
         return accountMapper.toDto(savedAccount.orElseThrow(() -> new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR, FAILED_TO_CREATE_ID)));
     }
 
     @Override
     public AccountDto getCurrentAccount() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account foundAccount = accountRepository.findById(authentication.getName())
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        var foundAccount = accountRepository.findById(authentication.getName())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_CURRENT_ACCOUNT_INFO));
         return accountMapper.toDto(foundAccount);
     }
