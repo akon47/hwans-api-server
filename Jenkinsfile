@@ -11,6 +11,7 @@ pipeline {
         SPRING_DATASOURCE_URL = credentials('spring-datasource-url')
         SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
+        SPRING_JWT_SECRET_KEY = credentials('spring-jwt-base64-secret')
         GITHUB_CREDENTIALS_ID = 'git-hub';
         DOCKER_CREDENTIALS_ID = 'docker-hub';
     }
@@ -39,6 +40,7 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL)
                     prodProperties = prodProperties.replaceAll(/\{datasource-username\}/, SPRING_DATASOURCE_USERNAME)
                     prodProperties = prodProperties.replaceAll(/\{datasource-password\}/, SPRING_DATASOURCE_PASSWORD)
+                    prodProperties = prodProperties.replaceAll(/\{jwt-base64-secret\}/, SPRING_JWT_SECRET_KEY)
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
             }

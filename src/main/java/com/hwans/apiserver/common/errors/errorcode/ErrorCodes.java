@@ -11,7 +11,7 @@ public class ErrorCodes {
 
         @Override
         public String getName() {
-            return this.name();
+            return this.name().toLowerCase();
         }
 
         @Override
@@ -26,7 +26,7 @@ public class ErrorCodes {
 
         @Override
         public String getName() {
-            return this.name();
+            return this.name().toLowerCase();
         }
 
         @Override
@@ -41,7 +41,7 @@ public class ErrorCodes {
 
         @Override
         public String getName() {
-            return this.name();
+            return this.name().toLowerCase();
         }
 
         @Override
@@ -56,7 +56,7 @@ public class ErrorCodes {
 
         @Override
         public String getName() {
-            return this.name();
+            return this.name().toLowerCase();
         }
 
         @Override
@@ -72,7 +72,7 @@ public class ErrorCodes {
 
         @Override
         public String getName() {
-            return this.name();
+            return this.name().toLowerCase();
         }
 
         @Override
@@ -87,7 +87,7 @@ public class ErrorCodes {
 
         @Override
         public String getName() {
-            return this.name();
+            return this.name().toLowerCase();
         }
 
         @Override

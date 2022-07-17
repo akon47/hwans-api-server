@@ -1,4 +1,4 @@
-package com.hwans.apiserver.config;
+package com.hwans.apiserver.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package com.hwans.apiserver.dto.user;
+package com.hwans.apiserver.dto.account;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 @ApiModel(description = "사용자 생성 Dto")
-public class UserCreateDto implements Serializable {
+public class AccountCreateDto implements Serializable {
     @ApiModelProperty(value = "사용자 로그인 Id", required = true, example = "kimhwan92")
     String id;
     @ApiModelProperty(value = "사용자 로그인 비밀번호", required = true, example = "12345")

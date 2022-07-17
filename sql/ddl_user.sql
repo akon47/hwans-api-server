@@ -1,8 +1,8 @@
-drop table if exists user CASCADE;
-CREATE table tb_user
-(
-    id varchar(255) not null,
-    name varchar(255),
-    password varchar(255),
-    primary key (id)
-)
+-- drop table if exists account CASCADE;
+-- CREATE table tb_account
+-- (
+--     id varchar(255) not null,
+--     name varchar(255),
+--     password varchar(255),
+--     primary key (id)
+-- )

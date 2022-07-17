@@ -59,7 +59,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private ErrorResponseDto makeErrorResponse(ErrorCode errorCode, String message) {
         return ErrorResponseDto.builder()
-                .name(errorCode.getName().toLowerCase())
+                .name(errorCode.getName())
                 .message(message)
                 .build();
     }
@@ -77,7 +77,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .collect(Collectors.toList());
 
         return ErrorResponseDto.builder()
-                .name(errorCode.getName().toLowerCase())
+                .name(errorCode.getName())
                 .message(e.getMessage())
                 .errors(validationErrorList)
                 .build();
