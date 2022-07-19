@@ -1,8 +1,6 @@
 package com.hwans.apiserver.entity.account;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -12,20 +10,13 @@ import java.util.Set;
 @Entity
 @Table(name = "tb_role")
 @Getter
-@Setter
-@Accessors(chain = true)
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Role {
     @Id
     @Column(length = 32)
     private String name;
-    @ManyToMany(mappedBy = "roles")
-    private Set<Account> accounts = new HashSet<>();
-
-    public Role(String name){
-        this.name = name;
-    }
-
-    public Role() {
-
-    }
+    @OneToMany(mappedBy = "role")
+    private final Set<AccountRole> accountRoles = new HashSet<>();
 }

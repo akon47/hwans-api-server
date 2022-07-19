@@ -12,13 +12,14 @@ public abstract class AccountMapper {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Mapping(source = "password", target = "password", ignore = true)
-    public abstract Account toEntity(AccountCreateDto userCreateDtoDto);
-
-    @AfterMapping
-    public void afterMapping(@MappingTarget Account target, AccountCreateDto source) {
-        target.setPassword(passwordEncoder.encode(source.getPassword()));
-    }
+    @Mapping(target = "password", qualifiedByName = "encodePassword")
+    @Mapping(target = "deleted", ignore = true)
+    public abstract Account toEntity(AccountCreateDto userCreateDto);
 
     public abstract AccountDto toDto(Account account);
+
+    @Named("encodePassword")
+    String encoderPassword(String password) {
+        return passwordEncoder.encode(password);
+    }
 }

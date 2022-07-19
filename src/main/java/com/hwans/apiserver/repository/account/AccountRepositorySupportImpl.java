@@ -7,7 +7,6 @@ import javax.persistence.PersistenceContext;
 
 @Repository
 public class AccountRepositorySupportImpl implements AccountRepositorySupport {
-
     @PersistenceContext
     private EntityManager entityManager;
 

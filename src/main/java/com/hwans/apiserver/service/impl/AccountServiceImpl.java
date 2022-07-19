@@ -5,9 +5,12 @@ import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.account.AccountCreateDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.entity.account.Account;
+import com.hwans.apiserver.entity.account.AccountRole;
 import com.hwans.apiserver.entity.account.Role;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
+import com.hwans.apiserver.repository.account.AccountRoleRepository;
+import com.hwans.apiserver.repository.role.RoleRepository;
 import com.hwans.apiserver.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -24,6 +27,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
+    private final AccountRoleRepository accountRoleRepository;
+    private final RoleRepository roleRepository;
     private final AccountMapper accountMapper;
 
     private static final String ALREADY_EXISTS_ID = "이미 존재하는 사용자 계정 아이디 입니다.";
@@ -40,11 +45,12 @@ public class AccountServiceImpl implements AccountService {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_ID);
         }
 
-        account.getRoles().add(new Role("ROLE_USER"));
-
         // 새 사용자 계정 정보 저장
-        var savedAccount = Optional.ofNullable(accountRepository.save(account));
-        return accountMapper.toDto(savedAccount.orElseThrow(() -> new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR, FAILED_TO_CREATE_ID)));
+        var savedAccount = accountRepository.save(account);
+        var userRole = roleRepository.saveIfNotExist("ROLE_USER");
+        var accountRole = accountRoleRepository.save(new AccountRole(savedAccount, userRole));
+        savedAccount.getAccountRoles().add(accountRole);
+        return accountMapper.toDto(savedAccount);
     }
 
     @Override
