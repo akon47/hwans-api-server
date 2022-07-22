@@ -1,5 +1,6 @@
 package com.hwans.apiserver.common.config;
 
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.security.jwt.JwtAccessDeniedHandler;
 import com.hwans.apiserver.common.security.jwt.JwtAuthenticationEntryPoint;
 import com.hwans.apiserver.common.security.jwt.TokenProvider;
@@ -52,7 +53,8 @@ public class WebSecurityConfig {
                 .and()
                 .authorizeRequests()
                 .antMatchers(SWAGGER_PERMIT_URL_ARRAY).permitAll()
-                .antMatchers(HttpMethod.POST, "/api/v1/account", "/api/v1/authentication/token").permitAll()
+                .antMatchers("/stomp/**").permitAll()
+                .antMatchers(HttpMethod.POST, Constants.API_PREFIX + "/v1/account", Constants.API_PREFIX + "/v1/authentication/token").permitAll()
                 .anyRequest().authenticated()
 
                 .and()

@@ -1,5 +1,6 @@
 package com.hwans.apiserver.common.security.jwt;
 
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import io.jsonwebtoken.*;
 
@@ -14,7 +15,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,7 +49,7 @@ public class TokenProvider implements InitializingBean {
                 .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
-        Date tokenExpiresIn = new Date(now + (60 * 60 * 24 * 30 * 1000L));
+        Date tokenExpiresIn = new Date(now + (10 * 60 * 1000L));
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim(AUTHORITIES_KEY, authorities)
@@ -77,9 +80,9 @@ public class TokenProvider implements InitializingBean {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    public boolean validateToken(String authToken) {
+    public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT signature.");
@@ -95,5 +98,16 @@ public class TokenProvider implements InitializingBean {
             log.trace("JWT token compact of handler are invalid trace: {}", e);
         }
         return false;
+    }
+
+    public void validateTokenWithThrow(String token) {
+        Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+    }
+
+    public String extractToken(String token) {
+        if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
+            return token.substring(7);
+        }
+        return token;
     }
 }

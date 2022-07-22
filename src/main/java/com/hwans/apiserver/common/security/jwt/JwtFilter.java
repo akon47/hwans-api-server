@@ -1,5 +1,6 @@
 package com.hwans.apiserver.common.security.jwt;
 
+import com.hwans.apiserver.common.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -17,14 +18,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtFilter extends GenericFilterBean {
-    public static final String AUTHORIZATION_HEADER = "Authorization";
-
     private final TokenProvider tokenProvider;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        String jwt = resolveToken(httpServletRequest);
+        String bearerToken = httpServletRequest.getHeader(Constants.AUTHORIZATION_HEADER);
+        String jwt = tokenProvider.extractToken(bearerToken);
         String requestURI = httpServletRequest.getRequestURI();
 
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
@@ -36,13 +36,5 @@ public class JwtFilter extends GenericFilterBean {
         }
 
         chain.doFilter(request, response);
-    }
-
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
     }
 }

@@ -1,7 +1,6 @@
 package com.hwans.apiserver.controller;
 
-import com.hwans.apiserver.dto.account.AccountCreateDto;
-import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.authentication.SigninDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.service.AuthenticationService;
@@ -9,6 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Api(tags = "인증")
-@RequestMapping(value = "/api")
+@RequestMapping(value = Constants.API_PREFIX)
 @RequiredArgsConstructor
 public class AuthenticationController {
     private final AuthenticationService authenticationService;

@@ -1,5 +1,6 @@
 package com.hwans.apiserver.controller;
 
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.account.AccountCreateDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.service.AccountService;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Api(tags = "사용자 계정")
-@RequestMapping(value = "/api")
+@RequestMapping(value = Constants.API_PREFIX)
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService accountService;
