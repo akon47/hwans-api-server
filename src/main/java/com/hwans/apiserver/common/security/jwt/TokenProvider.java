@@ -136,6 +136,23 @@ public class TokenProvider implements InitializingBean {
         return token;
     }
 
+    public Optional<String> getAccountIdFromAccessToken(String accessToken) {
+        try {
+            return Optional.ofNullable(
+                    Jwts
+                            .parserBuilder()
+                            .setSigningKey(accessTokenSecretKey)
+                            .build()
+                            .parseClaimsJws(accessToken)
+                            .getBody()
+                            .getSubject());
+
+        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
+                 IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
     public Optional<String> getAcountIdForReissueToken(String accessToken, String refreshToken) {
         try {
             var refreshClaims = Jwts

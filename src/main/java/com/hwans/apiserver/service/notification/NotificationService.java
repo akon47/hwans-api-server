@@ -1,4 +1,4 @@
-package com.hwans.apiserver.service;
+package com.hwans.apiserver.service.notification;
 
 import com.hwans.apiserver.dto.notification.NotificationMessageDto;
 

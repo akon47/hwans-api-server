@@ -3,7 +3,7 @@ package com.hwans.apiserver.controller;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.account.AccountCreateDto;
 import com.hwans.apiserver.dto.account.AccountDto;
-import com.hwans.apiserver.service.AccountService;
+import com.hwans.apiserver.service.account.AccountService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

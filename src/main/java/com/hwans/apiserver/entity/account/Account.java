@@ -42,6 +42,10 @@ public class Account extends BaseEntity {
         this.refreshToken = new RefreshToken(id, refreshToken, this);
     }
 
+    public void clearRefreshToken() {
+        setRefreshToken(null);
+    }
+
     public boolean validateRefreshToken(String refreshToken) {
         if(this.refreshToken == null)
             return true;

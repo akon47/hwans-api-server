@@ -1,19 +1,15 @@
-package com.hwans.apiserver.service.impl;
+package com.hwans.apiserver.service.authentication;
 
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
-import com.hwans.apiserver.common.security.jwt.JwtStatus;
 import com.hwans.apiserver.common.security.jwt.TokenProvider;
 import com.hwans.apiserver.dto.authentication.AuthenticationInfoDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.repository.account.AccountRepository;
-import com.hwans.apiserver.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -40,7 +36,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     @Override
     @Transactional
-    public TokenDto authenticate(AuthenticationInfoDto authenticationInfoDto) {
+    public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto) {
         var foundAccount = accountRepository.findById(authenticationInfoDto.getId()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (!passwordEncoder.matches(authenticationInfoDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
@@ -52,6 +48,24 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         foundAccount.setRefreshToken(token.getRefreshToken());
         accountRepository.save(foundAccount);
         return token;
+    }
+
+    @Override
+    @Transactional
+    public void redeemToken(String accessToken) {
+        accessToken = tokenProvider.extractTokenFromHeader(accessToken);
+        var accountId = tokenProvider.getAccountIdFromAccessToken(accessToken)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
+
+        accountRepository
+                .findById(accountId)
+                .ifPresent((foundAccount) ->
+                {
+                    foundAccount.clearRefreshToken();
+                    accountRepository.save(foundAccount);
+                });
+
+        // TODO: Redis 에 AccessToken 을 10 분의 만료시간과 함께 넣어두는 작업.
     }
 
     @Override

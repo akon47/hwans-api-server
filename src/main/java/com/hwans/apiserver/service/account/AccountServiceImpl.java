@@ -1,4 +1,4 @@
-package com.hwans.apiserver.service.impl;
+package com.hwans.apiserver.service.account;
 
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
@@ -9,7 +9,7 @@ import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.account.AccountRoleRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
-import com.hwans.apiserver.service.AccountService;
+import com.hwans.apiserver.service.account.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,6 @@
-package com.hwans.apiserver.service.impl;
+package com.hwans.apiserver.service.notification;
 
 import com.hwans.apiserver.dto.notification.NotificationMessageDto;
-import com.hwans.apiserver.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
