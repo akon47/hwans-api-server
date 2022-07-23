@@ -14,7 +14,7 @@ public abstract class AccountMapper {
 
     @Mapping(target = "password", qualifiedByName = "encodePassword")
     @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "accountRefreshToken", ignore = true)
+    @Mapping(target = "refreshToken", ignore = true)
     public abstract Account toEntity(AccountCreateDto userCreateDto);
 
     public abstract AccountDto toDto(Account account);

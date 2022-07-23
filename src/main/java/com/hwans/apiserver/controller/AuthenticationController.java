@@ -1,18 +1,16 @@
 package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.common.Constants;
-import com.hwans.apiserver.dto.authentication.SigninDto;
+import com.hwans.apiserver.dto.authentication.AuthenticationInfoDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.service.AuthenticationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.NotBlank;
 
 @RestController
 @Api(tags = "인증")
@@ -23,7 +21,15 @@ public class AuthenticationController {
 
     @ApiOperation(value = "계정 인증 토큰 발급", notes = "사용자 계정을 인증하여 토큰을 발급받는다.", tags = "인증")
     @PostMapping(value = "/v1/authentication/token")
-    public TokenDto signin(@ApiParam(value = "사용자 계정 정보", required = true) @RequestBody SigninDto signinDto) {
-        return authenticationService.authenticate(signinDto);
+    public TokenDto issueToken(@ApiParam(value = "사용자 계정 정보", required = true) @RequestBody AuthenticationInfoDto authenticationInfoDto) {
+        return authenticationService.authenticate(authenticationInfoDto);
+    }
+
+    @ApiOperation(value = "계정 인증 토큰 재발급", notes = "인증 토큰 정보를 이용하여 토큰을 재발급받는다.", tags = "인증")
+    @PostMapping(value = "/v1/authentication/refresh-token")
+    public TokenDto reissueToken(
+            @ApiParam(value = "AccessToken", required = true) @RequestHeader(value = Constants.AUTHORIZATION_HEADER) @NotBlank String accessToken,
+            @ApiParam(value = "RefreshToken", required = true) @RequestHeader(value = Constants.REFRESH_TOKEN_HEADER) @NotBlank String refreshToken) {
+        return authenticationService.reissueToken(accessToken, refreshToken);
     }
 }

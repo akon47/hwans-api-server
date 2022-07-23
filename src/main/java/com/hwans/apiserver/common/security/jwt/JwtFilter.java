@@ -26,7 +26,7 @@ public class JwtFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String bearerToken = httpServletRequest.getHeader(Constants.AUTHORIZATION_HEADER);
-        String jwt = tokenProvider.extractToken(bearerToken);
+        String jwt = tokenProvider.extractTokenFromHeader(bearerToken);
         String requestURI = httpServletRequest.getRequestURI();
 
         if (StringUtils.hasText(jwt)) {
@@ -36,7 +36,7 @@ public class JwtFilter extends GenericFilterBean {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
             } else if (jwtStatus == JwtStatus.EXPIRED) {
-                request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED, "토큰이 만료되었습니다."));
+                request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED));
                 log.debug("JWT token is expired, uri: {}", requestURI);
             } else {
                 log.debug("no valid JWT token found, uri: {}", requestURI);

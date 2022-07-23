@@ -2,7 +2,6 @@ package com.hwans.apiserver.entity.account.authentication;
 
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.Account;
-import com.hwans.apiserver.entity.account.role.AccountRoleId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,15 +16,12 @@ import java.io.Serializable;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountRefreshToken extends BaseEntity implements Serializable {
+public class RefreshToken extends BaseEntity implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column
-    private Long id;
-    @MapsId
-    @OneToOne
-    @JoinColumn(name = "account_id")
-    private Account account;
-    @Column
+    @Column(length = 32)
+    private String accountId;
+    @Column(length = 255)
     private String refreshToken;
+    @OneToOne(mappedBy = "refreshToken")
+    private Account account;
 }

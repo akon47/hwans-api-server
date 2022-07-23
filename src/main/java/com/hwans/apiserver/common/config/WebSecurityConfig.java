@@ -54,7 +54,11 @@ public class WebSecurityConfig {
                 .authorizeRequests()
                 .antMatchers(SWAGGER_PERMIT_URL_ARRAY).permitAll()
                 .antMatchers("/stomp/**").permitAll()
-                .antMatchers(HttpMethod.POST, Constants.API_PREFIX + "/v1/account", Constants.API_PREFIX + "/v1/authentication/token").permitAll()
+                .antMatchers(
+                        HttpMethod.POST,
+                        Constants.API_PREFIX + "/v1/account",
+                        Constants.API_PREFIX + "/v1/authentication/token",
+                        Constants.API_PREFIX + "/v1/authentication/refresh-token").permitAll()
                 .anyRequest().authenticated()
 
                 .and()

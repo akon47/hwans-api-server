@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Getter
 @Builder
 @ApiModel(description = "계정 인증 정보 Dto")
-public class SigninDto implements Serializable {
+public class AuthenticationInfoDto implements Serializable {
     @ApiModelProperty(value = "사용자 계정 아이디", required = true, example = "kimhwan92")
     @NotBlank
     String id;

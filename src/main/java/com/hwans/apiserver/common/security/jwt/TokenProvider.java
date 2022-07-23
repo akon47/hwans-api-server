@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,6 +21,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -53,11 +55,14 @@ public class TokenProvider implements InitializingBean {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
+        return createToken(authentication.getName(), authorities);
+    }
 
+    public TokenDto createToken(String accountId, String authorities) {
         long now = (new Date()).getTime();
         Date accessTokenExpiresIn = new Date(now + (10 * 60 * 1000L));
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())
+                .setSubject(accountId)
                 .claim(AUTHORITIES_KEY, authorities)
                 .signWith(accessTokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(accessTokenExpiresIn)
@@ -65,10 +70,9 @@ public class TokenProvider implements InitializingBean {
 
         Date refreshTokenExpiresIn = new Date(now + (60 * 60 * 24 * 30 * 1000L));
         String refreshToken = Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authorities)
+                .setSubject(accountId)
                 .signWith(refreshTokenSecretKey, SignatureAlgorithm.HS256)
-                .setExpiration(accessTokenExpiresIn)
+                .setExpiration(refreshTokenExpiresIn)
                 .compact();
 
         return TokenDto.builder()
@@ -125,14 +129,33 @@ public class TokenProvider implements InitializingBean {
         return JwtStatus.DENIED;
     }
 
-    public void validateTokenWithThrow(String token) {
-        Jwts.parserBuilder().setSigningKey(accessTokenSecretKey).build().parseClaimsJws(token);
-    }
-
-    public String extractToken(String token) {
+    public String extractTokenFromHeader(String token) {
         if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
             return token.substring(7);
         }
         return token;
+    }
+
+    public Optional<String> getAcountIdForReissueToken(String accessToken, String refreshToken) {
+        try {
+            var refreshClaims = Jwts
+                    .parserBuilder()
+                    .setSigningKey(refreshTokenSecretKey)
+                    .build()
+                    .parseClaimsJws(refreshToken);
+            return Optional.ofNullable(
+                    Jwts
+                            .parserBuilder()
+                            .requireSubject(refreshClaims.getBody().getSubject())
+                            .setSigningKey(accessTokenSecretKey)
+                            .build()
+                            .parseClaimsJws(accessToken)
+                            .getBody()
+                            .getSubject());
+
+        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
+                 IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 }

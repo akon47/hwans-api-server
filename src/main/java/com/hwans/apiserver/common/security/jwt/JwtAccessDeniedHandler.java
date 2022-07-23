@@ -2,6 +2,7 @@ package com.hwans.apiserver.common.security.jwt;
 
 import com.hwans.apiserver.common.errors.dto.ErrorResponseDto;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
+import com.hwans.apiserver.common.errors.exception.RestApiException;
 import nonapi.io.github.classgraph.json.JSONSerializer;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -19,9 +20,6 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
-        response.getWriter().print(JSONSerializer.serializeObject(ErrorResponseDto.builder()
-                .name(ErrorCodes.Forbidden.FORBIDDEN.getName())
-                .message("접근 권한이 없습니다.")
-                .build()));
+        response.getWriter().print(JSONSerializer.serializeObject(new ErrorResponseDto(new RestApiException(ErrorCodes.Forbidden.FORBIDDEN))));
     }
 }

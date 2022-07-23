@@ -2,17 +2,18 @@ package com.hwans.apiserver.service.impl;
 
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
+import com.hwans.apiserver.common.security.jwt.JwtStatus;
 import com.hwans.apiserver.common.security.jwt.TokenProvider;
-import com.hwans.apiserver.dto.authentication.SigninDto;
+import com.hwans.apiserver.dto.authentication.AuthenticationInfoDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.entity.account.Account;
-import com.hwans.apiserver.entity.account.authentication.AccountRefreshToken;
-import com.hwans.apiserver.repository.account.AccountRefreshTokenRepository;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -30,7 +31,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService, UserDetailsService {
     private final AccountRepository accountRepository;
-    private final AccountRefreshTokenRepository accountRefreshTokenRepository;
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
@@ -40,35 +40,51 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     @Override
     @Transactional
-    public TokenDto authenticate(SigninDto signinDto) {
-        var foundAccount = accountRepository.findById(signinDto.getId())
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
-        if (!passwordEncoder.matches(signinDto.getPassword(), foundAccount.getPassword())) {
+    public TokenDto authenticate(AuthenticationInfoDto authenticationInfoDto) {
+        var foundAccount = accountRepository.findById(authenticationInfoDto.getId()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        if (!passwordEncoder.matches(authenticationInfoDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }
-
-        var authenticationToken = new UsernamePasswordAuthenticationToken(signinDto.getId(), signinDto.getPassword());
+        var authenticationToken = new UsernamePasswordAuthenticationToken(authenticationInfoDto.getId(), authenticationInfoDto.getPassword());
         var authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var token = tokenProvider.createToken(authentication);
-        accountRefreshTokenRepository.save(AccountRefreshToken.builder().refreshToken(token.getRefreshToken()).build());
+        foundAccount.setRefreshToken(token.getRefreshToken());
+        accountRepository.save(foundAccount);
         return token;
     }
 
     @Override
+    @Transactional
+    public TokenDto reissueToken(String accessToken, String refreshToken) {
+        accessToken = tokenProvider.extractTokenFromHeader(accessToken);
+        refreshToken = tokenProvider.extractTokenFromHeader(refreshToken);
+
+        var accountId = tokenProvider
+                .getAcountIdForReissueToken(accessToken, refreshToken)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
+
+        var foundAccount = accountRepository.findById(accountId).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        if (foundAccount.validateRefreshToken(refreshToken)) {
+            String authorities = foundAccount.getRoles().stream()
+                    .map(x -> x.getName())
+                    .collect(Collectors.joining(","));
+            var token = tokenProvider.createToken(accountId, authorities);
+            foundAccount.setRefreshToken(token.getRefreshToken());
+            accountRepository.save(foundAccount);
+            return token;
+        } else {
+            throw new RestApiException(ErrorCodes.Unauthorized.INVALID_REFRESH_TOKEN);
+        }
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return accountRepository.findById(username)
-                .map(this::createUserDetails)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        return accountRepository.findById(username).map(this::createUserDetails).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
     }
 
     private UserDetails createUserDetails(Account account) {
-        var authorities = account.getRoles().stream()
-                .map(x -> new SimpleGrantedAuthority(x.getName()))
-                .collect(Collectors.toList());
-        return new User(
-                String.valueOf(account.getId()),
-                account.getPassword(),
-                authorities);
+        var authorities = account.getRoles().stream().map(x -> new SimpleGrantedAuthority(x.getName())).collect(Collectors.toList());
+        return new User(String.valueOf(account.getId()), account.getPassword(), authorities);
     }
 }
