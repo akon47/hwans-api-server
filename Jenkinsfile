@@ -40,7 +40,8 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL)
                     prodProperties = prodProperties.replaceAll(/\{datasource-username\}/, SPRING_DATASOURCE_USERNAME)
                     prodProperties = prodProperties.replaceAll(/\{datasource-password\}/, SPRING_DATASOURCE_PASSWORD)
-                    prodProperties = prodProperties.replaceAll(/\{jwt-base64-secret\}/, SPRING_JWT_SECRET_KEY)
+                    prodProperties = prodProperties.replaceAll(/\{jwt-base64-access-secret\}/, SPRING_JWT_ACCESS_SECRET_KEY)
+                    prodProperties = prodProperties.replaceAll(/\{jwt-base64-refresh-secret\}/, SPRING_JWT_REFRESH_SECRET_KEY)
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
             }

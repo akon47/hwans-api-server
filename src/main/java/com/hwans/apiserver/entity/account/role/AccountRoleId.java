@@ -1,4 +1,4 @@
-package com.hwans.apiserver.entity.account;
+package com.hwans.apiserver.entity.account.role;
 
 import lombok.EqualsAndHashCode;
 

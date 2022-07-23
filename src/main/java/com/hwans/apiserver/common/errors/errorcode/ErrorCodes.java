@@ -22,6 +22,7 @@ public class ErrorCodes {
 
     public enum Unauthorized implements ErrorCode {
         UNAUTHORIZED,
+        TOKEN_EXPIRED
         ;
 
         @Override

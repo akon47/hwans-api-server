@@ -1,7 +1,6 @@
-package com.hwans.apiserver.entity.account;
+package com.hwans.apiserver.entity.account.role;
 
 import lombok.*;
-import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.util.HashSet;

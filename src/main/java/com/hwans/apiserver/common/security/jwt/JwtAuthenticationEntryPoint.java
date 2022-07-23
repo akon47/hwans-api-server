@@ -2,6 +2,7 @@ package com.hwans.apiserver.common.security.jwt;
 
 import com.hwans.apiserver.common.errors.dto.ErrorResponseDto;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
+import com.hwans.apiserver.common.errors.exception.RestApiException;
 import nonapi.io.github.classgraph.json.JSONSerializer;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -18,9 +19,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        response.getWriter().print(JSONSerializer.serializeObject(ErrorResponseDto.builder()
-                .name(ErrorCodes.Unauthorized.UNAUTHORIZED.getName())
-                .message("유효한 자격증명이 존재하지 않습니다.")
-                .build()));
+        var restApiException = new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED, "유효한 자격증명이 존재하지 않습니다.");
+        var exception = request.getAttribute("exception");
+        if(RestApiException.class.isInstance(exception)) {
+            restApiException = RestApiException.class.cast(exception);
+        }
+
+        response.getWriter().print(JSONSerializer.serializeObject(new ErrorResponseDto(restApiException)));
     }
 }

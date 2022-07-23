@@ -4,23 +4,16 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.account.AccountCreateDto;
 import com.hwans.apiserver.dto.account.AccountDto;
-import com.hwans.apiserver.entity.account.Account;
-import com.hwans.apiserver.entity.account.AccountRole;
-import com.hwans.apiserver.entity.account.Role;
+import com.hwans.apiserver.entity.account.role.AccountRole;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.account.AccountRoleRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
 import com.hwans.apiserver.service.AccountService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)

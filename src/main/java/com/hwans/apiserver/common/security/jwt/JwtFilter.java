@@ -1,6 +1,8 @@
 package com.hwans.apiserver.common.security.jwt;
 
 import com.hwans.apiserver.common.Constants;
+import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
+import com.hwans.apiserver.common.errors.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -27,12 +29,20 @@ public class JwtFilter extends GenericFilterBean {
         String jwt = tokenProvider.extractToken(bearerToken);
         String requestURI = httpServletRequest.getRequestURI();
 
-        if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-            Authentication authentication = tokenProvider.getAuthentication(jwt);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
+        if (StringUtils.hasText(jwt)) {
+            var jwtStatus = tokenProvider.validateAccessToken(jwt);
+            if (jwtStatus == JwtStatus.ACCESS) {
+                Authentication authentication = tokenProvider.getAuthentication(jwt);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
+            } else if (jwtStatus == JwtStatus.EXPIRED) {
+                request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED, "토큰이 만료되었습니다."));
+                log.debug("JWT token is expired, uri: {}", requestURI);
+            } else {
+                log.debug("no valid JWT token found, uri: {}", requestURI);
+            }
         } else {
-            log.debug("no valid JWT token found, uri: {}", requestURI);
+            log.debug("JWT token is blank, uri: {}", requestURI);
         }
 
         chain.doFilter(request, response);

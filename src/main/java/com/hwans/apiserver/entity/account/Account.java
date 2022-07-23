@@ -1,8 +1,10 @@
 package com.hwans.apiserver.entity.account;
 
 import com.hwans.apiserver.entity.BaseEntity;
+import com.hwans.apiserver.entity.account.authentication.AccountRefreshToken;
+import com.hwans.apiserver.entity.account.role.AccountRole;
+import com.hwans.apiserver.entity.account.role.Role;
 import lombok.*;
-import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -27,6 +29,8 @@ public class Account extends BaseEntity {
     private boolean deleted;
     @OneToMany(mappedBy = "account")
     private final Set<AccountRole> accountRoles = new HashSet<>();
+    @OneToOne(mappedBy = "account")
+    private AccountRefreshToken accountRefreshToken;
 
     public Set<Role> getRoles() {
         return accountRoles.stream().map(x -> x.getRole()).collect(Collectors.toSet());

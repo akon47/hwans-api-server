@@ -1,6 +1,6 @@
 package com.hwans.apiserver.repository.role;
 
-import com.hwans.apiserver.entity.account.Role;
+import com.hwans.apiserver.entity.account.role.Role;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -14,7 +14,7 @@ public class RoleRepositorySupportImpl implements RoleRepositorySupport {
 
     @Override
     public Role saveIfNotExist(String name) {
-        return Optional.of(entityManager.find(Role.class, name))
+        return Optional.ofNullable(entityManager.find(Role.class, name))
                 .orElseGet(() ->
                 {
                     var role = new Role(name);

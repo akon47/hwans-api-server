@@ -6,15 +6,13 @@ import com.hwans.apiserver.common.security.jwt.TokenProvider;
 import com.hwans.apiserver.dto.authentication.SigninDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.entity.account.Account;
-import com.hwans.apiserver.mapper.AccountMapper;
+import com.hwans.apiserver.entity.account.authentication.AccountRefreshToken;
+import com.hwans.apiserver.repository.account.AccountRefreshTokenRepository;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -23,15 +21,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService, UserDetailsService {
     private final AccountRepository accountRepository;
+    private final AccountRefreshTokenRepository accountRefreshTokenRepository;
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
@@ -40,6 +39,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     private static final String NO_PASSWORD_MATCH = "계정 비밀번호가 잘못되었습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
 
     @Override
+    @Transactional
     public TokenDto authenticate(SigninDto signinDto) {
         var foundAccount = accountRepository.findById(signinDto.getId())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
@@ -50,7 +50,9 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         var authenticationToken = new UsernamePasswordAuthenticationToken(signinDto.getId(), signinDto.getPassword());
         var authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return tokenProvider.createToken(authentication);
+        var token = tokenProvider.createToken(authentication);
+        accountRefreshTokenRepository.save(AccountRefreshToken.builder().refreshToken(token.getRefreshToken()).build());
+        return token;
     }
 
     @Override
