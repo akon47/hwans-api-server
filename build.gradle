@@ -41,6 +41,9 @@ dependencies {
 	// Embedded Redis for Local Development
 	implementation ('it.ozimov:embedded-redis:0.7.3') { exclude group: "org.slf4j", module: "slf4j-simple" }
 
+	// H2 Database for Local Development
+	implementation 'com.h2database:h2'
+
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
