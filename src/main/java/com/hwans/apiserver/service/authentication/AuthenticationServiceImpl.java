@@ -1,5 +1,6 @@
 package com.hwans.apiserver.service.authentication;
 
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.common.security.jwt.TokenProvider;
@@ -8,6 +9,7 @@ import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +33,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private static final String NO_ACCOUNT_ID = "계정 Id 정보를 찾을 수 없습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
     private static final String NO_PASSWORD_MATCH = "계정 비밀번호가 잘못되었습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
@@ -65,7 +69,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                     accountRepository.save(foundAccount);
                 });
 
-        // TODO: Redis 에 AccessToken 을 10 분의 만료시간과 함께 넣어두는 작업.
+        redisTemplate.opsForValue().set(accountId, accessToken, Duration.ofMillis(Constants.REFRESH_TOKEN_EXPIRES_TIME));
     }
 
     @Override

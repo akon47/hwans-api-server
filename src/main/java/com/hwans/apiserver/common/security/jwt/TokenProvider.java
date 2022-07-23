@@ -1,5 +1,6 @@
 package com.hwans.apiserver.common.security.jwt;
 
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import io.jsonwebtoken.*;
 
@@ -60,7 +61,7 @@ public class TokenProvider implements InitializingBean {
 
     public TokenDto createToken(String accountId, String authorities) {
         long now = (new Date()).getTime();
-        Date accessTokenExpiresIn = new Date(now + (10 * 60 * 1000L));
+        Date accessTokenExpiresIn = new Date(now + Constants.ACCESS_TOKEN_EXPIRES_TIME);
         String accessToken = Jwts.builder()
                 .setSubject(accountId)
                 .claim(AUTHORITIES_KEY, authorities)
@@ -68,7 +69,7 @@ public class TokenProvider implements InitializingBean {
                 .setExpiration(accessTokenExpiresIn)
                 .compact();
 
-        Date refreshTokenExpiresIn = new Date(now + (60 * 60 * 24 * 30 * 1000L));
+        Date refreshTokenExpiresIn = new Date(now + Constants.REFRESH_TOKEN_EXPIRES_TIME);
         String refreshToken = Jwts.builder()
                 .setSubject(accountId)
                 .signWith(refreshTokenSecretKey, SignatureAlgorithm.HS256)

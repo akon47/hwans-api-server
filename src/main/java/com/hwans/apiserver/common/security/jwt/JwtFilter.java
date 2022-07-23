@@ -5,6 +5,7 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -21,6 +22,7 @@ import java.io.IOException;
 @Slf4j
 public class JwtFilter extends GenericFilterBean {
     private final TokenProvider tokenProvider;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -33,8 +35,12 @@ public class JwtFilter extends GenericFilterBean {
             var jwtStatus = tokenProvider.validateAccessToken(jwt);
             if (jwtStatus == JwtStatus.ACCESS) {
                 Authentication authentication = tokenProvider.getAuthentication(jwt);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
+                if(redisTemplate.opsForValue().get(authentication.getName()) == null) {
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
+                } else {
+                    log.debug("JWT token is black listed, uri: {}", requestURI);
+                }
             } else if (jwtStatus == JwtStatus.EXPIRED) {
                 request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED));
                 log.debug("JWT token is expired, uri: {}", requestURI);

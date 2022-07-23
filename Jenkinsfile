@@ -13,6 +13,8 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
         SPRING_JWT_ACCESS_SECRET_KEY = credentials('spring-jwt-base64-access-secret')
         SPRING_JWT_REFRESH_SECRET_KEY = credentials('spring-jwt-base64-refresh-secret')
+        SPRING_REDIS_HOST = credentials('spring-redis-host')
+        SPRING_REDIS_PORT = credentials('spring-redis-port')
         GITHUB_CREDENTIALS_ID = 'git-hub';
         DOCKER_CREDENTIALS_ID = 'docker-hub';
     }
@@ -43,6 +45,8 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{datasource-password\}/, SPRING_DATASOURCE_PASSWORD)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-access-secret\}/, SPRING_JWT_ACCESS_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-refresh-secret\}/, SPRING_JWT_REFRESH_SECRET_KEY)
+                    prodProperties = prodProperties.replaceAll(/\{redis-host\}/, SPRING_REDIS_HOST)
+                    prodProperties = prodProperties.replaceAll(/\{redis-port\}/, SPRING_REDIS_PORT)
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
             }
