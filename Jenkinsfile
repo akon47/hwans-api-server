@@ -11,7 +11,8 @@ pipeline {
         SPRING_DATASOURCE_URL = credentials('spring-datasource-url')
         SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
-        SPRING_JWT_SECRET_KEY = credentials('spring-jwt-base64-secret')
+        SPRING_JWT_ACCESS_SECRET_KEY = credentials('spring-jwt-base64-access-secret')
+        SPRING_JWT_REFRESH_SECRET_KEY = credentials('spring-jwt-base64-refresh-secret')
         GITHUB_CREDENTIALS_ID = 'git-hub';
         DOCKER_CREDENTIALS_ID = 'docker-hub';
     }
