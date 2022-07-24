@@ -37,18 +37,19 @@ public class JwtFilter extends GenericFilterBean {
                 Authentication authentication = tokenProvider.getAuthentication(jwt);
                 if(redisTemplate.opsForValue().get(authentication.getName()) == null) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.debug("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
+                    log.trace("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
                 } else {
-                    log.debug("JWT token is black listed, uri: {}", requestURI);
+                    log.info("JWT token is black listed");
+                    log.trace("JWT token is black listed, uri: {}, {}", requestURI, redisTemplate.opsForValue().get(authentication.getName()));
                 }
             } else if (jwtStatus == JwtStatus.EXPIRED) {
                 request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED));
-                log.debug("JWT token is expired, uri: {}", requestURI);
+                log.trace("JWT token is expired, uri: {}", requestURI);
             } else {
-                log.debug("no valid JWT token found, uri: {}", requestURI);
+                log.trace("no valid JWT token found, uri: {}", requestURI);
             }
         } else {
-            log.debug("JWT token is blank, uri: {}", requestURI);
+            log.trace("JWT token is blank, uri: {}", requestURI);
         }
 
         chain.doFilter(request, response);
