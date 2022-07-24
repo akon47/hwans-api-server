@@ -17,6 +17,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -35,12 +36,12 @@ public class JwtFilter extends GenericFilterBean {
             var jwtStatus = tokenProvider.validateAccessToken(jwt);
             if (jwtStatus == JwtStatus.ACCESS) {
                 Authentication authentication = tokenProvider.getAuthentication(jwt);
-                if(redisTemplate.opsForValue().get(authentication.getName()) == null) {
+                if(redisTemplate.opsForValue().get(jwt) == null) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.trace("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
                 } else {
                     log.info("JWT token is black listed");
-                    log.trace("JWT token is black listed, uri: {}, {}", requestURI, redisTemplate.opsForValue().get(authentication.getName()));
+                    log.trace("JWT token is black listed, uri: {}, {}", requestURI);
                 }
             } else if (jwtStatus == JwtStatus.EXPIRED) {
                 request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED));

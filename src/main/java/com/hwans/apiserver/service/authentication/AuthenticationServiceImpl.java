@@ -69,7 +69,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                     accountRepository.save(foundAccount);
                 });
 
-        redisTemplate.opsForValue().set(accountId, accessToken, Duration.ofMillis(Constants.REFRESH_TOKEN_EXPIRES_TIME));
+        redisTemplate.opsForValue().set(accessToken, "redeem", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
     }
 
     @Override
