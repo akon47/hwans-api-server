@@ -19,7 +19,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        var restApiException = new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED, "유효한 자격증명이 존재하지 않습니다.");
+        var restApiException = new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
         var exception = request.getAttribute("exception");
         if(RestApiException.class.isInstance(exception)) {
             restApiException = RestApiException.class.cast(exception);
