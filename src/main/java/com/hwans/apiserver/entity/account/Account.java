@@ -3,6 +3,8 @@ package com.hwans.apiserver.entity.account;
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.role.AccountRole;
 import com.hwans.apiserver.entity.account.role.Role;
+import com.hwans.apiserver.entity.blog.Comment;
+import com.hwans.apiserver.entity.blog.Like;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -38,6 +40,10 @@ public class Account extends BaseEntity {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     @Getter(AccessLevel.NONE)
     private final Set<AccountRole> accountRoles = new HashSet<>();
+    @OneToMany(mappedBy = "account")
+    private final Set<Comment> comments = new HashSet<>();
+    @OneToMany(mappedBy = "account")
+    private final Set<Like> likes = new HashSet<>();
 
     public Set<Role> getRoles() {
         return accountRoles.stream().map(x -> x.getRole()).collect(Collectors.toSet());
