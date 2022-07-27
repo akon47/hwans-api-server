@@ -41,16 +41,15 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Override
     @Transactional
     public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto) {
-        var foundAccount = accountRepository.findById(authenticationInfoDto.getId()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        var foundAccount = accountRepository.findByEmail(authenticationInfoDto.getEmail()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (!passwordEncoder.matches(authenticationInfoDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }
-        var authenticationToken = new UsernamePasswordAuthenticationToken(authenticationInfoDto.getId(), authenticationInfoDto.getPassword());
+        var authenticationToken = new UsernamePasswordAuthenticationToken(authenticationInfoDto.getEmail(), authenticationInfoDto.getPassword());
         var authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var token = tokenProvider.createToken(authentication);
-        foundAccount.setRefreshToken(token.getRefreshToken());
-        accountRepository.save(foundAccount);
+        accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
         return token;
     }
 
@@ -58,11 +57,11 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Transactional
     public void redeemToken(String accessToken) {
         accessToken = tokenProvider.extractTokenFromHeader(accessToken);
-        var accountId = tokenProvider.getAccountIdFromAccessToken(accessToken)
+        var accountEmail = tokenProvider.getAccountEmailFromAccessToken(accessToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
         accountRepository
-                .findById(accountId)
+                .findByEmail(accountEmail)
                 .ifPresent((foundAccount) ->
                 {
                     foundAccount.clearRefreshToken();
@@ -78,18 +77,17 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         accessToken = tokenProvider.extractTokenFromHeader(accessToken);
         refreshToken = tokenProvider.extractTokenFromHeader(refreshToken);
 
-        var accountId = tokenProvider
-                .getAcountIdForReissueToken(accessToken, refreshToken)
+        var accountEmail = tokenProvider
+                .getAcountEmailForReissueToken(accessToken, refreshToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
-        var foundAccount = accountRepository.findById(accountId).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        var foundAccount = accountRepository.findByEmail(accountEmail).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (foundAccount.validateRefreshToken(refreshToken)) {
             String authorities = foundAccount.getRoles().stream()
                     .map(x -> x.getName())
                     .collect(Collectors.joining(","));
-            var token = tokenProvider.createToken(accountId, authorities);
-            foundAccount.setRefreshToken(token.getRefreshToken());
-            accountRepository.save(foundAccount);
+            var token = tokenProvider.createToken(accountEmail, authorities);
+            accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
             return token;
         } else {
             throw new RestApiException(ErrorCodes.Unauthorized.INVALID_REFRESH_TOKEN);
@@ -98,11 +96,11 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return accountRepository.findById(username).map(this::createUserDetails).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        return accountRepository.findByEmail(username).map(this::createUserDetails).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
     }
 
     private UserDetails createUserDetails(Account account) {
         var authorities = account.getRoles().stream().map(x -> new SimpleGrantedAuthority(x.getName())).collect(Collectors.toList());
-        return new User(String.valueOf(account.getId()), account.getPassword(), authorities);
+        return new User(String.valueOf(account.getEmail()), account.getPassword(), authorities);
     }
 }

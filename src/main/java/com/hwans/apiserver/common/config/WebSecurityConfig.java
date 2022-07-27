@@ -61,7 +61,10 @@ public class WebSecurityConfig {
                         Constants.API_PREFIX + "/v1/account",
                         Constants.API_PREFIX + "/v1/authentication/token",
                         Constants.API_PREFIX + "/v1/authentication/refresh-token").permitAll()
+                //.antMatchers("/h2-console/**").permitAll() // Local H2 콘솔 테스트 환경
                 .anyRequest().authenticated()
+
+                //.and().headers().frameOptions().disable() // Local H2 콘솔 테스트 환경
 
                 .and()
                 .apply(new JwtSecurityConfig(tokenProvider, redisTemplate));

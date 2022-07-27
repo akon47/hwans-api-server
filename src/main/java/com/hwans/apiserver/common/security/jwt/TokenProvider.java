@@ -9,7 +9,6 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -59,11 +58,11 @@ public class TokenProvider implements InitializingBean {
         return createToken(authentication.getName(), authorities);
     }
 
-    public TokenDto createToken(String accountId, String authorities) {
+    public TokenDto createToken(String accountEmail, String authorities) {
         long now = (new Date()).getTime();
         Date accessTokenExpiresIn = new Date(now + Constants.ACCESS_TOKEN_EXPIRES_TIME);
         String accessToken = Jwts.builder()
-                .setSubject(accountId)
+                .setSubject(accountEmail)
                 .claim(AUTHORITIES_KEY, authorities)
                 .signWith(accessTokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(accessTokenExpiresIn)
@@ -71,7 +70,7 @@ public class TokenProvider implements InitializingBean {
 
         Date refreshTokenExpiresIn = new Date(now + Constants.REFRESH_TOKEN_EXPIRES_TIME);
         String refreshToken = Jwts.builder()
-                .setSubject(accountId)
+                .setSubject(accountEmail)
                 .signWith(refreshTokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(refreshTokenExpiresIn)
                 .compact();
@@ -137,7 +136,7 @@ public class TokenProvider implements InitializingBean {
         return token;
     }
 
-    public Optional<String> getAccountIdFromAccessToken(String accessToken) {
+    public Optional<String> getAccountEmailFromAccessToken(String accessToken) {
         try {
             return Optional.ofNullable(
                     Jwts
@@ -154,7 +153,7 @@ public class TokenProvider implements InitializingBean {
         }
     }
 
-    public Optional<String> getAcountIdForReissueToken(String accessToken, String refreshToken) {
+    public Optional<String> getAcountEmailForReissueToken(String accessToken, String refreshToken) {
         try {
             var refreshClaims = Jwts
                     .parserBuilder()

@@ -13,6 +13,7 @@ public abstract class AccountMapper {
     private PasswordEncoder passwordEncoder;
 
     @Mapping(target = "password", qualifiedByName = "encodePassword")
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "refreshToken", ignore = true)
     public abstract Account toEntity(AccountCreateDto userCreateDto);

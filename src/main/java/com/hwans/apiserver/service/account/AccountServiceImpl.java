@@ -33,23 +33,22 @@ public class AccountServiceImpl implements AccountService {
     public AccountDto createAccount(AccountCreateDto accountCreateDto) {
         var account = accountMapper.toEntity(accountCreateDto);
 
-        // 이미 해당 계정 아이디가 존재할 경우
-        if(accountRepository.existsById(account.getId())) {
+        // 이미 해당 계정 이메일이 존재할 경우
+        if(accountRepository.existsByEmail(account.getEmail())) {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_ID);
         }
 
         // 새 사용자 계정 정보 저장
         var savedAccount = accountRepository.save(account);
         var userRole = roleRepository.saveIfNotExist("ROLE_USER");
-        var accountRole = accountRoleRepository.save(new AccountRole(savedAccount, userRole));
-        savedAccount.getAccountRoles().add(accountRole);
+        savedAccount.addRole(userRole);
         return accountMapper.toDto(savedAccount);
     }
 
     @Override
     public AccountDto getCurrentAccount() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var foundAccount = accountRepository.findById(authentication.getName())
+        var foundAccount = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_CURRENT_ACCOUNT_INFO));
         return accountMapper.toDto(foundAccount);
     }
