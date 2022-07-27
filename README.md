@@ -5,7 +5,7 @@
   <img alt="GitHub starts" src="https://img.shields.io/github/stars/akon47/hwans-api-server">
 </p>
 
-스프링 프레임워크를 이용하여 웹 게임 백엔드 서버 개발중...
+스프링 프레임워크를 이용하여 OpenApi 백엔드 서버 개발중...
 
 ## 🚀 API Document
 
