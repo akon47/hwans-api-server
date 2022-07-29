@@ -15,6 +15,10 @@ pipeline {
         SPRING_JWT_REFRESH_SECRET_KEY = credentials('spring-jwt-base64-refresh-secret')
         SPRING_REDIS_HOST = credentials('spring-redis-host')
         SPRING_REDIS_PORT = credentials('spring-redis-port')
+        SPRING_MAIL_HOST = '';
+        SPRING_MAIL_USERNAME = '';
+        SPRING_MAIL_PASSWORD = '';
+        SPRING_MAIL_PORT = '';
         GITHUB_CREDENTIALS_ID = 'git-hub';
         DOCKER_CREDENTIALS_ID = 'docker-hub';
     }
@@ -47,6 +51,11 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-refresh-secret\}/, SPRING_JWT_REFRESH_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{redis-host\}/, SPRING_REDIS_HOST)
                     prodProperties = prodProperties.replaceAll(/\{redis-port\}/, SPRING_REDIS_PORT)
+                    prodProperties = prodProperties.replaceAll(/\{mail-host\}/, SPRING_MAIL_HOST)
+                    prodProperties = prodProperties.replaceAll(/\{mail-username\}/, SPRING_MAIL_USERNAME)
+                    prodProperties = prodProperties.replaceAll(/\{mail-password\}/, SPRING_MAIL_PASSWORD)
+                    prodProperties = prodProperties.replaceAll(/\{mail-port\}/, SPRING_MAIL_PORT)
+
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }
             }
