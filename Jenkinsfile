@@ -19,7 +19,7 @@ pipeline {
         SPRING_MAIL_USERNAME = ''
         SPRING_MAIL_PASSWORD = ''
         SPRING_MAIL_PORT = ''
-        GITHUB_CREDENTIALS_ID = 'git-hub';
+        GITHUB_CREDENTIALS_ID = 'git-hub'
         DOCKER_CREDENTIALS_ID = 'docker-hub'
     }
 
