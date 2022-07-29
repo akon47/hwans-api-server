@@ -15,10 +15,10 @@ pipeline {
         SPRING_JWT_REFRESH_SECRET_KEY = credentials('spring-jwt-base64-refresh-secret')
         SPRING_REDIS_HOST = credentials('spring-redis-host')
         SPRING_REDIS_PORT = credentials('spring-redis-port')
-        SPRING_MAIL_HOST = ''
-        SPRING_MAIL_USERNAME = ''
-        SPRING_MAIL_PASSWORD = ''
-        SPRING_MAIL_PORT = ''
+        SPRING_MAIL_HOST = 'host'
+        SPRING_MAIL_USERNAME = 'username'
+        SPRING_MAIL_PASSWORD = 'password'
+        SPRING_MAIL_PORT = '25'
         GITHUB_CREDENTIALS_ID = 'git-hub'
         DOCKER_CREDENTIALS_ID = 'docker-hub'
     }
