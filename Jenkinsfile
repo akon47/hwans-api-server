@@ -7,7 +7,7 @@ pipeline {
         IMAGE_NAME = 'akon47/hwans-api-server'
         IMAGE_TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
         ACTIVE_PROFILE = 'prod'
-        SPRING_PROD_PROPERTIES_PATH = "src/main/resources/application-${ACTIVE_PROFILE}.properties"
+        SPRING_PROD_PROPERTIES_PATH = "src/main/resources/application-${ACTIVE_PROFILE}.yml"
         SPRING_DATASOURCE_URL = credentials('spring-datasource-url')
         SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
