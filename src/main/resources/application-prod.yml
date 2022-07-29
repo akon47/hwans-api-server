@@ -3,10 +3,10 @@ spring:
     init:
       mode: never
   datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://{datasource-url}
     username: {datasource-username}
     password: {datasource-password}
-    url: jdbc:mysql://{datasource-url}
-    driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
     host: {redis-host}
     port: {redis-port}
