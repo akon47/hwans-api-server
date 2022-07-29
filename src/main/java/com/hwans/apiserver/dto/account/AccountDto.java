@@ -15,7 +15,7 @@ import java.util.Set;
 @Builder
 @ApiModel(description = "계정 정보 Dto")
 public class AccountDto implements Serializable {
-    @ApiModelProperty(value = "계정 사용자 이메일", required = true, example = "kimhwan92@gmail.com")
+    @ApiModelProperty(value = "계정 사용자 이메일", required = true, example = "akon47@naver.com")
     @NotBlank
     String email;
     @ApiModelProperty(value = "계정 사용자 이름", required = true, example = "김환")

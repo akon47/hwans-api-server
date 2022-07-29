@@ -4,12 +4,14 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.account.AccountCreateDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.mail.MailMessageDto;
 import com.hwans.apiserver.entity.account.role.AccountRole;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.account.AccountRoleRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
 import com.hwans.apiserver.service.account.AccountService;
+import com.hwans.apiserver.service.mail.MailSenderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRoleRepository accountRoleRepository;
     private final RoleRepository roleRepository;
     private final AccountMapper accountMapper;
+    private final MailSenderService mailSenderService;
 
     private static final String ALREADY_EXISTS_ID = "이미 존재하는 사용자 계정 아이디 입니다.";
     private static final String FAILED_TO_CREATE_ID = "사용자 계정 생성에 실패했습니다.";

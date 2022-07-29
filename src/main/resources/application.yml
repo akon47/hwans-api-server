@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: local
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  jpa:
+    defer-datasource-initialization: true

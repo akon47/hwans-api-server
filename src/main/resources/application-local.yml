@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:~/test
+  h2:
+    console:
+      path: /h2-console
+      enabled: true
+  redis:
+    host: localhost
+    port: 6379
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+  mail:
+    host:
+    username:
+    password:
+    port: 25
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+        debug: true
+jwt:
+  base64-access-secret: 4324e295ed33679e1512b77e4d47f555ef74c6408a768f506af7e88acd2951e9
+  base64-refresh-secret: 827bd28cc68a90ce1cdb5d02afdc1d9835df6ab21bbef50cc550d7e84d94eb2f

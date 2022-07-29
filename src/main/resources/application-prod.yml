@@ -1,0 +1,29 @@
+spring:
+  sql:
+    init:
+      mode: never
+  datasource:
+    username: {datasource-username}
+    url: jdbc:mysql://{datasource-url}
+    password: {datasource-password}
+  redis:
+    host: {redis-host}
+    port: {redis-port}
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  mail:
+    host: {mail-host}
+    username: {mail-username}
+    password: {mail-password}
+    port: {mail-port}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+jwt:
+  base64-access-secret: {jwt-base64-access-secret}
+  base64-refresh-secret: {jwt-base64-refresh-secret}
