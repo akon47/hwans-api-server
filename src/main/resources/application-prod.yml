@@ -4,8 +4,9 @@ spring:
       mode: never
   datasource:
     username: {datasource-username}
-    url: jdbc:mysql://{datasource-url}
     password: {datasource-password}
+    url: jdbc:mysql://{datasource-url}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
     host: {redis-host}
     port: {redis-port}
