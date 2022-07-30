@@ -1,11 +1,6 @@
 spring:
   profiles:
     active: local
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://
-    username:
-    password:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
