@@ -8,7 +8,7 @@ spring:
     init:
       mode: never
   redis:
-    host: {redis-host}
+    host: '{redis-host}'
     port: {redis-port}
   jpa:
     database: mysql
@@ -16,9 +16,9 @@ spring:
     hibernate:
       ddl-auto: update
   mail:
-    host: {mail-host}
-    username: {mail-username}
-    password: {mail-password}
+    host: '{mail-host}'
+    username: '{mail-username}'
+    password: '{mail-password}'
     port: {mail-port}
     properties:
       mail:
@@ -27,5 +27,5 @@ spring:
           starttls:
             enable: true
 jwt:
-  base64-access-secret: {jwt-base64-access-secret}
-  base64-refresh-secret: {jwt-base64-refresh-secret}
+  base64-access-secret: '{jwt-base64-access-secret}'
+  base64-refresh-secret: '{jwt-base64-refresh-secret}'
