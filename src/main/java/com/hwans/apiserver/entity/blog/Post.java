@@ -1,6 +1,7 @@
 package com.hwans.apiserver.entity.blog;
 
 import com.hwans.apiserver.entity.BaseEntity;
+import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.entity.account.role.AccountRole;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -27,6 +28,9 @@ public class Post extends BaseEntity {
     @Column
     @Lob
     private String content;
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
     @OneToMany(mappedBy = "post")
     private final Set<Comment> comments = new HashSet<>();
     @OneToMany(mappedBy = "post")

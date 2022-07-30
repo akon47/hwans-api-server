@@ -26,9 +26,9 @@ public class Like extends BaseEntity {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
     @ManyToOne
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
     @ManyToOne
-    @JoinColumn(name = "account_id")
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 }

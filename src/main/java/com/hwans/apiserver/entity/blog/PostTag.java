@@ -24,9 +24,9 @@ public class PostTag extends BaseEntity implements Serializable {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
     @ManyToOne
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
     @ManyToOne
-    @JoinColumn(name = "tag_id")
+    @JoinColumn(name = "tag_id", nullable = false)
     private Tag tag;
 }
