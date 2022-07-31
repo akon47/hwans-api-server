@@ -67,8 +67,8 @@ public class AccountServiceImpl implements AccountService {
 
         if (redisTemplate.hasKey(email) == false) {
             var verifyCode = createNewVerifyCode();
-            redisTemplate.opsForValue().set(email, verifyCode, Duration.ofMillis(Constants.EMAIL_VERIFY_CODE_EXPIRES_TIME));
             mailSenderService.sendMail(createVerifyEmailMessage(email, verifyCode));
+            redisTemplate.opsForValue().set(email, verifyCode, Duration.ofMillis(Constants.EMAIL_VERIFY_CODE_EXPIRES_TIME));
         } else {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_VERIFY_CODE);
         }
