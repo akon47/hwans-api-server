@@ -59,6 +59,7 @@ public class WebSecurityConfig {
                 .antMatchers(
                         HttpMethod.POST,
                         Constants.API_PREFIX + "/v1/account",
+                        Constants.API_PREFIX + "/v1/account/verify-email",
                         Constants.API_PREFIX + "/v1/authentication/token",
                         Constants.API_PREFIX + "/v1/authentication/refresh-token").permitAll()
                 //.antMatchers("/h2-console/**").permitAll() // Local H2 콘솔 테스트 환경

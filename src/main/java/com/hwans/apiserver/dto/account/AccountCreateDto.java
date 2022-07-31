@@ -23,4 +23,7 @@ public class AccountCreateDto implements Serializable {
     @ApiModelProperty(value = "사용자 이름", required = true, example = "김환")
     @NotBlank
     String name;
+    @ApiModelProperty(value = "사용자 이메일 인증 코드", required = true, example = "123456")
+    @NotBlank
+    String emailVerifyCode;
 }

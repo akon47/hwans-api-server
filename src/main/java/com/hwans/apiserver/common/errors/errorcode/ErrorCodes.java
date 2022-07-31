@@ -8,6 +8,7 @@ public class ErrorCodes {
     public enum BadRequest implements ErrorCode {
         BAD_REQUEST("잘못된 요청입니다."),
         INVALID_PARAMETER("잘못된 파라미터입니다."),
+        INVALID_EMAIL_VERIFY_CODE("잘못된 인증 코드입니다."),
         ;
 
         private final String defaultMessage;
