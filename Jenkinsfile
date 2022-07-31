@@ -124,7 +124,7 @@ pipeline {
                 sshagent(credentials: ['ssh']) {
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker pull ${IMAGE_NAME}'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -q -a --filter name=${APP_NAME} | grep -q . && docker rm -f \$(docker ps -aq --filter name=${APP_NAME}) || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --name ${APP_NAME} -p 1200:8080 --network hwans-api-server-net ${IMAGE_NAME}'"
+                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --restart always --name ${APP_NAME} -p 1200:8080 --network hwans-api-server-net ${IMAGE_NAME}'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker images -qf dangling=true | xargs -I{} docker rmi {} || true'"
                     sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true'"
                 }
