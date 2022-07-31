@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        jdk("JAVA 17")
+    }
+
     environment {
         dockerImage = ''
         APP_NAME = 'hwans-api-server'
