@@ -31,7 +31,7 @@ public class AccountServiceImpl implements AccountService {
     private final MailSenderService mailSenderService;
     private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String ALREADY_EXISTS_ID = "이미 존재하는 사용자 계정 아이디 입니다.";
+    private static final String ALREADY_EXISTS_EMAIL = "이미 존재하는 사용자 계정 이메일 입니다.";
     private static final String FAILED_TO_CREATE_ID = "사용자 계정 생성에 실패했습니다.";
     private static final String NO_CURRENT_ACCOUNT_INFO = "현재 계정에 대한 정보를 찾을 수 없습니다.";
     private static final String ALREADY_EXISTS_VERIFY_CODE = "이전에 발송한 인증 코드가 아직 유효합니다.";
@@ -43,7 +43,7 @@ public class AccountServiceImpl implements AccountService {
 
         // 이미 해당 계정 이메일이 존재할 경우
         if (accountRepository.existsByEmail(account.getEmail())) {
-            throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_ID);
+            throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_EMAIL);
         }
 
         String verifyCode = redisTemplate.opsForValue().get(accountCreateDto.getEmail());
@@ -62,7 +62,7 @@ public class AccountServiceImpl implements AccountService {
     public void sendEmailVerifyCode(String email) {
         // 이미 해당 계정 이메일이 존재할 경우
         if (accountRepository.existsByEmail(email)) {
-            throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_ID);
+            throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS, ALREADY_EXISTS_EMAIL);
         }
 
         if (redisTemplate.hasKey(email) == false) {
