@@ -88,6 +88,9 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                     .collect(Collectors.joining(","));
             var token = tokenProvider.createToken(accountEmail, authorities);
             accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
+
+            // 새로 토큰을 발급받았으므로 이전에 발급하여 사용중인 AccessToken은 사용중지 처리한다.
+            redisTemplate.opsForValue().set(accessToken, "redeem", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
             return token;
         } else {
             throw new RestApiException(ErrorCodes.Unauthorized.INVALID_REFRESH_TOKEN);
