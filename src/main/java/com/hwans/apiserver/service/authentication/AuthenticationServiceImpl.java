@@ -78,7 +78,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         refreshToken = tokenProvider.extractTokenFromHeader(refreshToken);
 
         var accountEmail = tokenProvider
-                .getAcountEmailForReissueToken(accessToken, refreshToken)
+                .getAccountEmailForReissueToken(accessToken, refreshToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
         var foundAccount = accountRepository.findByEmail(accountEmail).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));

@@ -153,25 +153,25 @@ public class TokenProvider implements InitializingBean {
         }
     }
 
-    public Optional<String> getAcountEmailForReissueToken(String accessToken, String refreshToken) {
+    public Optional<String> getAccountEmailForReissueToken(String accessToken, String refreshToken) {
         try {
             var refreshClaims = Jwts
                     .parserBuilder()
                     .setSigningKey(refreshTokenSecretKey)
                     .build()
                     .parseClaimsJws(refreshToken);
-            return Optional.ofNullable(
-                    Jwts
-                            .parserBuilder()
-                            .requireSubject(refreshClaims.getBody().getSubject())
-                            .setSigningKey(accessTokenSecretKey)
-                            .build()
-                            .parseClaimsJws(accessToken)
-                            .getBody()
-                            .getSubject());
-
-        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
-                 IllegalArgumentException e) {
+            try {
+                return Optional.ofNullable(Jwts.parserBuilder()
+                        .requireSubject(refreshClaims.getBody().getSubject())
+                        .setSigningKey(accessTokenSecretKey)
+                        .build()
+                        .parseClaimsJws(accessToken)
+                        .getBody()
+                        .getSubject());
+            } catch (ExpiredJwtException e) {
+                return Optional.ofNullable(e.getClaims().getSubject());
+            }
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
