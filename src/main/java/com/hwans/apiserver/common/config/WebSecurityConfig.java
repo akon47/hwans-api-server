@@ -18,6 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Collections;
+
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
@@ -46,7 +48,7 @@ public class WebSecurityConfig {
         http
                 .httpBasic().disable()
                 .csrf().disable()
-                .cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()).and()
+                .cors().configurationSource(request -> corsConfiguration()).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
                 .and()
@@ -73,5 +75,11 @@ public class WebSecurityConfig {
                 .apply(new JwtSecurityConfig(tokenProvider, redisTemplate));
 
         return http.build();
+    }
+
+    private CorsConfiguration corsConfiguration() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedMethods(Collections.singletonList(CorsConfiguration.ALL));
+        return configuration.applyPermitDefaultValues();
     }
 }
