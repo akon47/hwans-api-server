@@ -11,14 +11,8 @@ import java.util.Set;
 
 @Getter
 @Builder
-@ApiModel(description = "게시글 Dto")
-public class PostDto implements Serializable {
-    @ApiModelProperty(value = "게시글이 작성되어진 블로그 Id", required = true, example = "kim-hwan")
-    @NotBlank
-    String blogId;
-    @ApiModelProperty(value = "게시글 URL", required = true, example = "my-first-post")
-    @NotBlank
-    String postUrl;
+@ApiModel(description = "게시글 작성/수정 Dto")
+public class PostRequestDto implements Serializable {
     @ApiModelProperty(value = "제목", required = true, example = "제목입니다.")
     @NotBlank
     String title;
@@ -28,10 +22,4 @@ public class PostDto implements Serializable {
     @ApiModelProperty(value = "태그")
     @NotBlank
     Set<TagDto> tags;
-    @ApiModelProperty(value = "댓글")
-    @NotBlank
-    Set<SimpleCommentDto> comments;
-    @ApiModelProperty(value = "좋아요 수")
-    @NotBlank
-    Long likeCount;
 }

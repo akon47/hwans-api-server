@@ -33,6 +33,8 @@ public class Account extends BaseEntity {
     private String password;
     @Column(length = 32)
     private String name;
+    @Column(length = 64, unique = true, nullable = false)
+    private String blogId;
     @Column(nullable = false)
     private boolean deleted;
     @Column(length = 255)

@@ -11,9 +11,12 @@ import java.io.Serializable;
 
 @Getter
 @Builder
-@ApiModel(description = "간단한 댓글 Dto")
+@ApiModel(description = "댓글 리스트 조회용 Dto")
 public class SimpleCommentDto implements Serializable {
-    @ApiModelProperty(value = "내용", required = true)
+    @ApiModelProperty(value = "댓글 Id", required = true)
+    @NotBlank
+    String id;
+    @ApiModelProperty(value = "내용", required = true, example = "댓글입니다.")
     @NotBlank
     String content;
     @ApiModelProperty(value = "댓글을 단 사용자", required = true)

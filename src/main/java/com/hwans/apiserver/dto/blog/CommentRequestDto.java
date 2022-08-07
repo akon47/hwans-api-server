@@ -11,12 +11,9 @@ import java.io.Serializable;
 
 @Getter
 @Builder
-@ApiModel(description = "좋아요 Dto")
-public class LikeDto implements Serializable {
-    @ApiModelProperty(value = "좋아요를 한 게시글", required = true)
+@ApiModel(description = "댓글 작성/수정 Dto")
+public class CommentRequestDto implements Serializable {
+    @ApiModelProperty(value = "내용", required = true, example = "댓글입니다.")
     @NotBlank
-    PostDto post;
-    @ApiModelProperty(value = "좋아요를 한 사용자", required = true)
-    @NotBlank
-    AccountDto account;
+    String content;
 }

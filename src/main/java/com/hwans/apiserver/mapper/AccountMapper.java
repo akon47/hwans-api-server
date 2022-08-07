@@ -1,6 +1,6 @@
 package com.hwans.apiserver.mapper;
 
-import com.hwans.apiserver.dto.account.AccountCreateDto;
+import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.entity.account.Account;
 import org.mapstruct.*;
@@ -16,7 +16,7 @@ public abstract class AccountMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "refreshToken", ignore = true)
-    public abstract Account toEntity(AccountCreateDto userCreateDto);
+    public abstract Account toEntity(CreateAccountDto userCreateDto);
 
     public abstract AccountDto toDto(Account account);
 

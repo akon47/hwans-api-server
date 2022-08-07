@@ -1,7 +1,7 @@
 package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.common.Constants;
-import com.hwans.apiserver.dto.account.AccountCreateDto;
+import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.service.account.AccountService;
 import io.swagger.annotations.Api;
@@ -19,7 +19,7 @@ public class AccountController {
 
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
-    public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody AccountCreateDto userCreateDto) {
+    public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody CreateAccountDto userCreateDto) {
         return accountService.createAccount(userCreateDto);
     }
 

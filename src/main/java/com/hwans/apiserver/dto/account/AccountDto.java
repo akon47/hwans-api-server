@@ -21,6 +21,9 @@ public class AccountDto implements Serializable {
     @ApiModelProperty(value = "계정 사용자 이름", required = true, example = "김환")
     @NotBlank
     String name;
+    @ApiModelProperty(value = "블로그 Id", required = true, example = "kim-hwan")
+    @NotBlank
+    String blogId;
     @ApiModelProperty(value = "계정에 할당된 역할", required = true, example = "사용자")
     @NotBlank
     Set<RoleDto> roles;
