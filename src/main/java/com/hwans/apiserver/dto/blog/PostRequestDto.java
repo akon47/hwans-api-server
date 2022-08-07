@@ -20,6 +20,5 @@ public class PostRequestDto implements Serializable {
     @NotBlank
     String content;
     @ApiModelProperty(value = "태그")
-    @NotBlank
     Set<TagDto> tags;
 }

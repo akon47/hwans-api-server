@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -26,6 +28,13 @@ public class Comment extends BaseEntity {
     @Column
     @Lob
     private String content;
+    @Column(nullable = false)
+    private boolean deleted;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
+    @OneToMany(mappedBy = "parent")
+    private Set<Comment> children = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;

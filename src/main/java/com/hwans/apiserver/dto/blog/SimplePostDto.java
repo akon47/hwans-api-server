@@ -26,7 +26,6 @@ public class SimplePostDto implements Serializable {
     @NotBlank
     String content;
     @ApiModelProperty(value = "태그")
-    @NotBlank
     Set<TagDto> tags;
     @ApiModelProperty(value = "댓글 수")
     Long commentCount;

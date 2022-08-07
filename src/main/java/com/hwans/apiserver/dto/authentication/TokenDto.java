@@ -16,12 +16,10 @@ public class TokenDto implements Serializable {
     @NotBlank
     String accessToken;
     @ApiModelProperty(value = "인증 토큰 만료 시간", required = true)
-    @NotBlank
     Long accessTokenExpiresIn;
     @ApiModelProperty(value = "갱신 토큰 값", required = true)
     @NotBlank
     String refreshToken;
     @ApiModelProperty(value = "갱신 토큰 만료 시간", required = true)
-    @NotBlank
     Long refreshTokenExpiresIn;
 }

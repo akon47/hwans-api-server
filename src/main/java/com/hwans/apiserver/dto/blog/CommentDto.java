@@ -8,6 +8,7 @@ import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
+import java.util.Set;
 
 @Getter
 @Builder
@@ -19,6 +20,12 @@ public class CommentDto implements Serializable {
     @ApiModelProperty(value = "내용", required = true, example = "댓글입니다.")
     @NotBlank
     String content;
+    @ApiModelProperty(value = "부모 댓글 Id", required = true)
+    @NotBlank
+    String parentId;
+    @ApiModelProperty(value = "대댓글")
+    @NotBlank
+    Set<SimpleCommentDto> children;
     @ApiModelProperty(value = "댓글이 달려있는 게시글", required = true)
     @NotBlank
     PostDto post;

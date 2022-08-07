@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 @Getter
@@ -14,9 +15,9 @@ import java.io.Serializable;
 @ApiModel(description = "좋아요 Dto")
 public class LikeDto implements Serializable {
     @ApiModelProperty(value = "좋아요를 한 게시글", required = true)
-    @NotBlank
+    @NotNull
     PostDto post;
     @ApiModelProperty(value = "좋아요를 한 사용자", required = true)
-    @NotBlank
+    @NotNull
     AccountDto account;
 }
