@@ -6,5 +6,5 @@ import com.hwans.apiserver.dto.account.AccountDto;
 public interface AccountService {
     AccountDto createAccount(CreateAccountDto createAccountDto);
     AccountDto getCurrentAccount();
-    void sendEmailVerifyCode(String email);
+    String setEmailVerifyCode(String email);
 }

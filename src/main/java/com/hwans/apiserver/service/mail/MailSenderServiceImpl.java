@@ -10,13 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.mail.MessagingException;
 
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MailSenderServiceImpl implements MailSenderService {
     private final JavaMailSender javaMailSender;
 
     @Override
-    public void sendMail(MailMessageDto mailMessageDto) {
+    public void sendMailVerifyCode(String email, String verifyCode) {
+        sendMail(createVerifyEmailMessage(email, verifyCode));
+    }
+
+    private void sendMail(MailMessageDto mailMessageDto) {
         var mimeMessage = javaMailSender.createMimeMessage();
         try {
             var mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
@@ -28,5 +31,17 @@ public class MailSenderServiceImpl implements MailSenderService {
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private MailMessageDto createVerifyEmailMessage(String email, String verifyCode) {
+        return MailMessageDto.builder()
+                .subject("[Hwan'Story] 회원가입")
+                .content(new StringBuilder()
+                        .append("코드: ")
+                        .append(verifyCode)
+                        .toString())
+                .to(email)
+                .isHtmlContent(false)
+                .build();
     }
 }

@@ -1,6 +1,6 @@
 package com.hwans.apiserver.common.security.jwt;
 
-import com.hwans.apiserver.common.errors.dto.ErrorResponseDto;
+import com.hwans.apiserver.dto.common.ErrorResponseDto;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import nonapi.io.github.classgraph.json.JSONSerializer;

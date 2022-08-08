@@ -4,6 +4,7 @@ import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.service.account.AccountService;
+import com.hwans.apiserver.service.mail.MailSenderService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService accountService;
+    private final MailSenderService mailSenderService;
 
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
@@ -26,7 +28,8 @@ public class AccountController {
     @ApiOperation(value = "사용자 이메일 인증 코드 발송", notes = "새로운 사용자 계정 생성을 위해 이메일 인증 코드를 발송합니다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts/verify-email")
     public void verifyEmail(@ApiParam(value = "인증 코드를 발송할 이메일 주소", required = true) @RequestParam String email) {
-        accountService.sendEmailVerifyCode(email);
+        var verifyCode = accountService.setEmailVerifyCode(email);
+        mailSenderService.sendMailVerifyCode(email, verifyCode);
     }
 
     @ApiOperation(value = "현재 사용자 계정 정보 조회", notes = "현재 사용자 계정 정보를 조회합니다.", tags = "사용자 계정")

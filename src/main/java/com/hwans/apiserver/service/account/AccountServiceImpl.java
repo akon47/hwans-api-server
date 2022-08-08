@@ -25,10 +25,8 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
-    private final AccountRoleRepository accountRoleRepository;
     private final RoleRepository roleRepository;
     private final AccountMapper accountMapper;
-    private final MailSenderService mailSenderService;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
@@ -59,7 +57,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void sendEmailVerifyCode(String email) {
+    public String setEmailVerifyCode(String email) {
         // 이미 해당 계정 이메일이 존재할 경우
         if (accountRepository.existsByEmail(email)) {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_EMAIL);
@@ -67,8 +65,8 @@ public class AccountServiceImpl implements AccountService {
 
         if (redisTemplate.hasKey(email) == false) {
             var verifyCode = createNewVerifyCode();
-            mailSenderService.sendMail(createVerifyEmailMessage(email, verifyCode));
             redisTemplate.opsForValue().set(email, verifyCode, Duration.ofMillis(Constants.EMAIL_VERIFY_CODE_EXPIRES_TIME));
+            return verifyCode;
         } else {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_VERIFY_CODE);
         }
@@ -80,18 +78,6 @@ public class AccountServiceImpl implements AccountService {
         var foundAccount = accountRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         return accountMapper.toDto(foundAccount);
-    }
-
-    private MailMessageDto createVerifyEmailMessage(String email, String verifyCode) {
-        return MailMessageDto.builder()
-                .subject("[Hwan'Story] 회원가입")
-                .content(new StringBuilder()
-                        .append("코드: ")
-                        .append(verifyCode)
-                        .toString())
-                .to(email)
-                .isHtmlContent(false)
-                .build();
     }
 
     private String createNewVerifyCode() {

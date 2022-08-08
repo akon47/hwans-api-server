@@ -1,6 +1,6 @@
 package com.hwans.apiserver.common.errors.handler;
 
-import com.hwans.apiserver.common.errors.dto.ErrorResponseDto;
+import com.hwans.apiserver.dto.common.ErrorResponseDto;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCode;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;

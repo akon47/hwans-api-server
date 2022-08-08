@@ -1,4 +1,4 @@
-package com.hwans.apiserver.common.errors.dto;
+package com.hwans.apiserver.dto.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.hwans.apiserver.common.errors.exception.RestApiException;

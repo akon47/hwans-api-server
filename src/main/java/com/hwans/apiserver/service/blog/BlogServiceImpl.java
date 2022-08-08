@@ -13,9 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
+    private final PostRepository postRepository;
 
     @Override
     public PostDto createPost(String blogId, PostRequestDto postRequestDto) {
+
+
         return null;
     }
 
