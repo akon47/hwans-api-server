@@ -3,8 +3,11 @@ package com.hwans.apiserver.service.blog;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
 
+import java.util.Optional;
+import java.util.UUID;
+
 public interface BlogService {
-    SliceDto<SimplePostDto> getAllPosts(String cursorId, Long size);
+    SliceDto<SimplePostDto> getAllPosts(Optional<UUID> cursorId, int size);
     PostDto createPost(String accountEmail, PostRequestDto postRequestDto);
     PostDto modifyPost(String blogId, String postUrl, PostRequestDto postRequestDto);
     void deletePost(String blogId, String postUrl);

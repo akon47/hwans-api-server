@@ -13,6 +13,7 @@ import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
+@Getter
 @MappedSuperclass
 @EntityListeners(value = {AuditingEntityListener.class})
 public class BaseEntity {

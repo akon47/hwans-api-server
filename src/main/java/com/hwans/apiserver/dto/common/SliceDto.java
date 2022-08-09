@@ -7,6 +7,7 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -15,7 +16,7 @@ public class SliceDto<T extends Serializable> {
     @ApiModelProperty(value = "조회된 데이터")
     List<T> data;
     @ApiModelProperty(value = "조회된 데이터 수")
-    Long size;
+    int size;
     @ApiModelProperty(value = "조회된 데이터가 없는지 여부")
     boolean empty;
     @ApiModelProperty(value = "첫 페이지 여부")
@@ -23,5 +24,5 @@ public class SliceDto<T extends Serializable> {
     @ApiModelProperty(value = "마지막 페이지 여부")
     boolean last;
     @ApiModelProperty(value = "다음 페이지 조회를 위한 커서 Id")
-    String nextCursorId;
+    UUID cursorId;
 }

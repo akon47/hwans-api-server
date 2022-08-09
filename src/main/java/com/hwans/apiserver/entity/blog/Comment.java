@@ -34,7 +34,7 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Comment parent;
     @OneToMany(mappedBy = "parent")
-    private Set<Comment> children = new HashSet<>();
+    private final Set<Comment> children = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;

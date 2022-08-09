@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tb_post")
@@ -35,6 +36,8 @@ public class Post extends BaseEntity {
     @Column
     @Lob
     private String content;
+    @Column(nullable = false)
+    private boolean deleted;
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
@@ -42,7 +45,7 @@ public class Post extends BaseEntity {
     private final Set<Comment> comments = new HashSet<>();
     @OneToMany(mappedBy = "post")
     private final Set<Like> likes = new HashSet<>();
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST)
     private final Set<PostTag> postTags = new HashSet<>();
 
     public void modify(PostRequestDto postRequestDto) {
@@ -58,5 +61,13 @@ public class Post extends BaseEntity {
     public void setTags(Collection<Tag> tags) {
         postTags.clear();
         tags.stream().forEach(tag -> postTags.add(PostTag.builder().post(this).tag(tag).build()));
+    }
+
+    public void setDelete() {
+        this.deleted = true;
+    }
+
+    public Set<Tag> getTags() {
+        return postTags.stream().map(x -> x.getTag()).collect(Collectors.toSet());
     }
 }

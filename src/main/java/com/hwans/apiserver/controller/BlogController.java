@@ -11,6 +11,9 @@ import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @RestController
 @Api(tags = "블로그")
 @RequestMapping(value = Constants.API_PREFIX)
@@ -21,8 +24,8 @@ public class BlogController {
 
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")
-    public SliceDto<SimplePostDto> getAllPost(@ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam String cursorId,
-                                              @ApiParam(value = "조회할 최대 페이지 수") @RequestParam Long size) {
+    public SliceDto<SimplePostDto> getAllPost(@ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+                                              @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
         return blogService.getAllPosts(cursorId, size);
     }
 
