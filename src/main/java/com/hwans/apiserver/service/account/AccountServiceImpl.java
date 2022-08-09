@@ -80,6 +80,12 @@ public class AccountServiceImpl implements AccountService {
         return accountMapper.toDto(foundAccount);
     }
 
+    @Override
+    public String getCurrentAccountEmail() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
+
     private String createNewVerifyCode() {
         Random random = new Random();
         return String.valueOf(random.nextInt(100000, 1000000));

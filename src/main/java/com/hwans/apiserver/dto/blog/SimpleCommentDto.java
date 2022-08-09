@@ -3,8 +3,10 @@ package com.hwans.apiserver.dto.blog;
 import com.hwans.apiserver.dto.account.SimpleAccountDto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -13,6 +15,8 @@ import java.io.Serializable;
 @Getter
 @Builder
 @ApiModel(description = "댓글 리스트 조회용 Dto")
+@NoArgsConstructor
+@AllArgsConstructor
 public class SimpleCommentDto implements Serializable {
     @ApiModelProperty(value = "댓글 Id", required = true)
     @NotBlank

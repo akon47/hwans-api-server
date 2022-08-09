@@ -24,8 +24,12 @@ public class Tag extends BaseEntity {
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-    @Column(length = 2000, unique = true, nullable = false)
+    @Column(length = 100, unique = true, nullable = false)
     private String name;
     @OneToMany(mappedBy = "tag")
     private final Set<PostTag> postTags = new HashSet<>();
+
+    public Tag(String name) {
+        this.name = name;
+    }
 }
