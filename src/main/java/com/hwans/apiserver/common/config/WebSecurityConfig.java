@@ -61,6 +61,9 @@ public class WebSecurityConfig {
                 .antMatchers(SWAGGER_PERMIT_URL_ARRAY).permitAll()
                 .antMatchers("/stomp/**").permitAll()
                 .antMatchers(
+                        HttpMethod.GET,
+                        Constants.API_PREFIX + "/v1/blog/**").permitAll()
+                .antMatchers(
                         HttpMethod.POST,
                         Constants.API_PREFIX + "/v1/accounts",
                         Constants.API_PREFIX + "/v1/accounts/verify-email",
