@@ -28,7 +28,7 @@ public class SimpleCommentDto implements Serializable {
     @NotBlank
     String parentId;
     @ApiModelProperty(value = "대댓글 개수", required = true)
-    Long childrenCount;
+    int childrenCount;
     @ApiModelProperty(value = "댓글을 단 사용자", required = true)
     @NotNull
     SimpleAccountDto account;
