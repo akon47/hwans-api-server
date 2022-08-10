@@ -14,6 +14,8 @@ import java.util.UUID;
 public interface PostRepository extends JpaRepository<Post, UUID> {
     Optional<Post> findByBlogIdAndPostUrl(String blogId, String postUrl);
 
+    Optional<Post> findByBlogIdAndPostUrlAndDeletedIsFalse(String blogId, String postUrl);
+
     @Query("select x from Post as x where x.deleted = false order by x.createdAt desc, x.id desc")
     List<Post> findAllByOrderByIdDesc(Pageable page);
 

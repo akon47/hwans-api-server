@@ -59,13 +59,18 @@ public class BlogServiceImpl implements BlogService {
         var account = accountRepository
                 .findByEmail(accountEmail)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        postRepository.findByBlogIdAndPostUrl(account.getBlogId(), postRequestDto.getPostUrl())
+                .ifPresent(x -> {
+                    throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
+                });
         var post = postMapper.PostRequestDtoToEntity(postRequestDto);
         post.setAuthor(account);
-        post.setTags(postRequestDto.getTags().stream()
+        post.setTags(postRequestDto
+                .getTags().stream()
                 .map(tag -> tag.getName())
                 .map(tagName -> tagRepository
                         .findByName(tagName)
-                        .orElse(tagRepository.save(new Tag(tagName))))
+                        .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
         var savedPost = postRepository.save(post);
         return postMapper.EntityToPostDto(savedPost);
@@ -74,23 +79,39 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public PostDto modifyPost(String blogId, String postUrl, PostRequestDto postRequestDto) {
-        var foundPost = postRepository.findByBlogIdAndPostUrl(blogId, postUrl)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
-        foundPost.modify(postRequestDto);
+        var foundPost = postRepository.findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        if(foundPost.getPostUrl().equals(postUrl) == false) {
+            postRepository.findByBlogIdAndPostUrl(blogId, foundPost.getPostUrl())
+                    .ifPresent(x -> {
+                        throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
+                    });
+        }
+        foundPost.setTitle(postRequestDto.getTitle());
+        foundPost.setContent(postRequestDto.getContent());
+        foundPost.setTags(postRequestDto
+                .getTags().stream()
+                .map(tag -> tag.getName())
+                .map(tagName -> tagRepository
+                        .findByName(tagName)
+                        .orElseGet(() -> tagRepository.save(new Tag(tagName))))
+                .collect(Collectors.toSet()));
         return postMapper.EntityToPostDto(foundPost);
     }
 
     @Override
     @Transactional
     public void deletePost(String blogId, String postUrl) {
-        var foundPost = postRepository.findByBlogIdAndPostUrl(blogId, postUrl)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        var foundPost = postRepository.findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
         foundPost.setDelete();
     }
 
     @Override
     public PostDto getPost(String blogId, String postUrl) {
-        return null;
+        var foundPost = postRepository.findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        return postMapper.EntityToPostDto(foundPost);
     }
 
     @Override

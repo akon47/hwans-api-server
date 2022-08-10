@@ -16,7 +16,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "tb_post")
+@Table(name = "tb_post", uniqueConstraints = @UniqueConstraint(columnNames = {"blogId", "postUrl"}))
 @Getter
 @Builder
 @AllArgsConstructor
@@ -45,7 +45,8 @@ public class Post extends BaseEntity {
     private final Set<Comment> comments = new HashSet<>();
     @OneToMany(mappedBy = "post")
     private final Set<Like> likes = new HashSet<>();
-    @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @Getter(AccessLevel.NONE)
     private final Set<PostTag> postTags = new HashSet<>();
 
     public void modify(PostRequestDto postRequestDto) {
@@ -58,9 +59,17 @@ public class Post extends BaseEntity {
         this.blogId = account.getBlogId();
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
     public void setTags(Collection<Tag> tags) {
-        postTags.clear();
-        tags.stream().forEach(tag -> postTags.add(PostTag.builder().post(this).tag(tag).build()));
+        this.postTags.clear();
+        tags.stream().forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));
     }
 
     public void setDelete() {

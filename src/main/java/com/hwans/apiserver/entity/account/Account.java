@@ -40,7 +40,7 @@ public class Account extends BaseEntity {
     @Column(length = 255)
     @With
     private String refreshToken;
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
     @Getter(AccessLevel.NONE)
     private final Set<AccountRole> accountRoles = new HashSet<>();
     @OneToMany(mappedBy = "account")
