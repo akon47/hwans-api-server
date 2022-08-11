@@ -24,7 +24,7 @@ public class BlogController {
 
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")
-    public SliceDto<SimplePostDto> getAllPost(@ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+    public SliceDto<SimplePostDto> getAllPosts(@ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
                                               @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
         return blogService.getAllPosts(cursorId, size);
     }
@@ -49,6 +49,14 @@ public class BlogController {
     public void modifyPost(@ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
         var account = accountService.getCurrentAccount();
         blogService.deletePost(account.getBlogId(), postUrl);
+    }
+
+    @ApiOperation(value = "특정 블로그 전체 게시글 조회", notes = "특정 블로그 전체 게시글을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/posts")
+    public SliceDto<SimplePostDto> getPosts(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                              @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+                                              @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
+        return blogService.getPosts(blogId, cursorId, size);
     }
 
     @ApiOperation(value = "블로그 게시글 조회", notes = "블로그 게시글을 조회한다.", tags = "블로그")

@@ -21,4 +21,10 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select x from Post as x where x.deleted = false and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
     List<Post> findByIdLessThanOrderByIdDesc(@Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
+
+    @Query("select x from Post as x where x.deleted = false and x.blogId = :blogId order by x.createdAt desc, x.id desc")
+    List<Post> findAllByOrderByIdDesc(@Param("blogId") String blogId, Pageable page);
+
+    @Query("select x from Post as x where x.deleted = false and x.blogId = :blogId and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
+    List<Post> findByIdLessThanOrderByIdDesc(@Param("blogId") String blogId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
 }

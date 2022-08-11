@@ -49,11 +49,6 @@ public class Post extends BaseEntity {
     @Getter(AccessLevel.NONE)
     private final Set<PostTag> postTags = new HashSet<>();
 
-    public void modify(PostRequestDto postRequestDto) {
-        this.title = postRequestDto.getTitle();
-        this.content = postRequestDto.getContent();
-    }
-
     public void setAuthor(Account account) {
         this.account = account;
         this.blogId = account.getBlogId();
@@ -69,7 +64,7 @@ public class Post extends BaseEntity {
 
     public void setTags(Collection<Tag> tags) {
         this.postTags.clear();
-        tags.stream().forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));
+        tags.forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));
     }
 
     public void setDelete() {
@@ -77,6 +72,14 @@ public class Post extends BaseEntity {
     }
 
     public Set<Tag> getTags() {
-        return postTags.stream().map(x -> x.getTag()).collect(Collectors.toSet());
+        return postTags.stream().map(PostTag::getTag).collect(Collectors.toSet());
+    }
+
+    public int getLikeCount() {
+        return this.likes.size();
+    }
+
+    public int getCommentCount() {
+        return this.comments.size();
     }
 }

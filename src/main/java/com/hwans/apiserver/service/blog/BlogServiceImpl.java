@@ -41,15 +41,14 @@ public class BlogServiceImpl implements BlogService {
         } else {
             foundPosts = postRepository.findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
         }
-        boolean isLast = foundPosts.size() <= size;
         var lastPost = Streams.findLast(foundPosts.stream().limit(size));
         return SliceDto.<SimplePostDto>builder()
-                .data(foundPosts.stream().limit(size).map(x -> postMapper.EntityToSimplePostDto(x)).toList())
-                .first(cursorId.isEmpty())
-                .last(isLast)
-                .empty(foundPosts.isEmpty())
+                .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
                 .size((int)foundPosts.stream().limit(size).count())
-                .cursorId(lastPost.isPresent() ? lastPost.get().getId() : null)
+                .empty(foundPosts.isEmpty())
+                .first(cursorId.isEmpty())
+                .last(foundPosts.size() <= size)
+                .cursorId(lastPost.map(Post::getId).orElse(null))
                 .build();
     }
 
@@ -67,7 +66,7 @@ public class BlogServiceImpl implements BlogService {
         post.setAuthor(account);
         post.setTags(postRequestDto
                 .getTags().stream()
-                .map(tag -> tag.getName())
+                .map(TagDto::getName)
                 .map(tagName -> tagRepository
                         .findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
@@ -81,7 +80,7 @@ public class BlogServiceImpl implements BlogService {
     public PostDto modifyPost(String blogId, String postUrl, PostRequestDto postRequestDto) {
         var foundPost = postRepository.findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        if(foundPost.getPostUrl().equals(postUrl) == false) {
+        if(!foundPost.getPostUrl().equals(postUrl)) {
             postRepository.findByBlogIdAndPostUrl(blogId, foundPost.getPostUrl())
                     .ifPresent(x -> {
                         throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
@@ -91,7 +90,7 @@ public class BlogServiceImpl implements BlogService {
         foundPost.setContent(postRequestDto.getContent());
         foundPost.setTags(postRequestDto
                 .getTags().stream()
-                .map(tag -> tag.getName())
+                .map(TagDto::getName)
                 .map(tagName -> tagRepository
                         .findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
@@ -105,6 +104,28 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository.findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
         foundPost.setDelete();
+    }
+
+    @Override
+    public SliceDto<SimplePostDto> getPosts(String blogId, Optional<UUID> cursorId, int size) {
+        List<Post> foundPosts;
+        if(cursorId.isPresent()) {
+            var foundCursorPost = postRepository
+                    .findById(cursorId.get())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+            foundPosts = postRepository.findByIdLessThanOrderByIdDesc(blogId, foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1));
+        } else {
+            foundPosts = postRepository.findAllByOrderByIdDesc(blogId, PageRequest.of(0, size + 1));
+        }
+        var lastPost = Streams.findLast(foundPosts.stream().limit(size));
+        return SliceDto.<SimplePostDto>builder()
+                .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
+                .size((int)foundPosts.stream().limit(size).count())
+                .empty(foundPosts.isEmpty())
+                .first(cursorId.isEmpty())
+                .last(foundPosts.size() <= size)
+                .cursorId(lastPost.map(Post::getId).orElse(null))
+                .build();
     }
 
     @Override

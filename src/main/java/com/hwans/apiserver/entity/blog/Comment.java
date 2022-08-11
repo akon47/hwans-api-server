@@ -10,6 +10,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -41,4 +42,14 @@ public class Comment extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
+
+    public int getChildrenCount() {
+        return this.children.size();
+    }
+
+    public UUID getParentId() {
+        return Optional.ofNullable(this.parent)
+                .map(Comment::getId)
+                .orElse(null);
+    }
 }
