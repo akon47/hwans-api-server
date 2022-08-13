@@ -78,6 +78,9 @@ public class BlogServiceImpl implements BlogService {
                         .findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
+        if (post.getPostUrl() == null || post.getPostUrl().isBlank()) {
+            post.setPostUrl(UUID.randomUUID().toString().replace("-", "").substring(0, 8));
+        }
         var savedPost = postRepository.save(post);
         return postMapper.EntityToPostDto(savedPost);
     }
@@ -112,7 +115,7 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        foundPost.setDelete();
+        foundPost.delete();
     }
 
     @Override

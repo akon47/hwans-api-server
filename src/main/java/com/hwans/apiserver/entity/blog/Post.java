@@ -66,8 +66,12 @@ public class Post extends BaseEntity {
         tags.forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));
     }
 
-    public void setDelete() {
+    public void delete() {
         this.deleted = true;
+    }
+
+    public void setPostUrl(String postUrl) {
+        this.postUrl = postUrl;
     }
 
     public Set<Tag> getTags() {
