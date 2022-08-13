@@ -6,13 +6,18 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Builder
 @ApiModel(description = "게시글 Dto")
 public class PostDto implements Serializable {
+    @ApiModelProperty(value = "게시글 Id", required = true)
+    @NotNull
+    UUID id;
     @ApiModelProperty(value = "게시글이 작성되어진 블로그 Id", required = true, example = "kim-hwan")
     @NotBlank
     String blogId;

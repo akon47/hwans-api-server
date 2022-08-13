@@ -1,10 +1,11 @@
 package com.hwans.apiserver.common.errors.handler;
 
-import com.hwans.apiserver.dto.common.ErrorResponseDto;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCode;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
+import com.hwans.apiserver.dto.common.ErrorResponseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,8 +49,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Object> handleAllException(Exception ex) {
         log.warn("handleAllException", ex);
-        ErrorCode errorCode = ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR;
-        return handleExceptionInternal(errorCode, ex.getMessage());
+
+        ErrorCode errorCode;
+        String errorMessage;
+        if (ex instanceof DataIntegrityViolationException) {
+            errorCode = ErrorCodes.Conflict.ALREADY_EXISTS;
+            errorMessage = errorCode.getDefaultMessage();
+        } else {
+            errorCode = ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR;
+            errorMessage = ex.getMessage();
+        }
+
+        return handleExceptionInternal(errorCode, errorMessage);
     }
 
     private ResponseEntity<Object> handleExceptionInternal(ErrorCode errorCode, String message) {

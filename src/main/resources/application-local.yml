@@ -4,6 +4,9 @@ spring:
     url: jdbc:h2:~/test
     username: sa
     password:
+  sql:
+    init:
+      mode: always
   h2:
     console:
       path: /h2-console
@@ -13,9 +16,13 @@ spring:
     port: 6379
   jpa:
     database: h2
-    show-sql: true
     hibernate:
       ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
   mail:
     host:
     username:
@@ -27,7 +34,13 @@ spring:
           auth: true
           starttls:
             enable: true
-          debug: true
 jwt:
   base64-access-secret: 4324e295ed33679e1512b77e4d47f555ef74c6408a768f506af7e88acd2951e9
   base64-refresh-secret: 827bd28cc68a90ce1cdb5d02afdc1d9835df6ab21bbef50cc550d7e84d94eb2f
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace

@@ -1,12 +1,10 @@
 package com.hwans.apiserver.entity.blog;
 
-import com.hwans.apiserver.dto.blog.PostRequestDto;
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.Account;
-import com.hwans.apiserver.entity.account.role.AccountRole;
-import com.hwans.apiserver.entity.account.role.Role;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.util.Collection;
@@ -38,10 +36,11 @@ public class Post extends BaseEntity {
     private String content;
     @Column(nullable = false)
     private boolean deleted;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
     @OneToMany(mappedBy = "post")
+    @Where(clause = "deleted = false")
     private final Set<Comment> comments = new HashSet<>();
     @OneToMany(mappedBy = "post")
     private final Set<Like> likes = new HashSet<>();

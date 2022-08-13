@@ -13,6 +13,8 @@ public interface BlogService {
     void deletePost(String blogId, String postUrl);
     SliceDto<SimplePostDto> getPosts(String blogId, Optional<UUID> cursorId, int size);
     PostDto getPost(String blogId, String postUrl);
+    void likePost(String accountEmail, String blogId, String postUrl);
+    void unlikePost(String accountEmail, String blogId, String postUrl);
     CommentDto createComment(String blogId, String postUrl, CommentRequestDto commentRequestDto);
     CommentDto modifyComment(String commentId, CommentRequestDto commentRequestDto);
     void deleteComment(String commentId);

@@ -9,12 +9,10 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_like")
+@Table(name = "tb_like", uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "account_id"}))
 @Getter
 @Builder
 @AllArgsConstructor

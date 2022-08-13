@@ -6,6 +6,3 @@ spring:
       matching-strategy: ant_path_matcher
   jpa:
     defer-datasource-initialization: true
-    properties:
-      hibernate:
-        format_sql: true
