@@ -2,6 +2,7 @@ package com.hwans.apiserver.common.security.jwt;
 
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.authentication.TokenDto;
+import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import io.jsonwebtoken.*;
 
 import io.jsonwebtoken.io.Decoders;
@@ -13,30 +14,25 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class TokenProvider implements InitializingBean {
+public class JwtTokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = "auth";
-
     private final String accessTokenSecretKeyBase64Secret;
     private final String refreshTokenSecretKeyBase64Secret;
 
     private Key accessTokenSecretKey;
     private Key refreshTokenSecretKey;
 
-    public TokenProvider(@Value("${jwt.base64-access-secret}") String accessTokenSecretKeyBase64Secret,
-                         @Value("${jwt.base64-refresh-secret}") String refreshTokenSecretKeyBase64Secret) {
+    public JwtTokenProvider(@Value("${jwt.base64-access-secret}") String accessTokenSecretKeyBase64Secret,
+                            @Value("${jwt.base64-refresh-secret}") String refreshTokenSecretKeyBase64Secret) {
         this.accessTokenSecretKeyBase64Secret = accessTokenSecretKeyBase64Secret;
         log.debug("accessTokenSecretKeyBase64Secret -> " + accessTokenSecretKeyBase64Secret);
         this.refreshTokenSecretKeyBase64Secret = refreshTokenSecretKeyBase64Secret;
@@ -52,10 +48,12 @@ public class TokenProvider implements InitializingBean {
     }
 
     public TokenDto createToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
+        String authorities = authentication
+                .getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
-        return createToken(authentication.getName(), authorities);
+        var userAuthenticationDetails = (UserAuthenticationDetails) authentication.getPrincipal();
+        return createToken(userAuthenticationDetails.getEmail(), authorities);
     }
 
     public TokenDto createToken(String accountEmail, String authorities) {
@@ -95,7 +93,7 @@ public class TokenProvider implements InitializingBean {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        User principal = new User(claims.getSubject(), "", authorities);
+        var principal = new UserAuthenticationDetails(claims.getSubject(), authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }

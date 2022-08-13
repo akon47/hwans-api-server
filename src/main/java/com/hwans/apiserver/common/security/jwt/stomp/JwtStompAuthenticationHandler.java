@@ -1,7 +1,7 @@
 package com.hwans.apiserver.common.security.jwt.stomp;
 
 import com.hwans.apiserver.common.Constants;
-import com.hwans.apiserver.common.security.jwt.TokenProvider;
+import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class JwtStompAuthenticationHandler implements ChannelInterceptor {
-    private final TokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {

@@ -75,7 +75,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountDto getCurrentAccount() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var foundAccount = accountRepository.findByEmail(authentication.getName())
+        var foundAccount = accountRepository.findByEmailAndDeletedIsFalse(authentication.getName())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         return accountMapper.toDto(foundAccount);
     }

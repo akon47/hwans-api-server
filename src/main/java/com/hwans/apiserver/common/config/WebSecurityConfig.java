@@ -3,7 +3,7 @@ package com.hwans.apiserver.common.config;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.security.jwt.JwtAccessDeniedHandler;
 import com.hwans.apiserver.common.security.jwt.JwtAuthenticationEntryPoint;
-import com.hwans.apiserver.common.security.jwt.TokenProvider;
+import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +33,7 @@ public class WebSecurityConfig {
             "/swagger-resources/**",
     };
 
-    private final TokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;

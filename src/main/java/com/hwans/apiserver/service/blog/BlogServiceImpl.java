@@ -10,11 +10,11 @@ import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
 import com.hwans.apiserver.mapper.PostMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
+import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.blog.LikeRepository;
 import com.hwans.apiserver.repository.blog.PostRepository;
 import com.hwans.apiserver.repository.blog.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 public class BlogServiceImpl implements BlogService {
     private final AccountRepository accountRepository;
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
     private final TagRepository tagRepository;
     private final LikeRepository likeRepository;
     private final PostMapper postMapper;
@@ -60,9 +61,9 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public PostDto createPost(String accountEmail, PostRequestDto postRequestDto) {
+    public PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto) {
         var account = accountRepository
-                .findByEmail(accountEmail)
+                .findById(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         postRepository.findByBlogIdAndPostUrl(account.getBlogId(), postRequestDto.getPostUrl())
                 .ifPresent(x -> {
@@ -148,9 +149,9 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public void likePost(String accountEmail, String blogId, String postUrl) {
+    public void likePost(UUID actorAccountId, String blogId, String postUrl) {
         var account = accountRepository
-                .findByEmail(accountEmail)
+                .findById(actorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
 
         var foundPost = postRepository
@@ -162,9 +163,9 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public void unlikePost(String accountEmail, String blogId, String postUrl) {
+    public void unlikePost(UUID actorAccountId, String blogId, String postUrl) {
         var account = accountRepository
-                .findByEmail(accountEmail)
+                .findById(actorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
 
         var foundPost = postRepository
@@ -180,19 +181,27 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    public CommentDto createComment(String blogId, String postUrl, CommentRequestDto commentRequestDto) {
+    public CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto) {
+        var account = accountRepository
+                .findById(authorAccountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+
         return null;
     }
 
     @Override
     @Transactional
-    public CommentDto modifyComment(String commentId, CommentRequestDto commentRequestDto) {
+    public CommentDto modifyComment(UUID commentId, CommentRequestDto commentRequestDto) {
         return null;
     }
 
     @Override
     @Transactional
-    public void deleteComment(String commentId) {
+    public void deleteComment(UUID commentId) {
+        var foundComment = commentRepository
+                .findById(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
 
+        foundComment.delete();
     }
 }

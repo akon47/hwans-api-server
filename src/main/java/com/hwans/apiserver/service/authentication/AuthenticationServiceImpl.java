@@ -3,18 +3,18 @@ package com.hwans.apiserver.service.authentication;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
-import com.hwans.apiserver.common.security.jwt.TokenProvider;
+import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.authentication.AuthenticationInfoDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService, UserDetailsService {
     private final AccountRepository accountRepository;
-    private final TokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
@@ -41,7 +42,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Override
     @Transactional
     public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto) {
-        var foundAccount = accountRepository.findByEmail(authenticationInfoDto.getEmail()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        var foundAccount = accountRepository.findByEmailAndDeletedIsFalse(authenticationInfoDto.getEmail()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (!passwordEncoder.matches(authenticationInfoDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }
@@ -57,11 +58,12 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Transactional
     public void redeemToken(String accessToken) {
         accessToken = tokenProvider.extractTokenFromHeader(accessToken);
-        var accountEmail = tokenProvider.getAccountEmailFromAccessToken(accessToken)
+        var accountEmail = tokenProvider
+                .getAccountEmailFromAccessToken(accessToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
         accountRepository
-                .findByEmail(accountEmail)
+                .findByEmailAndDeletedIsFalse(accountEmail)
                 .ifPresent((foundAccount) ->
                 {
                     foundAccount.clearRefreshToken();
@@ -81,12 +83,12 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                 .getAccountEmailForReissueToken(accessToken, refreshToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
-        var foundAccount = accountRepository.findByEmail(accountEmail).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        var foundAccount = accountRepository.findByEmailAndDeletedIsFalse(accountEmail).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (foundAccount.validateRefreshToken(refreshToken)) {
             String authorities = foundAccount.getRoles().stream()
                     .map(x -> x.getName())
                     .collect(Collectors.joining(","));
-            var token = tokenProvider.createToken(accountEmail, authorities);
+            var token = tokenProvider.createToken(foundAccount.getEmail(), authorities);
             accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
 
             // 새로 토큰을 발급받았으므로 이전에 발급하여 사용중인 AccessToken은 사용중지 처리한다.
@@ -99,11 +101,34 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return accountRepository.findByEmail(username).map(this::createUserDetails).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        return accountRepository
+                .findByEmailAndDeletedIsFalse(username)
+                .map(this::createAuthenticationDetails)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
     }
 
-    private UserDetails createUserDetails(Account account) {
-        var authorities = account.getRoles().stream().map(x -> new SimpleGrantedAuthority(x.getName())).collect(Collectors.toList());
-        return new User(String.valueOf(account.getEmail()), account.getPassword(), authorities);
+    private UserAuthenticationDetails createAuthenticationDetails(Account account) {
+        var authorities = account
+                .getRoles().stream()
+                .map(x -> new SimpleGrantedAuthority(x.getName()))
+                .collect(Collectors.toList());
+        return new UserAuthenticationDetails(
+                account.getEmail(),
+                account.getPassword(),
+                authorities,
+                account.getId(),
+                account.getEmail(),
+                account.getBlogId());
+    }
+
+    @Bean
+    public Function<UserDetails, UserAuthenticationDetails> fetchCurrentUserAuthenticationDetails() {
+        return (principal -> {
+            String email = principal.getUsername();
+            return accountRepository
+                    .findByEmailAndDeletedIsFalse(email)
+                    .map(this::createAuthenticationDetails)
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        });
     }
 }

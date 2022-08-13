@@ -4,11 +4,14 @@ import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
 import com.hwans.apiserver.service.account.AccountService;
+import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
+import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.blog.BlogService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -31,24 +34,24 @@ public class BlogController {
 
     @ApiOperation(value = "게시글 작성", notes = "게시글을 작성한다.", tags = "블로그")
     @PostMapping(value = "/v1/blog/posts")
-    public PostDto createPost(@ApiParam(value = "게시글", required = true) @RequestBody PostRequestDto postRequestDto) {
-        var currentAccountEmail = accountService.getCurrentAccountEmail();
-        return blogService.createPost(currentAccountEmail, postRequestDto);
+    public PostDto createPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                              @ApiParam(value = "게시글", required = true) @RequestBody PostRequestDto postRequestDto) {
+        return blogService.createPost(userAuthenticationDetails.getId(), postRequestDto);
     }
 
     @ApiOperation(value = "게시글 수정", notes = "게시글을 수정한다.", tags = "블로그")
     @PutMapping(value = "/v1/blog/posts/{postUrl}")
-    public PostDto modifyPost(@ApiParam(value = "게시글 Url") @PathVariable String postUrl,
+    public PostDto modifyPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                              @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
                               @ApiParam(value = "게시글", required = true) @RequestBody PostRequestDto postRequestDto) {
-        var account = accountService.getCurrentAccount();
-        return blogService.modifyPost(account.getBlogId(), postUrl, postRequestDto);
+        return blogService.modifyPost(userAuthenticationDetails.getBlogId(), postUrl, postRequestDto);
     }
 
     @ApiOperation(value = "게시글 삭제", notes = "게시글을 삭제한다.", tags = "블로그")
     @DeleteMapping(value = "/v1/blog/posts/{postUrl}")
-    public void modifyPost(@ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
-        var account = accountService.getCurrentAccount();
-        blogService.deletePost(account.getBlogId(), postUrl);
+    public void modifyPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                           @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
+        blogService.deletePost(userAuthenticationDetails.getBlogId(), postUrl);
     }
 
     @ApiOperation(value = "특정 블로그 전체 게시글 조회", notes = "특정 블로그 전체 게시글을 조회한다.", tags = "블로그")
@@ -67,39 +70,40 @@ public class BlogController {
     }
 
     @ApiOperation(value = "댓글 작성", notes = "게시글에 댓글을 작성한다.", tags = "블로그")
-    @PostMapping(value = "/v1/blog/{blogId}/{postUrl}/comments")
-    public CommentDto createComment(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+    @PostMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/comments")
+    public CommentDto createComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                    @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                                     @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
                                     @ApiParam(value = "댓글", required = true) @RequestBody CommentRequestDto commentRequestDto) {
-        return blogService.createComment(blogId, postUrl, commentRequestDto);
+        return blogService.createComment(userAuthenticationDetails.getId(), blogId, postUrl, commentRequestDto);
     }
 
     @ApiOperation(value = "댓글 수정", notes = "댓글을 수정한다.", tags = "블로그")
     @PutMapping(value = "/v1/blog/comments/{commentId}")
-    public CommentDto modifyComment(@ApiParam(value = "댓글 Id") @PathVariable String commentId,
+    public CommentDto modifyComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
                                     @ApiParam(value = "댓글", required = true) @RequestBody CommentRequestDto commentRequestDto) {
         return blogService.modifyComment(commentId, commentRequestDto);
     }
 
-    @ApiOperation(value = "댓글 삭제", notes = "댓글을 수정한다.", tags = "블로그")
+    @ApiOperation(value = "댓글 삭제", notes = "댓글을 삭제한다.", tags = "블로그")
     @DeleteMapping(value = "/v1/blog/comments/{commentId}")
-    public void deleteComment(@ApiParam(value = "댓글 Id") @PathVariable String commentId) {
+    public void deleteComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
         blogService.deleteComment(commentId);
     }
 
     @ApiOperation(value = "게시글 좋아요 하기", notes = "게시글을 좋아요 한다.", tags = "블로그")
     @PostMapping(value = "/v1/blog/{blogId}/{postUrl}/likes")
-    public void likePost(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+    public void likePost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                         @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                          @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
-        var currentAccountEmail = accountService.getCurrentAccountEmail();
-        blogService.likePost(currentAccountEmail, blogId, postUrl);
+        blogService.likePost(userAuthenticationDetails.getId(), blogId, postUrl);
     }
 
     @ApiOperation(value = "게시글 좋아요 취소하기", notes = "게시글 좋아요를 취소한다.", tags = "블로그")
     @DeleteMapping(value = "/v1/blog/{blogId}/{postUrl}/likes")
-    public void unlikePost(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+    public void unlikePost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                           @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
-        var currentAccountEmail = accountService.getCurrentAccountEmail();
-        blogService.unlikePost(currentAccountEmail, blogId, postUrl);
+        blogService.unlikePost(userAuthenticationDetails.getId(), blogId, postUrl);
     }
 }

@@ -34,9 +34,9 @@ public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Comment parent;
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     private final Set<Comment> children = new HashSet<>();
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
     @ManyToOne
@@ -51,5 +51,9 @@ public class Comment extends BaseEntity {
         return Optional.ofNullable(this.parent)
                 .map(Comment::getId)
                 .orElse(null);
+    }
+
+    public void delete() {
+        this.deleted = true;
     }
 }

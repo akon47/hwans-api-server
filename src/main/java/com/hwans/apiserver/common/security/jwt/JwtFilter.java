@@ -17,12 +17,11 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JwtFilter extends GenericFilterBean {
-    private final TokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override

@@ -1,7 +1,7 @@
 package com.hwans.apiserver.common.config;
 
 import com.hwans.apiserver.common.security.jwt.JwtFilter;
-import com.hwans.apiserver.common.security.jwt.TokenProvider;
+import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @RequiredArgsConstructor
 public class JwtSecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
-    private final TokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
