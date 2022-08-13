@@ -92,7 +92,7 @@ public class BlogController {
     }
 
     @ApiOperation(value = "게시글 좋아요 하기", notes = "게시글을 좋아요 한다.", tags = "블로그")
-    @PostMapping(value = "/v1/blog/{blogId}/{postUrl}/likes")
+    @PostMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/likes")
     public void likePost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                          @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                          @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
@@ -100,7 +100,7 @@ public class BlogController {
     }
 
     @ApiOperation(value = "게시글 좋아요 취소하기", notes = "게시글 좋아요를 취소한다.", tags = "블로그")
-    @DeleteMapping(value = "/v1/blog/{blogId}/{postUrl}/likes")
+    @DeleteMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/likes")
     public void unlikePost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                            @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
