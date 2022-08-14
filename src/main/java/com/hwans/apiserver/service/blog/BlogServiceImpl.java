@@ -49,14 +49,13 @@ public class BlogServiceImpl implements BlogService {
                     .findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
         }
         var last = foundPosts.size() <= size;
-        var lastPost = last ? null : Streams.findLast(foundPosts.stream().limit(size));
         return SliceDto.<SimplePostDto>builder()
                 .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
                 .size((int) foundPosts.stream().limit(size).count())
                 .empty(foundPosts.isEmpty())
                 .first(cursorId.isEmpty())
                 .last(last)
-                .cursorId(lastPost.map(Post::getId).orElse(null))
+                .cursorId(last ? null : foundPosts.stream().limit(size).skip(size - 1).findFirst().map(Post::getId).orElse(null))
                 .build();
     }
 
@@ -133,14 +132,13 @@ public class BlogServiceImpl implements BlogService {
                     .findAllByOrderByIdDesc(blogId, PageRequest.of(0, size + 1));
         }
         var last = foundPosts.size() <= size;
-        var lastPost = last ? null : Streams.findLast(foundPosts.stream().limit(size));
         return SliceDto.<SimplePostDto>builder()
                 .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
                 .size((int) foundPosts.stream().limit(size).count())
                 .empty(foundPosts.isEmpty())
                 .first(cursorId.isEmpty())
                 .last(last)
-                .cursorId(lastPost.map(Post::getId).orElse(null))
+                .cursorId(last ? null : foundPosts.stream().limit(size).skip(size - 1).findFirst().map(Post::getId).orElse(null))
                 .build();
     }
 
