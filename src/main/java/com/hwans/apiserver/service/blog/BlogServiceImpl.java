@@ -48,13 +48,14 @@ public class BlogServiceImpl implements BlogService {
             foundPosts = postRepository
                     .findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
         }
-        var lastPost = Streams.findLast(foundPosts.stream().limit(size));
+        var last = foundPosts.size() <= size;
+        var lastPost = last ? null : Streams.findLast(foundPosts.stream().limit(size));
         return SliceDto.<SimplePostDto>builder()
                 .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
                 .size((int) foundPosts.stream().limit(size).count())
                 .empty(foundPosts.isEmpty())
                 .first(cursorId.isEmpty())
-                .last(foundPosts.size() <= size)
+                .last(last)
                 .cursorId(lastPost.map(Post::getId).orElse(null))
                 .build();
     }
@@ -119,7 +120,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public SliceDto<SimplePostDto> getPosts(String blogId, Optional<UUID> cursorId, int size) {
+    public SliceDto<SimplePostDto> getBlogPosts(String blogId, Optional<UUID> cursorId, int size) {
         List<Post> foundPosts;
         if (cursorId.isPresent()) {
             var foundCursorPost = postRepository
@@ -131,13 +132,14 @@ public class BlogServiceImpl implements BlogService {
             foundPosts = postRepository
                     .findAllByOrderByIdDesc(blogId, PageRequest.of(0, size + 1));
         }
-        var lastPost = Streams.findLast(foundPosts.stream().limit(size));
+        var last = foundPosts.size() <= size;
+        var lastPost = last ? null : Streams.findLast(foundPosts.stream().limit(size));
         return SliceDto.<SimplePostDto>builder()
                 .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
                 .size((int) foundPosts.stream().limit(size).count())
                 .empty(foundPosts.isEmpty())
                 .first(cursorId.isEmpty())
-                .last(foundPosts.size() <= size)
+                .last(last)
                 .cursorId(lastPost.map(Post::getId).orElse(null))
                 .build();
     }
