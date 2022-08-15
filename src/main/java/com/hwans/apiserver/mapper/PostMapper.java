@@ -15,7 +15,9 @@ public interface PostMapper {
     @Mapping(target = "deleted", constant = "false")
     Post PostRequestDtoToEntity(PostRequestDto postRequestDto);
 
+    @Mapping(target = "author", source = "account")
     PostDto EntityToPostDto(Post post);
 
+    @Mapping(target = "author", source = "account")
     SimplePostDto EntityToSimplePostDto(Post post);
 }

@@ -1,5 +1,6 @@
 package com.hwans.apiserver.dto.blog;
 
+import com.hwans.apiserver.dto.account.SimpleAccountDto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -30,6 +31,9 @@ public class PostDto implements Serializable {
     @ApiModelProperty(value = "내용", required = true, example = "게시글 내용입니다.")
     @NotBlank
     String content;
+    @ApiModelProperty(value = "글쓴이", required = true)
+    @NotBlank
+    SimpleAccountDto author;
     @ApiModelProperty(value = "태그")
     Set<TagDto> tags;
     @ApiModelProperty(value = "댓글")
