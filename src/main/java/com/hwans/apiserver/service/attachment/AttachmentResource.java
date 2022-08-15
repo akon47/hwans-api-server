@@ -15,10 +15,12 @@ import java.nio.file.Paths;
 public class AttachmentResource extends InputStreamResource {
     private final MediaType contentType;
     private final long contentLength;
+    private final String fileName;
 
     public AttachmentResource(Attachment attachment) throws IOException {
         super(Files.newInputStream(Paths.get(attachment.getLocalFilePath())));
         this.contentType = MediaType.valueOf(attachment.getContentType());
         this.contentLength = attachment.getFileSize();
+        this.fileName = attachment.getFileName();
     }
 }
