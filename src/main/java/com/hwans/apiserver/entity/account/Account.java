@@ -3,6 +3,7 @@ package com.hwans.apiserver.entity.account;
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.role.AccountRole;
 import com.hwans.apiserver.entity.account.role.Role;
+import com.hwans.apiserver.entity.attachment.Attachment;
 import com.hwans.apiserver.entity.blog.Comment;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,6 +42,9 @@ public class Account extends BaseEntity {
     @Column(length = 255)
     @With
     private String refreshToken;
+    @OneToOne
+    @JoinColumn(name = "profile_image_file_id")
+    private Attachment profileImage;
     @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
     @Getter(AccessLevel.NONE)
     private final Set<AccountRole> accountRoles = new HashSet<>();
@@ -69,5 +74,15 @@ public class Account extends BaseEntity {
             return true;
 
         return this.refreshToken.equals(refreshToken);
+    }
+
+    public String getProfileImageUrl() {
+        return Optional.ofNullable(this.profileImage)
+                .map(Attachment::getUrl)
+                .orElse(null);
+    }
+
+    public void setProfileImage(Attachment attachment) {
+        this.profileImage = attachment;
     }
 }

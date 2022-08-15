@@ -5,12 +5,10 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
-import com.hwans.apiserver.dto.mail.MailMessageDto;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
-import com.hwans.apiserver.repository.account.AccountRoleRepository;
+import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
-import com.hwans.apiserver.service.mail.MailSenderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,6 +25,7 @@ import java.util.Random;
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
+    private final AttachmentRepository attachmentRepository;
     private final AccountMapper accountMapper;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -73,9 +73,23 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
+    public AccountDto setProfileImage(UUID accountId, UUID fileId) {
+        var foundAccount = accountRepository
+                .findById(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        var attachment = attachmentRepository
+                .findById(fileId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        foundAccount.setProfileImage(attachment);
+        return accountMapper.toDto(foundAccount);
+    }
+
+    @Override
     public AccountDto getCurrentAccount() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var foundAccount = accountRepository.findByEmailAndDeletedIsFalse(authentication.getName())
+        var foundAccount = accountRepository
+                .findByEmailAndDeletedIsFalse(authentication.getName())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         return accountMapper.toDto(foundAccount);
     }

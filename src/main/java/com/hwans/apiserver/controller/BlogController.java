@@ -3,7 +3,6 @@ package com.hwans.apiserver.controller;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
-import com.hwans.apiserver.service.account.AccountService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.blog.BlogService;
@@ -11,7 +10,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -23,7 +21,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BlogController {
     private final BlogService blogService;
-    private final AccountService accountService;
 
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")

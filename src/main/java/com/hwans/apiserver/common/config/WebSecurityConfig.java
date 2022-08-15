@@ -62,7 +62,8 @@ public class WebSecurityConfig {
                 .antMatchers("/stomp/**").permitAll()
                 .antMatchers(
                         HttpMethod.GET,
-                        Constants.API_PREFIX + "/v1/blog/**").permitAll()
+                        Constants.API_PREFIX + "/v1/blog/**",
+                        "/attachments/**").permitAll()
                 .antMatchers(
                         HttpMethod.POST,
                         Constants.API_PREFIX + "/v1/accounts",

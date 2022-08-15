@@ -3,9 +3,7 @@ package com.hwans.apiserver.dto.account;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
-import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
@@ -24,6 +22,9 @@ public class AccountDto implements Serializable {
     @ApiModelProperty(value = "블로그 Id", required = true, example = "kim-hwan")
     @NotBlank
     String blogId;
+    @ApiModelProperty(value = "프로필 이미지 URL", required = true, example = "/attachments/file-id")
+    @NotBlank
+    String profileImageUrl;
     @ApiModelProperty(value = "계정에 할당된 역할", required = true, example = "사용자")
     Set<RoleDto> roles;
 }

@@ -4,12 +4,17 @@ import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.service.account.AccountService;
+import com.hwans.apiserver.service.attachment.AttachmentService;
+import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
+import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.mail.MailSenderService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Api(tags = "사용자 계정")
@@ -18,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
     private final AccountService accountService;
     private final MailSenderService mailSenderService;
+    private final AttachmentService attachmentService;
 
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
@@ -36,5 +42,13 @@ public class AccountController {
     @GetMapping(value = "/v1/accounts/me")
     public AccountDto getActualAccount() {
         return accountService.getCurrentAccount();
+    }
+
+    @ApiOperation(value = "현재 사용자 프로필 이미지 생성", notes = "현재 사용자 프로필 이미지를 생성한다.", tags = "사용자 계정")
+    @PostMapping(value = "/v1/accounts/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AccountDto uploadProfileImage(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                      @ApiParam(value = "사용자 프로필 이미지 파일", required = true) @RequestPart MultipartFile profileImageFile) {
+        var attachment = attachmentService.saveImageFile(userAuthenticationDetails.getId(), profileImageFile);
+        return accountService.setProfileImage(userAuthenticationDetails.getId(), attachment.getId());
     }
 }

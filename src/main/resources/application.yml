@@ -6,3 +6,11 @@ spring:
       matching-strategy: ant_path_matcher
   jpa:
     defer-datasource-initialization: true
+  servlet:
+    multipart:
+      enabled: true
+      location: /var/attachments/temp/
+      max-request-size: 20MB
+      max-file-size: 20MB
+attachments:
+  path: /var/attachments/

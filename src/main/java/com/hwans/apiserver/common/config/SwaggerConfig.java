@@ -1,5 +1,6 @@
 package com.hwans.apiserver.common.config;
 
+import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,7 +24,7 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.OAS_30)
                 .apiInfo(apiInfo())
                 .securityContexts(Arrays.asList(securityContext()))
-                .ignoredParameterTypes(AuthenticationPrincipal.class)
+                .ignoredParameterTypes(UserAuthenticationDetails.class)
                 .securitySchemes(authenticationSchemes())
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.hwans.apiserver.controller"))
