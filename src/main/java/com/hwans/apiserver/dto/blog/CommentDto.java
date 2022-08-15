@@ -8,6 +8,7 @@ import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -32,4 +33,7 @@ public class CommentDto implements Serializable {
     @ApiModelProperty(value = "댓글을 단 사용자", required = true)
     @NotBlank
     AccountDto account;
+    @ApiModelProperty(value = "작성 시간", required = true)
+    @NotBlank
+    LocalDateTime createdAt;
 }

@@ -9,6 +9,7 @@ import lombok.Getter;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -34,6 +35,9 @@ public class PostDto implements Serializable {
     @ApiModelProperty(value = "글쓴이", required = true)
     @NotBlank
     SimpleAccountDto author;
+    @ApiModelProperty(value = "작성 시간", required = true)
+    @NotBlank
+    LocalDateTime createdAt;
     @ApiModelProperty(value = "태그")
     Set<TagDto> tags;
     @ApiModelProperty(value = "댓글")
