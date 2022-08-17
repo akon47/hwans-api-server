@@ -1,13 +1,14 @@
 package com.hwans.apiserver.service.blog;
 
-import com.google.common.collect.Streams;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
+import com.hwans.apiserver.entity.blog.Comment;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
+import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.blog.CommentRepository;
@@ -34,6 +35,7 @@ public class BlogServiceImpl implements BlogService {
     private final TagRepository tagRepository;
     private final LikeRepository likeRepository;
     private final PostMapper postMapper;
+    private final CommentMapper commentMapper;
 
     @Override
     public SliceDto<SimplePostDto> getAllPosts(Optional<UUID> cursorId, int size) {
@@ -185,17 +187,28 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto) {
-        var account = accountRepository
+        var authorAccount = accountRepository
                 .findById(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
-
-        return null;
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        var comment = commentMapper.toEntity(commentRequestDto);
+        comment.setAuthor(authorAccount);
+        comment.setPost(foundPost);
+        var savedComment = commentRepository.save(comment);
+        return commentMapper.toDto(savedComment);
     }
 
     @Override
     @Transactional
     public CommentDto modifyComment(UUID commentId, CommentRequestDto commentRequestDto) {
-        return null;
+        var foundComment = commentRepository
+                .findByIdAndDeletedIsFalse(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+        foundComment.setContent(commentRequestDto.getContent());
+        var savedComment = commentRepository.save(foundComment);
+        return commentMapper.toDto(savedComment);
     }
 
     @Override
@@ -204,7 +217,6 @@ public class BlogServiceImpl implements BlogService {
         var foundComment = commentRepository
                 .findById(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
-
         foundComment.delete();
     }
 }

@@ -12,5 +12,8 @@ spring:
       location: /var/attachments/temp/
       max-request-size: 20MB
       max-file-size: 20MB
+server:
+  tomcat:
+    use-relative-redirects: true
 attachments:
   path: /var/attachments/

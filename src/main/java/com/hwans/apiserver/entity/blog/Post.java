@@ -41,6 +41,7 @@ public class Post extends BaseEntity {
     private Account account;
     @OneToMany(mappedBy = "post")
     @Where(clause = "deleted = false")
+    @OrderBy(value = "createdAt asc")
     private final Set<Comment> comments = new HashSet<>();
     @OneToMany(mappedBy = "post")
     private final Set<Like> likes = new HashSet<>();
@@ -84,5 +85,9 @@ public class Post extends BaseEntity {
 
     public int getCommentCount() {
         return this.comments.size();
+    }
+
+    public Account getAuthor() {
+        return this.account;
     }
 }

@@ -35,6 +35,7 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Comment parent;
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    @OrderBy(value = "createdAt asc")
     private final Set<Comment> children = new HashSet<>();
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -55,5 +56,17 @@ public class Comment extends BaseEntity {
 
     public void delete() {
         this.deleted = true;
+    }
+
+    public void setAuthor(Account account) {
+        this.account = account;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

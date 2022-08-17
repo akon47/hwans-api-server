@@ -16,6 +16,7 @@ public abstract class AccountMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "refreshToken", ignore = true)
+    @Mapping(target = "profileImage", ignore = true)
     public abstract Account toEntity(CreateAccountDto userCreateDto);
 
     public abstract AccountDto toDto(Account account);

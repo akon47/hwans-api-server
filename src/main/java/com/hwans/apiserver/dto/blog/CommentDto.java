@@ -7,23 +7,24 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Builder
 @ApiModel(description = "댓글 Dto")
 public class CommentDto implements Serializable {
     @ApiModelProperty(value = "댓글 Id", required = true)
-    @NotBlank
-    String id;
+    @NotNull
+    UUID id;
     @ApiModelProperty(value = "내용", required = true, example = "댓글입니다.")
     @NotBlank
     String content;
     @ApiModelProperty(value = "부모 댓글 Id", required = true)
-    @NotBlank
-    String parentId;
+    UUID parentId;
     @ApiModelProperty(value = "대댓글")
     @NotBlank
     Set<SimpleCommentDto> children;
