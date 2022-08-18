@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BlogService {
+    BlogDetailsDto getBlogDetails(String blogId);
     SliceDto<SimplePostDto> getAllPosts(Optional<UUID> cursorId, int size);
     PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto);
     PostDto modifyPost(String blogId, String postUrl, PostRequestDto postRequestDto);

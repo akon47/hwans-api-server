@@ -3,6 +3,7 @@ package com.hwans.apiserver.controller;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
+import com.hwans.apiserver.service.account.AccountService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.blog.BlogService;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BlogController {
     private final BlogService blogService;
+    private final AccountService accountService;
 
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")
@@ -64,6 +66,12 @@ public class BlogController {
     public PostDto getPost(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
         return blogService.getPost(blogId, postUrl);
+    }
+
+    @ApiOperation(value = "블로그 정보 조회", notes = "블로그 정보를 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}")
+    public BlogDetailsDto getBlogDetails(@ApiParam(value = "블로그 Id") @PathVariable String blogId) {
+        return blogService.getBlogDetails(blogId);
     }
 
     @ApiOperation(value = "댓글 작성", notes = "게시글에 댓글을 작성한다.", tags = "블로그")

@@ -40,6 +40,14 @@ public class Account extends BaseEntity {
     @Column(nullable = false)
     private boolean deleted;
     @Column(length = 255)
+    private String biography;
+    @Column(length = 64)
+    private String company;
+    @Column(length = 64)
+    private String location;
+    @Column(length = 255)
+    private String homepage;
+    @Column(length = 255)
     @With
     private String refreshToken;
     @OneToOne

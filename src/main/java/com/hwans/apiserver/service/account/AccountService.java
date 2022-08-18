@@ -11,4 +11,5 @@ public interface AccountService {
     String getCurrentAccountEmail();
     String setEmailVerifyCode(String email);
     AccountDto setProfileImage(UUID accountId, UUID fileId);
+    AccountDto getAccount(UUID accountId);
 }

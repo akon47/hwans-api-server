@@ -86,6 +86,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public AccountDto getAccount(UUID accountId) {
+        var foundAccount = accountRepository
+                .findById(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        return accountMapper.toDto(foundAccount);
+    }
+
+    @Override
     public AccountDto getCurrentAccount() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         var foundAccount = accountRepository

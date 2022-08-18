@@ -8,6 +8,7 @@ import com.hwans.apiserver.entity.blog.Comment;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
+import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
@@ -34,8 +35,20 @@ public class BlogServiceImpl implements BlogService {
     private final CommentRepository commentRepository;
     private final TagRepository tagRepository;
     private final LikeRepository likeRepository;
+    private final AccountMapper accountMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
+
+    @Override
+    public BlogDetailsDto getBlogDetails(String blogId) {
+        var account = accountRepository
+                .findByBlogId(blogId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+
+        return BlogDetailsDto.builder()
+                .owner(accountMapper.toDto(account))
+                .build();
+    }
 
     @Override
     public SliceDto<SimplePostDto> getAllPosts(Optional<UUID> cursorId, int size) {
