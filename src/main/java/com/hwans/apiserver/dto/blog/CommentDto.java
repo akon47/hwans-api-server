@@ -30,7 +30,7 @@ public class CommentDto implements Serializable {
     Set<SimpleCommentDto> children;
     @ApiModelProperty(value = "댓글이 달려있는 게시글", required = true)
     @NotBlank
-    PostDto post;
+    SimplePostDto post;
     @ApiModelProperty(value = "댓글을 단 사용자", required = true)
     @NotBlank
     AccountDto account;
