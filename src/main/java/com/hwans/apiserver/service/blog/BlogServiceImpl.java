@@ -106,12 +106,15 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        if (!foundPost.getPostUrl().equals(postUrl)) {
+        if (!foundPost.getPostUrl().equals(postRequestDto.getPostUrl())) {
             postRepository.findByBlogIdAndPostUrl(blogId, foundPost.getPostUrl())
                     .ifPresent(x -> {
                         throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
                     });
+        } else {
+            foundPost.setPostUrl(postRequestDto.getPostUrl());
         }
+
         foundPost.setTitle(postRequestDto.getTitle());
         foundPost.setContent(postRequestDto.getContent());
         foundPost.setTags(postRequestDto
