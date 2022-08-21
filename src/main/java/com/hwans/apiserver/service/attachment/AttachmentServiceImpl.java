@@ -59,6 +59,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
+    @Transactional
     public FileDto saveImageFileFromUrl(UUID uploaderAccountId, String imageUrl) {
         try {
             var uploaderAccount = accountRepository
