@@ -13,6 +13,7 @@ public interface PostMapper {
     @Mapping(target = "blogId", ignore = true)
     @Mapping(target = "account", ignore = true)
     @Mapping(target = "deleted", constant = "false")
+    @Mapping(target = "thumbnailImage", ignore = true)
     Post PostRequestDtoToEntity(PostRequestDto postRequestDto);
 
     PostDto EntityToPostDto(Post post);

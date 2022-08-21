@@ -29,9 +29,12 @@ public class SimplePostDto implements Serializable {
     @ApiModelProperty(value = "제목", required = true, example = "제목입니다.")
     @NotBlank
     String title;
-    @ApiModelProperty(value = "내용", required = true, example = "게시글 내용입니다.")
+    @ApiModelProperty(value = "요약 내용", required = true, example = "요약 내용입니다.")
     @NotBlank
-    String content;
+    String summary;
+    @ApiModelProperty(value = "썸네일 이미지 URL", example = "/file-id")
+    @NotBlank
+    String thumbnailImageUrl;
     @ApiModelProperty(value = "글쓴이", required = true)
     @NotBlank
     SimpleAccountDto author;

@@ -22,7 +22,7 @@ public class AccountDto implements Serializable {
     @ApiModelProperty(value = "블로그 Id", required = true, example = "kim-hwan")
     @NotBlank
     String blogId;
-    @ApiModelProperty(value = "프로필 이미지 URL", example = "/attachments/file-id")
+    @ApiModelProperty(value = "프로필 이미지 URL", example = "/file-id")
     @NotBlank
     String profileImageUrl;
     @ApiModelProperty(value = "간단한 자기소개", example = "안녕하세요, 반갑습니다.")

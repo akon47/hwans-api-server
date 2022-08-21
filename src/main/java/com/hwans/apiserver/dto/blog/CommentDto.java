@@ -33,7 +33,7 @@ public class CommentDto implements Serializable {
     SimplePostDto post;
     @ApiModelProperty(value = "댓글을 단 사용자", required = true)
     @NotBlank
-    AccountDto account;
+    AccountDto author;
     @ApiModelProperty(value = "작성 시간", required = true)
     @NotBlank
     LocalDateTime createdAt;

@@ -12,6 +12,7 @@ import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
+import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.blog.LikeRepository;
 import com.hwans.apiserver.repository.blog.PostRepository;
@@ -35,6 +36,7 @@ public class BlogServiceImpl implements BlogService {
     private final CommentRepository commentRepository;
     private final TagRepository tagRepository;
     private final LikeRepository likeRepository;
+    private final AttachmentRepository attachmentRepository;
     private final AccountMapper accountMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
@@ -86,6 +88,8 @@ public class BlogServiceImpl implements BlogService {
                 });
         var post = postMapper.PostRequestDtoToEntity(postRequestDto);
         post.setAuthor(account);
+        post.updatePostUrlIfNecessary();
+        post.updateSummaryIfNecessary();
         post.setTags(postRequestDto
                 .getTags().stream()
                 .map(TagDto::getName)
@@ -93,9 +97,14 @@ public class BlogServiceImpl implements BlogService {
                         .findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
-        if (post.getPostUrl() == null || post.getPostUrl().isBlank()) {
-            post.setPostUrl(UUID.randomUUID().toString().replace("-", "").substring(0, 8));
+
+        if(postRequestDto.getThumbnailFileId() != null) {
+            var attachment = attachmentRepository
+                    .findById(postRequestDto.getThumbnailFileId())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+            post.setThumbnailImageImage(attachment);
         }
+
         var savedPost = postRepository.save(post);
         return postMapper.EntityToPostDto(savedPost);
     }
@@ -117,6 +126,7 @@ public class BlogServiceImpl implements BlogService {
 
         foundPost.setTitle(postRequestDto.getTitle());
         foundPost.setContent(postRequestDto.getContent());
+        foundPost.updatePostUrlIfNecessary();
         foundPost.setTags(postRequestDto
                 .getTags().stream()
                 .map(TagDto::getName)
@@ -124,6 +134,14 @@ public class BlogServiceImpl implements BlogService {
                         .findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
+
+        if(postRequestDto.getThumbnailFileId() != null) {
+            var attachment = attachmentRepository
+                    .findById(postRequestDto.getThumbnailFileId())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+            foundPost.setThumbnailImageImage(attachment);
+        }
+
         return postMapper.EntityToPostDto(foundPost);
     }
 

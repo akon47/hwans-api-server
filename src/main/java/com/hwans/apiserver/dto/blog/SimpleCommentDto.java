@@ -32,7 +32,7 @@ public class SimpleCommentDto implements Serializable {
     int childrenCount;
     @ApiModelProperty(value = "댓글을 단 사용자", required = true)
     @NotNull
-    SimpleAccountDto account;
+    SimpleAccountDto author;
     @ApiModelProperty(value = "작성 시간", required = true)
     @NotBlank
     LocalDateTime createdAt;

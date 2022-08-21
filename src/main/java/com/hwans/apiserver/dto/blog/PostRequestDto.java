@@ -8,6 +8,7 @@ import lombok.Getter;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -22,6 +23,12 @@ public class PostRequestDto implements Serializable {
     @ApiModelProperty(value = "내용", required = true, example = "게시글 내용입니다.")
     @NotBlank
     String content;
+    @ApiModelProperty(value = "요약 내용", example = "요약 내용입니다.")
+    @NotBlank
+    String summary;
+    @ApiModelProperty(value = "썸네일 파일 Id")
+    @NotBlank
+    UUID thumbnailFileId;
     @ApiModelProperty(value = "태그", required = true)
     Set<TagDto> tags;
 }

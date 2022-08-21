@@ -2,15 +2,13 @@ package com.hwans.apiserver.entity.blog;
 
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.Account;
+import com.hwans.apiserver.entity.attachment.Attachment;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -31,9 +29,14 @@ public class Post extends BaseEntity {
     private String postUrl;
     @Column(length = 2000, nullable = false)
     private String title;
+    @Column(length = 255)
+    private String summary;
     @Column
     @Lob
     private String content;
+    @OneToOne
+    @JoinColumn(name = "thumbnail_image_file_id")
+    private Attachment thumbnailImage;
     @Column(nullable = false)
     private boolean deleted;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -75,6 +78,21 @@ public class Post extends BaseEntity {
         this.postUrl = postUrl;
     }
 
+    public void updateSummaryIfNecessary() {
+        if (this.summary == null || this.summary.isBlank()) {
+            this.summary = this.content.lines()
+                    .filter((x) -> x.isBlank() == false && x.matches("^[A-Za-z].*(?:\\n[A-Za-z].*)*"))
+                    .findFirst()
+                    .orElseGet(() -> this.content);
+        }
+    }
+
+    public void updatePostUrlIfNecessary() {
+        if (this.postUrl == null || this.postUrl.isBlank()) {
+            setPostUrl(UUID.randomUUID().toString().replace("-", "").substring(0, 8));
+        }
+    }
+
     public Set<Tag> getTags() {
         return postTags.stream().map(PostTag::getTag).collect(Collectors.toSet());
     }
@@ -89,5 +107,15 @@ public class Post extends BaseEntity {
 
     public Account getAuthor() {
         return this.account;
+    }
+
+    public String getThumbnailImageUrl() {
+        return Optional.ofNullable(this.thumbnailImage)
+                .map(Attachment::getUrl)
+                .orElse(null);
+    }
+
+    public void setThumbnailImageImage(Attachment attachment) {
+        this.thumbnailImage = attachment;
     }
 }

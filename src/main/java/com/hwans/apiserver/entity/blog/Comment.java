@@ -69,4 +69,8 @@ public class Comment extends BaseEntity {
     public void setContent(String content) {
         this.content = content;
     }
+
+    public Account getAuthor() {
+        return this.account;
+    }
 }
