@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface AttachmentService {
     FileDto saveImageFile(UUID uploaderAccountId, MultipartFile multipartFile);
+    FileDto saveImageFileFromUrl(UUID uploaderAccountId, String imageUrl);
     FileDto getFile(UUID fileId);
     File getLocalFile(UUID fileId);
     AttachmentResource getFileAsResource(UUID fileId);

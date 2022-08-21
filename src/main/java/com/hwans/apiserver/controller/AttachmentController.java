@@ -49,4 +49,16 @@ public class AttachmentController {
                 .fileName(attachment.getFileName())
                 .build();
     }
+
+    @ApiOperation(value = "이미지 파일 업로드", notes = "이미지 파일을 업로드합니다.", tags = "파일")
+    @PostMapping(value = "/v1/attachments", params = { "imageUrl" })
+    public SimpleFileDto uploadImageFileFromUrl(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                         @ApiParam(value = "이미지 파일", required = true) @RequestParam(value = "imageUrl", required = true) String imageUrl) {
+        var attachment = attachmentService.saveImageFileFromUrl(userAuthenticationDetails.getId(), imageUrl);
+        return SimpleFileDto.builder()
+                .id(attachment.getId())
+                .url(attachment.getUrl())
+                .fileName(attachment.getFileName())
+                .build();
+    }
 }
