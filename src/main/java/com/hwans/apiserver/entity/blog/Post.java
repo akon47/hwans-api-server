@@ -65,6 +65,10 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
     public void setTags(Collection<Tag> tags) {
         this.postTags.clear();
         tags.forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));

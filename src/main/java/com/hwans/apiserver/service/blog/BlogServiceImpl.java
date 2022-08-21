@@ -123,7 +123,7 @@ public class BlogServiceImpl implements BlogService {
         } else {
             foundPost.setPostUrl(postRequestDto.getPostUrl());
         }
-
+        foundPost.setSummary(postRequestDto.getSummary());
         foundPost.setTitle(postRequestDto.getTitle());
         foundPost.setContent(postRequestDto.getContent());
         foundPost.updatePostUrlIfNecessary();
