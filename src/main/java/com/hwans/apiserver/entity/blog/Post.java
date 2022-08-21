@@ -43,7 +43,7 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
     @OneToMany(mappedBy = "post")
-    @Where(clause = "deleted = false")
+    @Where(clause = "deleted = false and parent_id is null")
     @OrderBy(value = "createdAt asc")
     private final Set<Comment> comments = new HashSet<>();
     @OneToMany(mappedBy = "post")

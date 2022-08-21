@@ -18,6 +18,8 @@ public interface BlogService {
     void unlikePost(UUID actorAccountId, String blogId, String postUrl);
     boolean isLikePost(UUID accountId, String blogId, String postUrl);
     CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto);
+    CommentDto createComment(UUID authorAccountId, UUID commentId, CommentRequestDto commentRequestDto);
     CommentDto modifyComment(UUID commentId, CommentRequestDto commentRequestDto);
+    CommentDto getComment(UUID commentId);
     void deleteComment(UUID commentId);
 }

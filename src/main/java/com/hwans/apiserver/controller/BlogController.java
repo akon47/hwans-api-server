@@ -55,8 +55,8 @@ public class BlogController {
     @ApiOperation(value = "특정 블로그 전체 게시글 조회", notes = "특정 블로그 전체 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}/posts")
     public SliceDto<SimplePostDto> getBlogPosts(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
-                                            @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
-                                            @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
+                                                @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+                                                @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
         return blogService.getBlogPosts(blogId, cursorId, size);
     }
 
@@ -93,6 +93,20 @@ public class BlogController {
     @DeleteMapping(value = "/v1/blog/comments/{commentId}")
     public void deleteComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
         blogService.deleteComment(commentId);
+    }
+
+    @ApiOperation(value = "댓글 조회", notes = "댓글을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/comments/{commentId}")
+    public CommentDto getComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
+        return blogService.getComment(commentId);
+    }
+
+    @ApiOperation(value = "대댓글 작성", notes = "댓글에 댓글을 작성한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/comments/{commentId}")
+    public CommentDto createCommentToComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                             @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
+                                             @ApiParam(value = "댓글", required = true) @RequestBody CommentRequestDto commentRequestDto) {
+        return blogService.createComment(userAuthenticationDetails.getId(), commentId, commentRequestDto);
     }
 
     @ApiOperation(value = "게시글 좋아요 하기", notes = "게시글을 좋아요 한다.", tags = "블로그")

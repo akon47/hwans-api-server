@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ public class Comment extends BaseEntity {
     private Comment parent;
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     @OrderBy(value = "createdAt asc")
+    @Where(clause = "deleted = false")
     private final Set<Comment> children = new HashSet<>();
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -72,5 +74,9 @@ public class Comment extends BaseEntity {
 
     public Account getAuthor() {
         return this.account;
+    }
+
+    public void setParent(Comment comment) {
+        this.parent = comment;
     }
 }

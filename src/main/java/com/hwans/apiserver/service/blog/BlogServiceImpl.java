@@ -246,6 +246,24 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    public CommentDto createComment(UUID authorAccountId, UUID commentId, CommentRequestDto commentRequestDto) {
+        var authorAccount = accountRepository
+                .findById(authorAccountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var foundComment = commentRepository
+                .findByIdAndDeletedIsFalse(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+
+        var comment = commentMapper.toEntity(commentRequestDto);
+        comment.setAuthor(authorAccount);
+        comment.setPost(foundComment.getPost());
+        comment.setParent(foundComment);
+        var savedComment = commentRepository.save(comment);
+        return commentMapper.toDto(savedComment);
+    }
+
+    @Override
+    @Transactional
     public CommentDto modifyComment(UUID commentId, CommentRequestDto commentRequestDto) {
         var foundComment = commentRepository
                 .findByIdAndDeletedIsFalse(commentId)
@@ -253,6 +271,14 @@ public class BlogServiceImpl implements BlogService {
         foundComment.setContent(commentRequestDto.getContent());
         var savedComment = commentRepository.save(foundComment);
         return commentMapper.toDto(savedComment);
+    }
+
+    @Override
+    public CommentDto getComment(UUID commentId) {
+        var foundComment = commentRepository
+                .findByIdAndDeletedIsFalse(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+        return commentMapper.toDto(foundComment);
     }
 
     @Override

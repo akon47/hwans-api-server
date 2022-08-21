@@ -8,19 +8,16 @@ import com.hwans.apiserver.mapper.FileMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.id.UUIDGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -79,7 +76,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                     .save(new Attachment(uploaderAccount, savedFile, null, contentType));
             return fileMapper.EntityToFileDto(attachment);
         } catch (IOException e) {
-            throw new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR);
+            throw new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
