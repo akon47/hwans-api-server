@@ -10,6 +10,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -108,5 +109,14 @@ public class BlogController {
                            @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
         blogService.unlikePost(userAuthenticationDetails.getId(), blogId, postUrl);
+    }
+
+    @ApiOperation(value = "게시글에 좋아요를 했는지 여부", notes = "게시글에 좋아요를 했는지 여부를 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/likes")
+    public ResponseEntity isLikePost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                     @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                     @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
+        var exists = blogService.isLikePost(userAuthenticationDetails.getId(), blogId, postUrl);
+        return exists ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

@@ -16,6 +16,7 @@ public interface BlogService {
     PostDto getPost(String blogId, String postUrl);
     void likePost(UUID actorAccountId, String blogId, String postUrl);
     void unlikePost(UUID actorAccountId, String blogId, String postUrl);
+    boolean isLikePost(UUID accountId, String blogId, String postUrl);
     CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto);
     CommentDto modifyComment(UUID commentId, CommentRequestDto commentRequestDto);
     void deleteComment(UUID commentId);

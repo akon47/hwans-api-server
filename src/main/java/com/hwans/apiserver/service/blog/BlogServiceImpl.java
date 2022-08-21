@@ -220,6 +220,15 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    public boolean isLikePost(UUID accountId, String blogId, String postUrl) {
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+
+        return likeRepository.existsByAccountIdAndPostId(accountId, foundPost.getId());
+    }
+
+    @Override
     @Transactional
     public CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto) {
         var authorAccount = accountRepository
