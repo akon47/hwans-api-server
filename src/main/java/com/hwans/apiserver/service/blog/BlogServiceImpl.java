@@ -82,7 +82,8 @@ public class BlogServiceImpl implements BlogService {
         var account = accountRepository
                 .findById(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
-        postRepository.findByBlogIdAndPostUrl(account.getBlogId(), postRequestDto.getPostUrl())
+        postRepository
+                .findByBlogIdAndPostUrl(account.getBlogId(), postRequestDto.getPostUrl())
                 .ifPresent(x -> {
                     throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
                 });
@@ -98,7 +99,7 @@ public class BlogServiceImpl implements BlogService {
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
 
-        if(postRequestDto.getThumbnailFileId() != null) {
+        if (postRequestDto.getThumbnailFileId() != null) {
             var attachment = attachmentRepository
                     .findById(postRequestDto.getThumbnailFileId())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
@@ -116,13 +117,14 @@ public class BlogServiceImpl implements BlogService {
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
         if (!foundPost.getPostUrl().equals(postRequestDto.getPostUrl())) {
-            postRepository.findByBlogIdAndPostUrl(blogId, foundPost.getPostUrl())
+            postRepository
+                    .findByBlogIdAndPostUrl(blogId, postRequestDto.getPostUrl())
                     .ifPresent(x -> {
                         throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
                     });
-        } else {
             foundPost.setPostUrl(postRequestDto.getPostUrl());
         }
+
         foundPost.setSummary(postRequestDto.getSummary());
         foundPost.setTitle(postRequestDto.getTitle());
         foundPost.setContent(postRequestDto.getContent());
@@ -136,7 +138,7 @@ public class BlogServiceImpl implements BlogService {
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
 
-        if(postRequestDto.getThumbnailFileId() != null) {
+        if (postRequestDto.getThumbnailFileId() != null) {
             var attachment = attachmentRepository
                     .findById(postRequestDto.getThumbnailFileId())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
