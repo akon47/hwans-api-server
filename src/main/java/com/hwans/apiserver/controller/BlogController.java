@@ -60,6 +60,14 @@ public class BlogController {
         return blogService.getBlogPosts(blogId, cursorId, size);
     }
 
+    @ApiOperation(value = "특정 블로그 주인이 좋아요 한 전체 게시글 조회", notes = "특정 블로그 주인이 좋아요 한 전체 게시글을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/likes")
+    public SliceDto<SimplePostDto> getBloggerLikePosts(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                                @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+                                                @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
+        return blogService.getBloggerLikePosts(blogId, cursorId, size);
+    }
+
     @ApiOperation(value = "블로그 게시글 조회", notes = "블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}")
     public PostDto getPost(@ApiParam(value = "블로그 Id") @PathVariable String blogId,

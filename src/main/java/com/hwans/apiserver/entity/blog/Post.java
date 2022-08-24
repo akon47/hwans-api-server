@@ -76,6 +76,9 @@ public class Post extends BaseEntity {
 
     public void delete() {
         this.deleted = true;
+        if (!this.postUrl.endsWith("-deleted")) {
+            this.postUrl += "-deleted";
+        }
     }
 
     public void setPostUrl(String postUrl) {
@@ -119,7 +122,7 @@ public class Post extends BaseEntity {
                 .orElse(null);
     }
 
-    public void setThumbnailImageImage(Attachment attachment) {
+    public void setThumbnailImage(Attachment attachment) {
         this.thumbnailImage = attachment;
     }
 }

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -103,7 +104,7 @@ public class BlogServiceImpl implements BlogService {
             var attachment = attachmentRepository
                     .findById(postRequestDto.getThumbnailFileId())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
-            post.setThumbnailImageImage(attachment);
+            post.setThumbnailImage(attachment);
         }
 
         var savedPost = postRepository.save(post);
@@ -142,7 +143,7 @@ public class BlogServiceImpl implements BlogService {
             var attachment = attachmentRepository
                     .findById(postRequestDto.getThumbnailFileId())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
-            foundPost.setThumbnailImageImage(attachment);
+            foundPost.setThumbnailImage(attachment);
         }
 
         return postMapper.EntityToPostDto(foundPost);
@@ -178,6 +179,36 @@ public class BlogServiceImpl implements BlogService {
                 .first(cursorId.isEmpty())
                 .last(last)
                 .cursorId(last ? null : foundPosts.stream().limit(size).skip(size - 1).findFirst().map(Post::getId).orElse(null))
+                .build();
+    }
+
+    @Override
+    public SliceDto<SimplePostDto> getBloggerLikePosts(String blogId, Optional<UUID> cursorId, int size) {
+        var account = accountRepository
+                .findByBlogId(blogId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_BLOG));
+        Map<UUID, Post> foundPosts;
+        if (cursorId.isPresent()) {
+            var foundCursorLike = likeRepository
+                    .findById(cursorId.get())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+            foundPosts = postRepository
+                    .findLikePostsByIdLessThanOrderByLikeIdDesc(account.getId(), foundCursorLike.getId(), foundCursorLike.getCreatedAt(), PageRequest.of(0, size + 1))
+                    .stream().collect(Collectors.toMap(x -> ((Like) x[0]).getId(), x -> (Post) x[0]));
+        } else {
+            foundPosts = postRepository
+                    .findAllLikePostsByOrderByLikeIdDesc(account.getId(), PageRequest.of(0, size + 1))
+                    .stream().collect(Collectors.toMap(x -> ((Like) x[0]).getId(), x -> (Post) x[0]));
+        }
+
+        var last = foundPosts.size() <= size;
+        return SliceDto.<SimplePostDto>builder()
+                .data(foundPosts.values().stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
+                .size((int) foundPosts.values().stream().limit(size).count())
+                .empty(foundPosts.isEmpty())
+                .first(cursorId.isEmpty())
+                .last(last)
+                .cursorId(last ? null : foundPosts.keySet().stream().limit(size).skip(size - 1).findFirst().orElse(null))
                 .build();
     }
 

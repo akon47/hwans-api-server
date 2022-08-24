@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-@AuthenticationPrincipal(expression = "@fetchCurrentUserAuthenticationDetails.apply(#this)")
+@AuthenticationPrincipal(expression = "@fetchCurrentUserAuthenticationDetails.apply(#this == 'anonymousUser' ? null : #this)")
 public @interface CurrentAuthenticationDetails {
 }

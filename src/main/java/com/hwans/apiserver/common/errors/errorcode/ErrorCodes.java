@@ -82,6 +82,7 @@ public class ErrorCodes {
         NO_CURRENT_ACCOUNT_INFO("현재 계정에 대한 정보를 찾을 수 없습니다."),
         NOT_FOUND_POST("게시글을 찾을 수 없습니다."),
         NOT_FOUND_COMMENT("댓글을 찾을 수 없습니다."),
+        NOT_FOUND_BLOG("블로그를 찾을 수 없습니다."),
         ;
 
         private final String defaultMessage;

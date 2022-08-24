@@ -77,7 +77,6 @@ public class WebSecurityConfig {
 
                 .and()
                 .apply(new JwtSecurityConfig(tokenProvider, redisTemplate));
-
         return http.build();
     }
 

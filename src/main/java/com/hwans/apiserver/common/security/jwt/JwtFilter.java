@@ -3,8 +3,10 @@ package com.hwans.apiserver.common.security.jwt;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
+import com.hwans.apiserver.dto.common.ErrorResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nonapi.io.github.classgraph.json.JSONSerializer;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,8 +45,12 @@ public class JwtFilter extends GenericFilterBean {
                     log.trace("JWT token is black listed, uri: {}, {}", requestURI);
                 }
             } else if (jwtStatus == JwtStatus.EXPIRED) {
-                request.setAttribute("exception", new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED));
+                var exception = new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED);
+                request.setAttribute("exception", exception);
                 log.trace("JWT token is expired, uri: {}", requestURI);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().print(JSONSerializer.serializeObject(new ErrorResponseDto(exception)));
+                return;
             } else {
                 log.trace("no valid JWT token found, uri: {}", requestURI);
             }
