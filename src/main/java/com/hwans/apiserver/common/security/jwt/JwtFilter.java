@@ -46,7 +46,6 @@ public class JwtFilter extends GenericFilterBean {
                 var exception = new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED);
                 request.setAttribute("exception", exception);
                 log.trace("JWT token is expired, uri: {}", requestURI);
-                return;
             } else {
                 log.trace("no valid JWT token found, uri: {}", requestURI);
             }

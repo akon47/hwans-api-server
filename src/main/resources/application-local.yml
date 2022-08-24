@@ -39,7 +39,7 @@ jwt:
   base64-refresh-secret: 827bd28cc68a90ce1cdb5d02afdc1d9835df6ab21bbef50cc550d7e84d94eb2f
 logging:
   level:
-    root: debug
+    root: info
     org:
       hibernate:
         type:
