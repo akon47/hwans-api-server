@@ -194,11 +194,11 @@ public class BlogServiceImpl implements BlogService {
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             foundPosts = postRepository
                     .findLikePostsByIdLessThanOrderByLikeIdDesc(account.getId(), foundCursorLike.getId(), foundCursorLike.getCreatedAt(), PageRequest.of(0, size + 1))
-                    .stream().collect(Collectors.toMap(x -> ((Like) x[0]).getId(), x -> (Post) x[0]));
+                    .stream().collect(Collectors.toMap(x -> ((Like) x[1]).getId(), x -> (Post) x[0]));
         } else {
             foundPosts = postRepository
                     .findAllLikePostsByOrderByLikeIdDesc(account.getId(), PageRequest.of(0, size + 1))
-                    .stream().collect(Collectors.toMap(x -> ((Like) x[0]).getId(), x -> (Post) x[0]));
+                    .stream().collect(Collectors.toMap(x -> ((Like) x[1]).getId(), x -> (Post) x[0]));
         }
 
         var last = foundPosts.size() <= size;
