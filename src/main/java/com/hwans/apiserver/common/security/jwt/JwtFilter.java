@@ -18,6 +18,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @RequiredArgsConstructor
@@ -48,8 +49,11 @@ public class JwtFilter extends GenericFilterBean {
                 var exception = new RestApiException(ErrorCodes.Unauthorized.TOKEN_EXPIRED);
                 request.setAttribute("exception", exception);
                 log.trace("JWT token is expired, uri: {}", requestURI);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().print(JSONSerializer.serializeObject(new ErrorResponseDto(exception)));
+
+                HttpServletResponse httpResponse = (HttpServletResponse) response;
+                httpResponse.setContentType("application/json;charset=UTF-8");
+                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                httpResponse.getWriter().print(JSONSerializer.serializeObject(new ErrorResponseDto(exception)));
                 return;
             } else {
                 log.trace("no valid JWT token found, uri: {}", requestURI);
