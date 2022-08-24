@@ -124,6 +124,9 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Bean
     public Function<UserDetails, UserAuthenticationDetails> fetchCurrentUserAuthenticationDetails() {
         return (principal -> {
+            if(principal == null)
+                throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
+
             String email = principal.getUsername();
             return accountRepository
                     .findByEmailAndDeletedIsFalse(email)
