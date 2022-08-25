@@ -66,7 +66,8 @@ public class AttachmentServiceImpl implements AttachmentService {
             var url = new URL(imageUrl);
             var connection = url.openConnection();
             String contentType = connection.getContentType();
-            if (!contentType.startsWith("image")) {
+            long contentLength = connection.getContentLengthLong();
+            if (!contentType.startsWith("image") || contentLength < 0 || contentLength > 1024 * 1024 * 20) {
                 throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
             }
             var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());
