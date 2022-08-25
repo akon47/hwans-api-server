@@ -27,11 +27,4 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select x from Post as x where x.deleted = false and x.blogId = :blogId and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
     List<Post> findByIdLessThanOrderByIdDesc(@Param("blogId") String blogId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
-
-
-    @Query("select x, y from Post as x inner join Like as y on y.account.id = :accountId where x.deleted = false order by y.createdAt desc, y.id desc")
-    List<Object[]> findAllLikePostsByOrderByLikeIdDesc(@Param("accountId") UUID accountId, Pageable page);
-
-    @Query("select x from Post as x inner join Like as y on y.account.id = :accountId where x.deleted = false and ((y.createdAt < :createdAt and y.id < :id) or (y.createdAt < :createdAt)) order by y.createdAt desc, y.id desc")
-    List<Object[]> findLikePostsByIdLessThanOrderByLikeIdDesc(@Param("accountId") UUID accountId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
 }

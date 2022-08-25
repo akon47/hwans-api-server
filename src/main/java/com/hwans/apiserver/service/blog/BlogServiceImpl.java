@@ -184,31 +184,25 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public SliceDto<SimplePostDto> getBloggerLikePosts(String blogId, Optional<UUID> cursorId, int size) {
-        var account = accountRepository
-                .findByBlogId(blogId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_BLOG));
-        Map<UUID, Post> foundPosts;
+        List<Like> foundLikes;
         if (cursorId.isPresent()) {
             var foundCursorLike = likeRepository
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
-            foundPosts = postRepository
-                    .findLikePostsByIdLessThanOrderByLikeIdDesc(account.getId(), foundCursorLike.getId(), foundCursorLike.getCreatedAt(), PageRequest.of(0, size + 1))
-                    .stream().collect(Collectors.toMap(x -> ((Like) x[1]).getId(), x -> (Post) x[0]));
+            foundLikes = likeRepository
+                    .findByIdLessThanOrderByIdDesc(blogId, foundCursorLike.getId(), foundCursorLike.getCreatedAt(), PageRequest.of(0, size + 1));
         } else {
-            foundPosts = postRepository
-                    .findAllLikePostsByOrderByLikeIdDesc(account.getId(), PageRequest.of(0, size + 1))
-                    .stream().collect(Collectors.toMap(x -> ((Like) x[1]).getId(), x -> (Post) x[0]));
+            foundLikes = likeRepository
+                    .findAllByOrderByIdDesc(blogId, PageRequest.of(0, size + 1));
         }
-
-        var last = foundPosts.size() <= size;
+        var last = foundLikes.size() <= size;
         return SliceDto.<SimplePostDto>builder()
-                .data(foundPosts.values().stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
-                .size((int) foundPosts.values().stream().limit(size).count())
-                .empty(foundPosts.isEmpty())
+                .data(foundLikes.stream().limit(size).map(x -> postMapper.EntityToSimplePostDto(x.getPost())).toList())
+                .size((int) foundLikes.stream().limit(size).count())
+                .empty(foundLikes.isEmpty())
                 .first(cursorId.isEmpty())
                 .last(last)
-                .cursorId(last ? null : foundPosts.keySet().stream().limit(size).skip(size - 1).findFirst().orElse(null))
+                .cursorId(last ? null : foundLikes.stream().limit(size).skip(size - 1).findFirst().map(Like::getId).orElse(null))
                 .build();
     }
 
