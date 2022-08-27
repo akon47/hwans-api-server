@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -43,7 +45,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request) {
         log.warn("handleIllegalArgument", e);
         ErrorCode errorCode = ErrorCodes.BadRequest.INVALID_PARAMETER;
-        return handleExceptionInternal(e, errorCode);
+
+        StringJoiner errorMessages = new StringJoiner(", ");
+        e.getFieldErrors().forEach((fieldError) -> {
+            String fieldName = fieldError.getField();
+            String errorMessage = fieldError.getDefaultMessage();
+            errorMessages.add(MessageFormat.format("[{0}] 필드는 {1}", fieldName, errorMessage));
+        });
+
+        return handleExceptionInternal(errorCode, errorMessages.toString());
     }
 
     @ExceptionHandler({Exception.class})
@@ -53,8 +63,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorCode errorCode;
         String errorMessage;
         if (ex instanceof DataIntegrityViolationException) {
-            errorCode = ErrorCodes.Conflict.ALREADY_EXISTS;
-            errorMessage = errorCode.getDefaultMessage();
+            errorCode = ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR;
+            errorMessage = ex.getMessage();
         } else {
             errorCode = ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR;
             errorMessage = ex.getMessage();

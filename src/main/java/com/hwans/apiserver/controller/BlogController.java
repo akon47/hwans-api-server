@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,7 +34,7 @@ public class BlogController {
     @ApiOperation(value = "게시글 작성", notes = "게시글을 작성한다.", tags = "블로그")
     @PostMapping(value = "/v1/blog/posts")
     public PostDto createPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                              @ApiParam(value = "게시글", required = true) @RequestBody PostRequestDto postRequestDto) {
+                              @ApiParam(value = "게시글", required = true) @RequestBody @Valid final PostRequestDto postRequestDto) {
         return blogService.createPost(userAuthenticationDetails.getId(), postRequestDto);
     }
 
@@ -41,7 +42,7 @@ public class BlogController {
     @PutMapping(value = "/v1/blog/posts/{postUrl}")
     public PostDto modifyPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                               @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
-                              @ApiParam(value = "게시글", required = true) @RequestBody PostRequestDto postRequestDto) {
+                              @ApiParam(value = "게시글", required = true) @RequestBody @Valid final PostRequestDto postRequestDto) {
         return blogService.modifyPost(userAuthenticationDetails.getBlogId(), postUrl, postRequestDto);
     }
 
@@ -86,14 +87,14 @@ public class BlogController {
     public CommentDto createComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                     @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                                     @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
-                                    @ApiParam(value = "댓글", required = true) @RequestBody CommentRequestDto commentRequestDto) {
+                                    @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
         return blogService.createComment(userAuthenticationDetails.getId(), blogId, postUrl, commentRequestDto);
     }
 
     @ApiOperation(value = "댓글 수정", notes = "댓글을 수정한다.", tags = "블로그")
     @PutMapping(value = "/v1/blog/comments/{commentId}")
     public CommentDto modifyComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
-                                    @ApiParam(value = "댓글", required = true) @RequestBody CommentRequestDto commentRequestDto) {
+                                    @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
         return blogService.modifyComment(commentId, commentRequestDto);
     }
 
@@ -113,7 +114,7 @@ public class BlogController {
     @PostMapping(value = "/v1/blog/comments/{commentId}")
     public CommentDto createCommentToComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                              @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
-                                             @ApiParam(value = "댓글", required = true) @RequestBody CommentRequestDto commentRequestDto) {
+                                             @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
         return blogService.createComment(userAuthenticationDetails.getId(), commentId, commentRequestDto);
     }
 

@@ -16,6 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
+
 @RestController
 @Api(tags = "사용자 계정")
 @RequestMapping(value = Constants.API_PREFIX)
@@ -27,7 +29,7 @@ public class AccountController {
 
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
-    public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody CreateAccountDto userCreateDto) {
+    public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody @Valid final CreateAccountDto userCreateDto) {
         return accountService.createAccount(userCreateDto);
     }
 

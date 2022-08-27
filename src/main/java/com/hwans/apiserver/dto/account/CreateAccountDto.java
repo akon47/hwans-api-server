@@ -4,7 +4,9 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.validator.constraints.Length;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
@@ -14,15 +16,19 @@ import java.io.Serializable;
 public class CreateAccountDto implements Serializable {
     @ApiModelProperty(value = "사용자 이메일", required = true, example = "akon47@naver.com")
     @NotBlank
+    @Length(max = 320)
+    @Email
     String email;
     @ApiModelProperty(value = "사용자 로그인 비밀번호", required = true, example = "12345")
     @NotBlank
     String password;
     @ApiModelProperty(value = "사용자 이름", required = true, example = "김환")
     @NotBlank
+    @Length(max = 32)
     String name;
     @ApiModelProperty(value = "블로그 Id", required = true, example = "kim-hwan")
     @NotBlank
+    @Length(max = 64)
     String blogId;
     @ApiModelProperty(value = "사용자 이메일 인증 코드", required = true, example = "123456")
     @NotBlank
