@@ -1,5 +1,6 @@
 package com.hwans.apiserver.dto.blog;
 
+import com.hwans.apiserver.support.annotation.PostUrl;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -18,6 +19,7 @@ public class PostRequestDto implements Serializable {
     @ApiModelProperty(value = "게시글 URL", required = true, example = "my-first-post")
     @NotBlank
     @Length(max = 320)
+    @PostUrl
     String postUrl;
     @ApiModelProperty(value = "제목", required = true, example = "제목입니다.")
     @NotBlank
