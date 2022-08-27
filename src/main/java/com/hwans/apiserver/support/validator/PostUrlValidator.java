@@ -10,7 +10,7 @@ public class PostUrlValidator implements ConstraintValidator<PostUrl, String> {
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if(value == null) {
-            return false;
+            return true;
         }
 
         return value.matches("^[-a-zA-Z\\d_]+$");

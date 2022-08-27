@@ -17,7 +17,6 @@ import java.util.UUID;
 @ApiModel(description = "게시글 작성/수정 Dto")
 public class PostRequestDto implements Serializable {
     @ApiModelProperty(value = "게시글 URL", required = true, example = "my-first-post")
-    @NotBlank
     @Length(max = 320)
     @PostUrl
     String postUrl;
