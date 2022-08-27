@@ -39,6 +39,8 @@ public class Post extends BaseEntity {
     private Attachment thumbnailImage;
     @Column(nullable = false)
     private boolean deleted;
+    @Column
+    private Long hits;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
@@ -124,5 +126,9 @@ public class Post extends BaseEntity {
 
     public void setThumbnailImage(Attachment attachment) {
         this.thumbnailImage = attachment;
+    }
+
+    public void setHits(Long hits) {
+        this.hits = hits;
     }
 }

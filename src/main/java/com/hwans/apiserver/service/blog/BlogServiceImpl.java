@@ -19,11 +19,12 @@ import com.hwans.apiserver.repository.blog.PostRepository;
 import com.hwans.apiserver.repository.blog.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class BlogServiceImpl implements BlogService {
     private final AccountMapper accountMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
+    private final RedisTemplate<String, Integer> redisTemplate;
 
     @Override
     public BlogDetailsDto getBlogDetails(String blogId) {
@@ -211,6 +213,7 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        foundPost.setHits(increaseHits(foundPost.getId()));
         return postMapper.EntityToPostDto(foundPost);
     }
 
@@ -315,5 +318,15 @@ public class BlogServiceImpl implements BlogService {
                 .findById(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
         foundComment.delete();
+    }
+
+    private Long increaseHits(UUID postId) {
+        HashOperations<String, String, Integer> hashOperations = redisTemplate.opsForHash();
+        return hashOperations.increment(postId.toString(), "hits", 1);
+    }
+
+    private Integer getHits(UUID postId) {
+        HashOperations<String, String, Integer> hashOperations = redisTemplate.opsForHash();
+        return hashOperations.get(postId.toString(), "hits");
     }
 }

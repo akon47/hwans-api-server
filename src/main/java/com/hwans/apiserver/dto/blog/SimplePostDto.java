@@ -47,4 +47,6 @@ public class SimplePostDto implements Serializable {
     int commentCount;
     @ApiModelProperty(value = "좋아요 수")
     int likeCount;
+    @ApiModelProperty(value = "조회수")
+    Long hits;
 }
