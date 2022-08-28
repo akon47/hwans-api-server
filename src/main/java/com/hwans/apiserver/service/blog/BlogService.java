@@ -23,4 +23,5 @@ public interface BlogService {
     CommentDto modifyComment(UUID commentId, CommentRequestDto commentRequestDto);
     CommentDto getComment(UUID commentId);
     void deleteComment(UUID commentId);
+    void updatePostHitsFromCache();
 }

@@ -40,7 +40,7 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private boolean deleted;
     @Column
-    private Long hits;
+    private Integer hits;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
@@ -128,7 +128,7 @@ public class Post extends BaseEntity {
         this.thumbnailImage = attachment;
     }
 
-    public void setHits(Long hits) {
+    public void setHits(Integer hits) {
         this.hits = hits;
     }
 }

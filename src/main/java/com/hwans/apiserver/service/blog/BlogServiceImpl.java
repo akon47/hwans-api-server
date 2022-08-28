@@ -4,7 +4,6 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
-import com.hwans.apiserver.entity.blog.Comment;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
@@ -18,6 +17,7 @@ import com.hwans.apiserver.repository.blog.LikeRepository;
 import com.hwans.apiserver.repository.blog.PostRepository;
 import com.hwans.apiserver.repository.blog.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class BlogServiceImpl implements BlogService {
     private final AccountRepository accountRepository;
     private final PostRepository postRepository;
@@ -43,6 +44,8 @@ public class BlogServiceImpl implements BlogService {
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
     private final RedisTemplate<String, Integer> redisTemplate;
+
+    private static final String POST_HITS_KEY = "post-hits";
 
     @Override
     public BlogDetailsDto getBlogDetails(String blogId) {
@@ -213,7 +216,7 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        foundPost.setHits(increaseHits(foundPost.getId()));
+        foundPost.setHits(increaseHits(foundPost).intValue());
         return postMapper.EntityToPostDto(foundPost);
     }
 
@@ -320,13 +323,29 @@ public class BlogServiceImpl implements BlogService {
         foundComment.delete();
     }
 
-    private Long increaseHits(UUID postId) {
-        HashOperations<String, String, Integer> hashOperations = redisTemplate.opsForHash();
-        return hashOperations.increment(postId.toString(), "hits", 1);
+    @Override
+    @Transactional
+    public void updatePostHitsFromCache() {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        hashOperations.keys(POST_HITS_KEY).forEach((postId) -> {
+            var hits = hashOperations.get(POST_HITS_KEY, postId);
+            hashOperations.delete(POST_HITS_KEY, postId);
+            if (hits != null) {
+                postRepository.findById(UUID.fromString(postId)).ifPresent((post) -> {
+                    post.setHits(Integer.valueOf(hits));
+                });
+            }
+        });
     }
 
-    private Integer getHits(UUID postId) {
-        HashOperations<String, String, Integer> hashOperations = redisTemplate.opsForHash();
-        return hashOperations.get(postId.toString(), "hits");
+    private Long increaseHits(Post post) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        final String hashKey = post.getId().toString();
+        if (!hashOperations.hasKey(POST_HITS_KEY, hashKey)) {
+            Optional.ofNullable(post.getHits()).ifPresent((hits) -> {
+                hashOperations.put(POST_HITS_KEY, hashKey, hits.toString());
+            });
+        }
+        return hashOperations.increment(POST_HITS_KEY, hashKey, 1L);
     }
 }
