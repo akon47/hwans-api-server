@@ -83,7 +83,9 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                 .getAccountEmailForReissueToken(accessToken, refreshToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
-        var foundAccount = accountRepository.findByEmailAndDeletedIsFalse(accountEmail).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        var foundAccount = accountRepository
+                .findByEmailAndDeletedIsFalse(accountEmail)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
         if (foundAccount.validateRefreshToken(refreshToken)) {
             String authorities = foundAccount.getRoles().stream()
                     .map(x -> x.getName())
