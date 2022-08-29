@@ -4,9 +4,7 @@ import com.hwans.apiserver.entity.blog.Post;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,10 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
-    @Query(value = "update tb_post set created_At = :createdAt where id = :id", nativeQuery = true)
-    @Modifying
-    void updateCreatedAt(@Param("id") UUID id, @Param(value = "createdAt") LocalDateTime createdAt);
-
     Optional<Post> findByBlogIdAndPostUrl(String blogId, String postUrl);
 
     Optional<Post> findByBlogIdAndPostUrlAndDeletedIsFalse(String blogId, String postUrl);

@@ -9,7 +9,6 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,6 +35,4 @@ public class PostRequestDto implements Serializable {
     UUID thumbnailFileId;
     @ApiModelProperty(value = "태그", required = true)
     Set<TagDto> tags;
-    @ApiModelProperty(value = "작성 시간")
-    LocalDateTime createdAt;
 }
