@@ -50,7 +50,7 @@ public class AccountController {
     @PostMapping(value = "/v1/accounts/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public AccountDto uploadProfileImage(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                       @ApiParam(value = "사용자 프로필 이미지 파일", required = true) @RequestPart MultipartFile profileImageFile) {
-        var attachment = attachmentService.saveImageFile(userAuthenticationDetails.getId(), profileImageFile);
+        var attachment = attachmentService.saveFile(userAuthenticationDetails.getId(), profileImageFile);
         // TODO: 기존 프로필 이미지가 존재한다면 삭제 동작 필요
         return accountService.setProfileImage(userAuthenticationDetails.getId(), attachment.getId());
     }
