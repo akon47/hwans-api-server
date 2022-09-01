@@ -38,11 +38,11 @@ public class AttachmentController {
                 .body(resource);
     }
 
-    @ApiOperation(value = "이미지 파일 업로드", notes = "이미지 파일을 업로드합니다.", tags = "파일")
+    @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
     @PostMapping(value = "/v1/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public SimpleFileDto uploadImageFile(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                            @ApiParam(value = "이미지 파일", required = true) @RequestPart MultipartFile imageFile) {
-        var attachment = attachmentService.saveImageFile(userAuthenticationDetails.getId(), imageFile);
+    public SimpleFileDto uploadFile(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                            @ApiParam(value = "파일", required = true) @RequestPart MultipartFile file) {
+        var attachment = attachmentService.saveFile(userAuthenticationDetails.getId(), file);
         return SimpleFileDto.builder()
                 .id(attachment.getId())
                 .url(attachment.getUrl())
@@ -50,11 +50,11 @@ public class AttachmentController {
                 .build();
     }
 
-    @ApiOperation(value = "이미지 파일 업로드", notes = "이미지 파일을 업로드합니다.", tags = "파일")
-    @PostMapping(value = "/v1/attachments", params = { "imageUrl" })
-    public SimpleFileDto uploadImageFileFromUrl(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                         @ApiParam(value = "이미지 파일", required = true) @RequestParam(value = "imageUrl", required = true) String imageUrl) {
-        var attachment = attachmentService.saveImageFileFromUrl(userAuthenticationDetails.getId(), imageUrl);
+    @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
+    @PostMapping(value = "/v1/attachments", params = { "fileUrl" })
+    public SimpleFileDto uploadFileFromUrl(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                         @ApiParam(value = "파일", required = true) @RequestParam(value = "fileUrl", required = true) String fileUrl) {
+        var attachment = attachmentService.saveFileFromUrl(userAuthenticationDetails.getId(), fileUrl);
         return SimpleFileDto.builder()
                 .id(attachment.getId())
                 .url(attachment.getUrl())

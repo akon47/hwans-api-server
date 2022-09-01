@@ -1,5 +1,6 @@
 package com.hwans.apiserver.service.attachment;
 
+import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.attachment.FileDto;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -33,16 +35,23 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Value("${attachments.path}")
     private String attachmentsBasePath;
 
+    private boolean isSavableContentType(String contentType) {
+        if (!StringUtils.hasText(contentType)) {
+            return false;
+        }
+        return contentType.matches("(^video\\/(mp4|webm))|(^image\\/.*)");
+    }
+
     @Override
     @Transactional
-    public FileDto saveImageFile(UUID uploaderAccountId, MultipartFile multipartFile) {
-        if (!multipartFile.getContentType().startsWith("image")) {
+    public FileDto saveFile(UUID uploaderAccountId, MultipartFile multipartFile) {
+        var contentType = multipartFile.getContentType();
+        if (!isSavableContentType(contentType)) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
         }
-
         var uploaderAccount = accountRepository
                 .findById(uploaderAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+                .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
         var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());
         try {
             multipartFile.transferTo(savePath);
@@ -57,17 +66,16 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     @Transactional
-    public FileDto saveImageFileFromUrl(UUID uploaderAccountId, String imageUrl) {
+    public FileDto saveFileFromUrl(UUID uploaderAccountId, String fileUrl) {
         try {
             var uploaderAccount = accountRepository
                     .findById(uploaderAccountId)
-                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
-
-            var url = new URL(imageUrl);
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
+            var url = new URL(fileUrl);
             var connection = url.openConnection();
             String contentType = connection.getContentType();
             long contentLength = connection.getContentLengthLong();
-            if (!contentType.startsWith("image") || contentLength < 0 || contentLength > 1024 * 1024 * 20) {
+            if (!isSavableContentType(contentType) || contentLength <= 0 || contentLength > Constants.MAX_ATTACHMENT_FILE_SIZE) {
                 throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
             }
             var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());

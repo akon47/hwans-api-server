@@ -87,15 +87,6 @@ public class Post extends BaseEntity {
         this.postUrl = postUrl;
     }
 
-    public void updateSummaryIfNecessary() {
-        if (this.summary == null || this.summary.isBlank()) {
-            this.summary = this.content.lines()
-                    .filter((x) -> x.isBlank() == false && x.matches("^[A-Za-z].*(?:\\n[A-Za-z].*)*"))
-                    .findFirst()
-                    .orElseGet(() -> this.content);
-        }
-    }
-
     public void updatePostUrlIfNecessary() {
         if (this.postUrl == null || this.postUrl.isBlank()) {
             setPostUrl(UUID.randomUUID().toString().replace("-", "").substring(0, 8));
