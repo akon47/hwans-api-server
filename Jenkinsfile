@@ -126,11 +126,11 @@ pipeline {
             steps {
                 echo 'Pull Docker Image & Docker Image Run'
                 sshagent(credentials: ['ssh']) {
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker pull ${IMAGE_NAME}'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker ps -aq --filter name=${APP_NAME} | grep -q . && docker rm -f \$(docker ps -aq --filter name=${APP_NAME}) || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker run -d --restart always --name ${APP_NAME} -v /home/kimhwan/hwans-api-server-data:/var/attachments -v /etc/localtime:/etc/localtime:ro -v /usr/share/zoneinfo/Asia/Seoul:/etc/timezone:ro -p 1200:8080 --network hwans-api-server-net ${IMAGE_NAME}'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker images -qf dangling=true | xargs -I{} docker rmi {} || true'"
-                    sh "ssh -o StrictHostKeyChecking=no kimhwan@kimhwan.kr 'docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true'"
+                    sh "ssh -o StrictHostKeyChecking=no 10.10.10.100 'docker pull ${IMAGE_NAME}'"
+                    sh "ssh -o StrictHostKeyChecking=no 10.10.10.100 'docker ps -aq --filter name=${APP_NAME} | grep -q . && docker rm -f \$(docker ps -aq --filter name=${APP_NAME}) || true'"
+                    sh "ssh -o StrictHostKeyChecking=no 10.10.10.100 'docker run -d --restart always --name ${APP_NAME} -v /home/kimhwan/blog-datas:/var/attachments -v /etc/localtime:/etc/localtime:ro -v /usr/share/zoneinfo/Asia/Seoul:/etc/timezone:ro --network=host ${IMAGE_NAME}'"
+                    sh "ssh -o StrictHostKeyChecking=no 10.10.10.100 'docker images -qf dangling=true | xargs -I{} docker rmi {} || true'"
+                    sh "ssh -o StrictHostKeyChecking=no 10.10.10.100 'docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true'"
                 }
             }
             post {
