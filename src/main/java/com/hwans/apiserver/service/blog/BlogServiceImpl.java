@@ -112,6 +112,7 @@ public class BlogServiceImpl implements BlogService {
         }
 
         var savedPost = postRepository.save(post);
+        postRepository.updateCreatedAt(savedPost.getId(), postRequestDto.getCreatedAt());
         return postMapper.EntityToPostDto(savedPost);
     }
 
