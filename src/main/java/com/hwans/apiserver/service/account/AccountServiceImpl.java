@@ -44,12 +44,10 @@ public class AccountServiceImpl implements AccountService {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_BLOG_ID);
         }
 
-        /*
         String verifyCode = redisTemplate.opsForValue().get(createAccountDto.getEmail());
         if (verifyCode == null || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
             throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
         }
-        */
 
         // 새 사용자 계정 정보 저장
         var savedAccount = accountRepository.save(account);
