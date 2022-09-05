@@ -5,8 +5,11 @@
   <img alt="GitHub starts" src="https://img.shields.io/github/stars/akon47/hwans-api-server">
 </p>
 
-스프링 프레임워크를 이용한 개인 블로그 RestAPI 서버 프로젝트 입니다.
+스프링 프레임워크를 이용한 블로그 서비스 RestAPI 서버 프로젝트 입니다.
 
 ## 🚀 API Document
 
 [https://api.kimhwan.kr/swagger-ui/index.html](https://api.kimhwan.kr/swagger-ui/index.html)
+
+## 🚀 서비스
+https://blog.kimhwan.kr/
