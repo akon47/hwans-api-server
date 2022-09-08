@@ -5,6 +5,7 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
@@ -51,7 +52,7 @@ public class AccountServiceImpl implements AccountService {
 
         // 새 사용자 계정 정보 저장
         var savedAccount = accountRepository.save(account);
-        var userRole = roleRepository.saveIfNotExist("ROLE_USER");
+        var userRole = roleRepository.saveIfNotExist(RoleType.USER.getName());
         savedAccount.addRole(userRole);
         return accountMapper.toDto(savedAccount);
     }

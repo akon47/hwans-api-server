@@ -42,7 +42,9 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Override
     @Transactional
     public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto) {
-        var foundAccount = accountRepository.findByEmailAndDeletedIsFalse(authenticationInfoDto.getEmail()).orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        var foundAccount = accountRepository
+                .findByEmailAndDeletedIsFalse(authenticationInfoDto.getEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
         if (!passwordEncoder.matches(authenticationInfoDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }

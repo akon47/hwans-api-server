@@ -48,12 +48,16 @@ public class JwtTokenProvider implements InitializingBean {
     }
 
     public TokenDto createToken(Authentication authentication) {
-        String authorities = authentication
+        var authorities = authentication
                 .getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
         var userAuthenticationDetails = (UserAuthenticationDetails) authentication.getPrincipal();
         return createToken(userAuthenticationDetails.getEmail(), authorities);
+    }
+
+    public TokenDto createToken(String accountEmail, Collection<? extends GrantedAuthority> authorities) {
+        return createToken(accountEmail, authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
     }
 
     public TokenDto createToken(String accountEmail, String authorities) {

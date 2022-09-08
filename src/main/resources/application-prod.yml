@@ -26,6 +26,17 @@ spring:
           auth: true
           starttls:
             enable: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: '{oauth2-google-client-id}'
+            client-secret: '{oauth2-google-secret}'
+            scope:
+              - profile
+              - email
 jwt:
   base64-access-secret: '{jwt-base64-access-secret}'
   base64-refresh-secret: '{jwt-base64-refresh-secret}'
+  base64-register-secret: '{jwt-base64-register-secret}'
