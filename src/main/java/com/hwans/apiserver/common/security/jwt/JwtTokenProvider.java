@@ -116,7 +116,7 @@ public class JwtTokenProvider implements InitializingBean {
         String accessToken = Jwts.builder()
                 .setSubject(email)
                 .claim(AUTHORITIES_KEY, RoleType.SOCIAL.getName())
-                .signWith(accessTokenSecretKey, SignatureAlgorithm.HS256)
+                .signWith(registerTokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(registerTokenExpiresIn)
                 .compact();
         return accessToken;
