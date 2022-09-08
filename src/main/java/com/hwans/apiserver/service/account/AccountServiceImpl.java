@@ -11,6 +11,7 @@ import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -67,7 +68,7 @@ public class AccountServiceImpl implements AccountService {
 
         if (needVerifyCode) {
             String verifyCode = redisTemplate.opsForValue().get(createAccountDto.getEmail());
-            if (verifyCode == null || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
+            if (StringUtils.isBlank(verifyCode) || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
                 throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
             }
         }

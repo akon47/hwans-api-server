@@ -32,7 +32,6 @@ public class CreateAccountDto implements Serializable {
     @Length(min = 2, max = 64)
     @BlogId
     String blogId;
-    @ApiModelProperty(value = "사용자 이메일 인증 코드", required = true, example = "123456")
-    @NotBlank
+    @ApiModelProperty(value = "사용자 이메일 인증 코드", required = false, example = "123456")
     String emailVerifyCode;
 }
