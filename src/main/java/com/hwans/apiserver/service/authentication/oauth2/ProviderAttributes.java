@@ -16,19 +16,39 @@ public class ProviderAttributes {
     private final String profileImagelUrl;
 
     public ProviderAttributes(ProviderType providerType, Map<String, Object> attributes,
-                              String nameAttributeKey, String emailAttributeKey, String profileImagelUrlAttributeKey)
-    {
+                              String nameAttributeKey, String emailAttributeKey, String profileImagelUrlAttributeKey) {
         this.providerType = providerType;
         this.attributes = attributes;
-        this.name = attributes.getOrDefault(nameAttributeKey, "").toString();
-        this.email = attributes.getOrDefault(emailAttributeKey, "").toString();
-        this.profileImagelUrl = attributes.getOrDefault(profileImagelUrlAttributeKey, "").toString();
+        this.name = getAttributeValue(attributes, nameAttributeKey);
+        this.email = getAttributeValue(attributes, emailAttributeKey);
+        this.profileImagelUrl = getAttributeValue(attributes, profileImagelUrlAttributeKey);
+    }
+
+    private static String getAttributeValue(Map<String, Object> attributes, String key) {
+        if (attributes == null || key == null)
+            return null;
+
+        int index = key.indexOf('/');
+        if (index < 0) {
+            return attributes.getOrDefault(key, "").toString();
+        } else {
+            Map<String, Object> children = (Map<String, Object>) attributes.get(key.substring(0, index));
+            return getAttributeValue(children, key.substring(index + 1));
+        }
     }
 
     public static ProviderAttributes of(ProviderType providerType, Map<String, Object> attributes) {
         switch (providerType) {
             case GOOGLE:
                 return ofGoogle(providerType, attributes);
+            case GITHUB:
+                return ofGithub(providerType, attributes);
+            case FACEBOOK:
+                return ofFacebook(providerType, attributes);
+            case NAVER:
+                return ofNaver(providerType, attributes);
+            case KAKAO:
+                return ofKakao(providerType, attributes);
         }
         return null;
     }
@@ -36,5 +56,25 @@ public class ProviderAttributes {
     private static ProviderAttributes ofGoogle(ProviderType providerType, Map<String, Object> attributes) {
         return new ProviderAttributes(providerType, attributes,
                 "name", "email", "picture");
+    }
+
+    private static ProviderAttributes ofGithub(ProviderType providerType, Map<String, Object> attributes) {
+        return new ProviderAttributes(providerType, attributes,
+                "name", "email", "avatar_url");
+    }
+
+    private static ProviderAttributes ofFacebook(ProviderType providerType, Map<String, Object> attributes) {
+        return new ProviderAttributes(providerType, attributes,
+                "name", "email", "imageUrl");
+    }
+
+    private static ProviderAttributes ofNaver(ProviderType providerType, Map<String, Object> attributes) {
+        return new ProviderAttributes(providerType, attributes,
+                "response/nickname", "response/email", "response/profile_image");
+    }
+
+    private static ProviderAttributes ofKakao(ProviderType providerType, Map<String, Object> attributes) {
+        return new ProviderAttributes(providerType, attributes,
+                "properties/nickname", "account_email", "properties/thumbnail_image");
     }
 }

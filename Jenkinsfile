@@ -10,19 +10,37 @@ pipeline {
         APP_NAME = 'hwans-api-server'
         IMAGE_NAME = 'akon47/hwans-api-server'
         IMAGE_TAG = "${env.APP_VERSION}.${env.BUILD_NUMBER}"
+
         ACTIVE_PROFILE = 'prod'
         SPRING_PROD_PROPERTIES_PATH = "src/main/resources/application-${ACTIVE_PROFILE}.yml"
+
         SPRING_DATASOURCE_URL = credentials('spring-datasource-url')
         SPRING_DATASOURCE_USERNAME = credentials('spring-datasource-username')
         SPRING_DATASOURCE_PASSWORD = credentials('spring-datasource-password')
+
         SPRING_JWT_ACCESS_SECRET_KEY = credentials('spring-jwt-base64-access-secret')
         SPRING_JWT_REFRESH_SECRET_KEY = credentials('spring-jwt-base64-refresh-secret')
+        SPRING_JWT_REGISTER_SECRET_KEY = credentials('spring-jwt-base64-register-secret')
+
         SPRING_REDIS_HOST = credentials('spring-redis-host')
         SPRING_REDIS_PORT = credentials('spring-redis-port')
+
         SPRING_MAIL_HOST = credentials('spring-mail-host')
         SPRING_MAIL_USERNAME = credentials('spring-mail-username')
         SPRING_MAIL_PASSWORD = credentials('spring-mail-password')
         SPRING_MAIL_PORT = credentials('spring-mail-port')
+
+        SPRING_OAUTH2_GOOGLE_CLIENT_ID = credentials('spring-oauth2-google-client-id')
+        SPRING_OAUTH2_GOOGLE_SECRET = credentials('spring-oauth2-google-secret')
+        SPRING_OAUTH2_GITHUB_CLIENT_ID = credentials('spring-oauth2-github-client-id')
+        SPRING_OAUTH2_GITHUB_SECRET = credentials('spring-oauth2-github-secret')
+        SPRING_OAUTH2_FACEBOOK_CLIENT_ID = credentials('spring-oauth2-facebook-client-id')
+        SPRING_OAUTH2_FACEBOOK_SECRET = credentials('spring-oauth2-facebook-secret')
+        SPRING_OAUTH2_NAVER_CLIENT_ID = credentials('spring-oauth2-naver-client-id')
+        SPRING_OAUTH2_NAVER_SECRET = credentials('spring-oauth2-naver-secret')
+        SPRING_OAUTH2_KAKAO_CLIENT_ID = credentials('spring-oauth2-kakao-client-id')
+        SPRING_OAUTH2_KAKAO_SECRET = credentials('spring-oauth2-kakao-secret')
+
         GITHUB_CREDENTIALS_ID = 'git-hub'
         DOCKER_CREDENTIALS_ID = 'docker-hub'
     }
@@ -53,12 +71,24 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{datasource-password\}/, SPRING_DATASOURCE_PASSWORD)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-access-secret\}/, SPRING_JWT_ACCESS_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-refresh-secret\}/, SPRING_JWT_REFRESH_SECRET_KEY)
+                    prodProperties = prodProperties.replaceAll(/\{jwt-base64-register-secret\}/, SPRING_JWT_REGISTER_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{redis-host\}/, SPRING_REDIS_HOST)
                     prodProperties = prodProperties.replaceAll(/\{redis-port\}/, SPRING_REDIS_PORT)
                     prodProperties = prodProperties.replaceAll(/\{mail-host\}/, SPRING_MAIL_HOST)
                     prodProperties = prodProperties.replaceAll(/\{mail-username\}/, SPRING_MAIL_USERNAME)
                     prodProperties = prodProperties.replaceAll(/\{mail-password\}/, SPRING_MAIL_PASSWORD)
                     prodProperties = prodProperties.replaceAll(/\{mail-port\}/, SPRING_MAIL_PORT)
+
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-google-client-id\}/, SPRING_OAUTH2_GOOGLE_CLIENT_ID)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-google-secret\}/, SPRING_OAUTH2_GOOGLE_SECRET)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-github-client-id\}/, SPRING_OAUTH2_GITHUB_CLIENT_ID)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-github-secret\}/, SPRING_OAUTH2_GITHUB_SECRET)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-facebook-client-id\}/, SPRING_OAUTH2_FACEBOOK_CLIENT_ID)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-facebook-secret\}/, SPRING_OAUTH2_FACEBOOK_SECRET)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-naver-client-id\}/, SPRING_OAUTH2_NAVER_CLIENT_ID)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-naver-secret\}/, SPRING_OAUTH2_NAVER_SECRET)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-kakao-client-id\}/, SPRING_OAUTH2_KAKAO_CLIENT_ID)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-kakao-secret\}/, SPRING_OAUTH2_KAKAO_SECRET)
 
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }

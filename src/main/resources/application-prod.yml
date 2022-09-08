@@ -33,9 +33,18 @@ spring:
           google:
             client-id: '{oauth2-google-client-id}'
             client-secret: '{oauth2-google-secret}'
-            scope:
-              - profile
-              - email
+          github:
+            client-id: '{oauth2-github-client-id}'
+            client-secret: '{oauth2-github-secret}'
+          facebook:
+            client-id: '{oauth2-facebook-client-id}'
+            client-secret: '{oauth2-facebook-secret}'
+          naver:
+            client-id: '{oauth2-naver-client-id}'
+            client-secret: '{oauth2-naver-secret}'
+          kakao:
+            client-id: '{oauth2-kakao-client-id}'
+            client-secret: '{oauth2-kakao-secret}'
 jwt:
   base64-access-secret: '{jwt-base64-access-secret}'
   base64-refresh-secret: '{jwt-base64-refresh-secret}'

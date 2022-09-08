@@ -39,11 +39,20 @@ spring:
       client:
         registration:
           google:
-            client-id:
-            client-secret:
-            scope:
-              - profile
-              - email
+            client-id: 'id'
+            client-secret: 'secret'
+          github:
+            client-id: 'id'
+            client-secret: 'secret'
+          facebook:
+            client-id: 'id'
+            client-secret: 'secret'
+          naver:
+            client-id: 'id'
+            client-secret: 'secret'
+          kakao:
+            client-id: 'id'
+            client-secret: 'secret'
 jwt:
   base64-access-secret: 4324e295ed33679e1512b77e4d47f555ef74c6408a768f506af7e88acd2951e9
   base64-refresh-secret: 4324e295ed33679e1512b77e4d47f555ef74c6408a768f506af7e88acd2951e9

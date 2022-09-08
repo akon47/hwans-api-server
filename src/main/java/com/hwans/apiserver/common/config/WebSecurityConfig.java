@@ -7,6 +7,7 @@ import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.service.authentication.oauth2.CustomOAuth2UserService;
 import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2AuthenticationFailureHandler;
 import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2AuthenticationSuccessHandler;
+import com.hwans.apiserver.service.authentication.oauth2.repository.HttpCookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,7 +53,7 @@ public class WebSecurityConfig {
      * */
     @Bean
     public OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
-        return new OAuth2AuthenticationSuccessHandler(tokenProvider);
+        return new OAuth2AuthenticationSuccessHandler();
     }
 
     /*
@@ -61,6 +62,11 @@ public class WebSecurityConfig {
     @Bean
     public OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler() {
         return new OAuth2AuthenticationFailureHandler();
+    }
+
+    @Bean
+    public HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
     }
 
     @Bean
@@ -100,8 +106,15 @@ public class WebSecurityConfig {
                     .apply(new JwtSecurityConfig(tokenProvider, redisTemplate))
                 .and()
                     .oauth2Login()
+                    .authorizationEndpoint()
+                    .baseUri(Constants.API_PREFIX + "/v1/authentication/oauth2")
+                    .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository())
+                .and()
                     .userInfoEndpoint()
                     .userService(customOAuth2UserService)
+                .and()
+                    .redirectionEndpoint()
+                    .baseUri(Constants.API_PREFIX + "/v1/authentication/oauth2/code/*")
                 .and()
                     .successHandler(oAuth2AuthenticationSuccessHandler())
                     .failureHandler(oAuth2AuthenticationFailureHandler());

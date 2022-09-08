@@ -29,8 +29,13 @@ public class AccountController {
 
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
-    public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody @Valid final CreateAccountDto userCreateDto) {
-        return accountService.createAccount(userCreateDto);
+    public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody @Valid final CreateAccountDto userCreateDto,
+                             @ApiParam(value = "OAuth2 인증을 통해 계정을 생성하는 경우 Register 토큰", required = false) @RequestParam String registerToken) {
+        if (registerToken != null) {
+            return accountService.createAccount(userCreateDto, registerToken);
+        } else {
+            return accountService.createAccount(userCreateDto);
+        }
     }
 
     @ApiOperation(value = "사용자 이메일 인증 코드 발송", notes = "새로운 사용자 계정 생성을 위해 이메일 인증 코드를 발송합니다.", tags = "사용자 계정")
@@ -49,7 +54,7 @@ public class AccountController {
     @ApiOperation(value = "현재 사용자 프로필 이미지 생성", notes = "현재 사용자 프로필 이미지를 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public AccountDto uploadProfileImage(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                      @ApiParam(value = "사용자 프로필 이미지 파일", required = true) @RequestPart MultipartFile profileImageFile) {
+                                         @ApiParam(value = "사용자 프로필 이미지 파일", required = true) @RequestPart MultipartFile profileImageFile) {
         var attachment = attachmentService.saveFile(userAuthenticationDetails.getId(), profileImageFile);
         // TODO: 기존 프로필 이미지가 존재한다면 삭제 동작 필요
         return accountService.setProfileImage(userAuthenticationDetails.getId(), attachment.getId());

@@ -1,5 +1,9 @@
 package com.hwans.apiserver.service.authentication.oauth2;
 
 public enum ProviderType {
-    GOOGLE
+    GOOGLE,
+    GITHUB,
+    FACEBOOK,
+    NAVER,
+    KAKAO
 }

@@ -2,6 +2,7 @@ package com.hwans.apiserver.common.security.jwt;
 
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.authentication.TokenDto;
+import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import io.jsonwebtoken.*;
 
@@ -27,16 +28,21 @@ public class JwtTokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = "auth";
     private final String accessTokenSecretKeyBase64Secret;
     private final String refreshTokenSecretKeyBase64Secret;
+    private final String registerTokenSecretKeyBase64Secret;
 
     private Key accessTokenSecretKey;
     private Key refreshTokenSecretKey;
+    private Key registerTokenSecretKey;
 
     public JwtTokenProvider(@Value("${jwt.base64-access-secret}") String accessTokenSecretKeyBase64Secret,
-                            @Value("${jwt.base64-refresh-secret}") String refreshTokenSecretKeyBase64Secret) {
+                            @Value("${jwt.base64-refresh-secret}") String refreshTokenSecretKeyBase64Secret,
+                            @Value("${jwt.base64-register-secret}") String registerTokenSecretKeyBase64Secret) {
         this.accessTokenSecretKeyBase64Secret = accessTokenSecretKeyBase64Secret;
         log.debug("accessTokenSecretKeyBase64Secret -> " + accessTokenSecretKeyBase64Secret);
         this.refreshTokenSecretKeyBase64Secret = refreshTokenSecretKeyBase64Secret;
         log.debug("refreshTokenSecretKeyBase64Secret -> " + refreshTokenSecretKeyBase64Secret);
+        this.registerTokenSecretKeyBase64Secret = registerTokenSecretKeyBase64Secret;
+        log.debug("registerTokenSecretKeyBase64Secret -> " + registerTokenSecretKeyBase64Secret);
     }
 
     @Override
@@ -45,6 +51,8 @@ public class JwtTokenProvider implements InitializingBean {
         this.accessTokenSecretKey = Keys.hmacShaKeyFor(accessSecretKeyBytes);
         byte[] refreshSecretKeyBytes = Decoders.BASE64.decode(refreshTokenSecretKeyBase64Secret);
         this.refreshTokenSecretKey = Keys.hmacShaKeyFor(refreshSecretKeyBytes);
+        byte[] registerSecretKeyBytes = Decoders.BASE64.decode(registerTokenSecretKeyBase64Secret);
+        this.registerTokenSecretKey = Keys.hmacShaKeyFor(registerSecretKeyBytes);
     }
 
     public TokenDto createToken(Authentication authentication) {
@@ -100,6 +108,18 @@ public class JwtTokenProvider implements InitializingBean {
         var principal = new UserAuthenticationDetails(claims.getSubject(), authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    }
+
+    public String createRegisterToken(String email) {
+        long now = (new Date()).getTime();
+        Date registerTokenExpiresIn = new Date(now + Constants.REGISTER_TOKEN_EXPIRES_TIME);
+        String accessToken = Jwts.builder()
+                .setSubject(email)
+                .claim(AUTHORITIES_KEY, RoleType.SOCIAL.getName())
+                .signWith(accessTokenSecretKey, SignatureAlgorithm.HS256)
+                .setExpiration(registerTokenExpiresIn)
+                .compact();
+        return accessToken;
     }
 
     public JwtStatus validateAccessToken(String token) {
@@ -174,6 +194,23 @@ public class JwtTokenProvider implements InitializingBean {
                 return Optional.ofNullable(e.getClaims().getSubject());
             }
         } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<String> getAccountEmailFromRegisterToken(String registerToken) {
+        try {
+            return Optional.ofNullable(
+                    Jwts
+                            .parserBuilder()
+                            .setSigningKey(registerTokenSecretKey)
+                            .build()
+                            .parseClaimsJws(registerToken)
+                            .getBody()
+                            .getSubject());
+
+        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
+                 IllegalArgumentException e) {
             return Optional.empty();
         }
     }

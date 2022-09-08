@@ -3,6 +3,7 @@ package com.hwans.apiserver.service.account;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
+import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.entity.account.role.RoleType;
@@ -29,10 +30,29 @@ public class AccountServiceImpl implements AccountService {
     private final AttachmentRepository attachmentRepository;
     private final AccountMapper accountMapper;
     private final RedisTemplate<String, String> redisTemplate;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     @Override
     public AccountDto createAccount(CreateAccountDto createAccountDto) {
+        return createAccount(createAccountDto, true);
+    }
+
+    @Transactional
+    @Override
+    public AccountDto createAccount(CreateAccountDto createAccountDto, String registerToken) {
+        var accountEmail = jwtTokenProvider
+                .getAccountEmailFromRegisterToken(registerToken)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST));
+        if (!createAccountDto.getEmail().equals(accountEmail)) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+
+        return createAccount(createAccountDto, false);
+    }
+
+    @Transactional
+    protected AccountDto createAccount(CreateAccountDto createAccountDto, boolean needVerifyCode) {
         var account = accountMapper.toEntity(createAccountDto);
 
         // 이미 해당 계정 이메일이 존재할 경우
@@ -45,9 +65,11 @@ public class AccountServiceImpl implements AccountService {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_BLOG_ID);
         }
 
-        String verifyCode = redisTemplate.opsForValue().get(createAccountDto.getEmail());
-        if (verifyCode == null || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
-            throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
+        if (needVerifyCode) {
+            String verifyCode = redisTemplate.opsForValue().get(createAccountDto.getEmail());
+            if (verifyCode == null || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
+                throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
+            }
         }
 
         // 새 사용자 계정 정보 저장

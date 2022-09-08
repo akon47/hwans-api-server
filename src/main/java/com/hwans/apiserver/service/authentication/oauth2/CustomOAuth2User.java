@@ -18,18 +18,28 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
     private final ProviderAttributes providerAttributes;
-    private final Collection<GrantedAuthority> authorities;
+    private final Collection<? extends GrantedAuthority> authorities;
     private final boolean needRegister;
+    private final String accessToken;
+    private final String refreshToken;
+    private final String registerToken;
 
-    public CustomOAuth2User(ProviderAttributes providerAttributes, Account foundAccount) {
+    public CustomOAuth2User(ProviderAttributes providerAttributes, Collection<? extends GrantedAuthority> authorities, String accessToken, String refreshToken) {
         this.providerAttributes = providerAttributes;
-        if (foundAccount == null) {
-            this.authorities = Collections.singletonList(new SimpleGrantedAuthority(RoleType.SOCIAL.getName()));
-            this.needRegister = true;
-        } else {
-            this.authorities = foundAccount.getRoles().stream().map(Role::getName).map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
-            this.needRegister = false;
-        }
+        this.authorities = authorities;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.registerToken = null;
+        this.needRegister = false;
+    }
+
+    public CustomOAuth2User(ProviderAttributes providerAttributes, String registerToken) {
+        this.providerAttributes = providerAttributes;
+        this.authorities = Collections.singletonList(new SimpleGrantedAuthority(RoleType.SOCIAL.getName()));
+        this.registerToken = registerToken;
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.needRegister = true;
     }
 
     @Override

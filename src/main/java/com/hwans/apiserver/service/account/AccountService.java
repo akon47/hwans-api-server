@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface AccountService {
     AccountDto createAccount(CreateAccountDto createAccountDto);
+    AccountDto createAccount(CreateAccountDto createAccountDto, String registerToken);
     AccountDto getCurrentAccount();
     String getCurrentAccountEmail();
     String setEmailVerifyCode(String email);
