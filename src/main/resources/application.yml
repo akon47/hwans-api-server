@@ -60,5 +60,6 @@ spring:
 server:
   tomcat:
     use-relative-redirects: true
+  forward-headers-strategy: native
 attachments:
   path: /var/attachments/
