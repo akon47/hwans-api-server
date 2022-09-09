@@ -70,11 +70,11 @@ public class ProviderAttributes {
 
     private static ProviderAttributes ofNaver(ProviderType providerType, Map<String, Object> attributes) {
         return new ProviderAttributes(providerType, attributes,
-                "response/nickname", "response/email", "response/profile_image");
+                "response/name", "response/email", "response/profile_image");
     }
 
     private static ProviderAttributes ofKakao(ProviderType providerType, Map<String, Object> attributes) {
         return new ProviderAttributes(providerType, attributes,
-                "properties/nickname", "account_email", "properties/thumbnail_image");
+                "kakao_account/profile/nickname", "kakao_account/email", "kakao_account/profile/profile_image_url");
     }
 }
