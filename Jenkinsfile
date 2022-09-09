@@ -40,6 +40,8 @@ pipeline {
         SPRING_OAUTH2_NAVER_SECRET = credentials('spring-oauth2-naver-secret')
         SPRING_OAUTH2_KAKAO_CLIENT_ID = credentials('spring-oauth2-kakao-client-id')
         SPRING_OAUTH2_KAKAO_SECRET = credentials('spring-oauth2-kakao-secret')
+        SPRING_OAUTH2_DISCORD_CLIENT_ID = credentials('spring-oauth2-discord-client-id')
+        SPRING_OAUTH2_DISCORD_SECRET = credentials('spring-oauth2-discord-secret')
 
         GITHUB_CREDENTIALS_ID = 'git-hub'
         DOCKER_CREDENTIALS_ID = 'docker-hub'
@@ -89,6 +91,8 @@ pipeline {
                     prodProperties = prodProperties.replaceAll(/\{oauth2-naver-secret\}/, SPRING_OAUTH2_NAVER_SECRET)
                     prodProperties = prodProperties.replaceAll(/\{oauth2-kakao-client-id\}/, SPRING_OAUTH2_KAKAO_CLIENT_ID)
                     prodProperties = prodProperties.replaceAll(/\{oauth2-kakao-secret\}/, SPRING_OAUTH2_KAKAO_SECRET)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-discord-client-id\}/, SPRING_OAUTH2_DISCORD_CLIENT_ID)
+                    prodProperties = prodProperties.replaceAll(/\{oauth2-discord-secret\}/, SPRING_OAUTH2_DISCORD_SECRET)
 
                     writeFile file: SPRING_PROD_PROPERTIES_PATH, text: prodProperties
                 }

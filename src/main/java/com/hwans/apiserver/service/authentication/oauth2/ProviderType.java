@@ -5,5 +5,6 @@ public enum ProviderType {
     GITHUB,
     FACEBOOK,
     NAVER,
-    KAKAO
+    KAKAO,
+    DISCORD,
 }

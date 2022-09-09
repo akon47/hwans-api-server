@@ -53,6 +53,9 @@ spring:
           kakao:
             client-id: 'id'
             client-secret: 'secret'
+          discord:
+            client-id: 'id'
+            client-secret: 'secret'
 jwt:
   base64-access-secret: 4324e295ed33679e1512b77e4d47f555ef74c6408a768f506af7e88acd2951e9
   base64-refresh-secret: 4324e295ed33679e1512b77e4d47f555ef74c6408a768f506af7e88acd2951e9

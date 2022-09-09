@@ -45,6 +45,9 @@ spring:
           kakao:
             client-id: '{oauth2-kakao-client-id}'
             client-secret: '{oauth2-kakao-secret}'
+          discord:
+            client-id: '{oauth2-discord-client-id}'
+            client-secret: '{oauth2-discord-secret}'
 jwt:
   base64-access-secret: '{jwt-base64-access-secret}'
   base64-refresh-secret: '{jwt-base64-refresh-secret}'
