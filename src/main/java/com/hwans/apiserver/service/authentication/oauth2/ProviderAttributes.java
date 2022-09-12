@@ -51,6 +51,8 @@ public class ProviderAttributes {
                 return ofKakao(providerType, attributes);
             case DISCORD:
                 return ofDiscord(providerType, attributes);
+            case MICROSOFT:
+                return ofMicrosoft(providerType, attributes);
         }
         return null;
     }
@@ -88,5 +90,10 @@ public class ProviderAttributes {
                 getAttributeValue(attributes, "username"),
                 getAttributeValue(attributes, "email"),
                 profileImageUrl);
+    }
+
+    private static ProviderAttributes ofMicrosoft(ProviderType providerType, Map<String, Object> attributes) {
+        return ProviderAttributes.ofAttributeKey(providerType, attributes,
+                "displayName", "userPrincipalName", null);
     }
 }

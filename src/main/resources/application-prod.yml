@@ -48,6 +48,9 @@ spring:
           discord:
             client-id: '{oauth2-discord-client-id}'
             client-secret: '{oauth2-discord-secret}'
+          microsoft:
+            client-id: '{oauth2-microsoft-client-id}'
+            client-secret: '{oauth2-microsoft-secret}'
 jwt:
   base64-access-secret: '{jwt-base64-access-secret}'
   base64-refresh-secret: '{jwt-base64-refresh-secret}'

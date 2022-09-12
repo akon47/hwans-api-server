@@ -54,6 +54,13 @@ spring:
             client-authentication-method: post
             authorization-grant-type: authorization_code
             client-name: Discord
+          microsoft:
+            scope:
+              - https://graph.microsoft.com/User.Read
+            redirect-uri: '{baseUrl}/api/v1/authentication/oauth2/code/{registrationId}'
+            client-authentication-method: post
+            authorization-grant-type: authorization_code
+            client-name: Microsoft
         provider:
           naver:
             authorization-uri: https://nid.naver.com/oauth2.0/authorize
@@ -69,6 +76,11 @@ spring:
             authorization-uri: https://discord.com/api/oauth2/authorize
             token-uri: https://discord.com/api/oauth2/token
             user-info-uri: https://discord.com/api/users/@me
+            user-name-attribute: id
+          microsoft:
+            authorization-uri: https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/consumers/oauth2/v2.0/token
+            user-info-uri: https://graph.microsoft.com/v1.0/me
             user-name-attribute: id
 server:
   tomcat:

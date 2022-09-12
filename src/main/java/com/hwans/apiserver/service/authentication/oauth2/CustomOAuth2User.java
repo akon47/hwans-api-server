@@ -1,7 +1,5 @@
 package com.hwans.apiserver.service.authentication.oauth2;
 
-import com.hwans.apiserver.entity.account.Account;
-import com.hwans.apiserver.entity.account.role.Role;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +10,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 @RequiredArgsConstructor

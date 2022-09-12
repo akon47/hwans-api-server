@@ -7,4 +7,5 @@ public enum ProviderType {
     NAVER,
     KAKAO,
     DISCORD,
+    MICROSOFT
 }
