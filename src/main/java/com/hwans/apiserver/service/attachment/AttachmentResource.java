@@ -23,4 +23,9 @@ public class AttachmentResource extends InputStreamResource {
         this.contentLength = attachment.getFileSize();
         this.fileName = attachment.getFileName();
     }
+
+    @Override
+    public long contentLength() {
+        return this.contentLength;
+    }
 }
