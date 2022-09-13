@@ -2,12 +2,17 @@ package com.hwans.apiserver.service.account;
 
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import org.springframework.validation.annotation.Validated;
 
+import javax.validation.Valid;
 import java.util.UUID;
 
+@Validated
 public interface AccountService {
-    AccountDto createAccount(CreateAccountDto createAccountDto);
-    AccountDto createAccount(CreateAccountDto createAccountDto, String registerToken);
+    @Validated(CreateAccountDto.ByEmailVerifyCode.class)
+    AccountDto createAccount(@Valid CreateAccountDto createAccountDto);
+    @Validated(CreateAccountDto.ByRegisterToken.class)
+    AccountDto createAccount(@Valid CreateAccountDto createAccountDto, String registerToken);
     AccountDto getCurrentAccount();
     String getCurrentAccountEmail();
     String setEmailVerifyCode(String email);

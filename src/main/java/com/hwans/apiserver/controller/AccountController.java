@@ -13,11 +13,14 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
 
+@Validated
 @RestController
 @Api(tags = "사용자 계정")
 @RequestMapping(value = Constants.API_PREFIX)
@@ -30,7 +33,7 @@ public class AccountController {
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
     public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody @Valid final CreateAccountDto userCreateDto,
-                             @ApiParam(value = "OAuth2 인증을 통해 계정을 생성하는 경우 Register 토큰", required = false) @RequestParam String registerToken) {
+                             @ApiParam(value = "OAuth2 인증을 통해 계정을 생성하는 경우 Register 토큰", required = false) @RequestParam(required = false) String registerToken) {
         if (registerToken != null) {
             return accountService.createAccount(userCreateDto, registerToken);
         } else {
@@ -40,7 +43,7 @@ public class AccountController {
 
     @ApiOperation(value = "사용자 이메일 인증 코드 발송", notes = "새로운 사용자 계정 생성을 위해 이메일 인증 코드를 발송합니다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts/verify-email")
-    public void verifyEmail(@ApiParam(value = "인증 코드를 발송할 이메일 주소", required = true) @RequestParam String email) {
+    public void verifyEmail(@ApiParam(value = "인증 코드를 발송할 이메일 주소", required = true) @RequestParam @Email String email) {
         var verifyCode = accountService.setEmailVerifyCode(email);
         mailSenderService.sendMailVerifyCode(email, verifyCode);
     }

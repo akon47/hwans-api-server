@@ -15,7 +15,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static com.hwans.apiserver.service.authentication.oauth2.repository.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
@@ -52,13 +52,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                     .queryParam("email", providerAttributes.getEmail())
                     .queryParam("name", providerAttributes.getName())
                     .queryParam("profileImageUrl", providerAttributes.getProfileImagelUrl())
-                    .build().toUriString();
+                    .build().encode(StandardCharsets.UTF_8).toUriString();
         } else {
             return UriComponentsBuilder.fromUriString(targetUrl)
                     .queryParam("needRegister", customOAuth2User.isNeedRegister())
                     .queryParam("accessToken", customOAuth2User.getAccessToken())
                     .queryParam("refreshToken", customOAuth2User.getRefreshToken())
-                    .build().toUriString();
+                    .build().encode(StandardCharsets.UTF_8).toUriString();
         }
     }
 }

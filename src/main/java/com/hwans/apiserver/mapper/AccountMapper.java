@@ -27,6 +27,9 @@ public abstract class AccountMapper {
 
     @Named("encodePassword")
     String encoderPassword(String password) {
+        if (password == null)
+            return null;
+
         return passwordEncoder.encode(password);
     }
 }

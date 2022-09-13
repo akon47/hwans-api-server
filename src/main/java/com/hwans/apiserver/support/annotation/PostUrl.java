@@ -15,6 +15,8 @@ import static java.lang.annotation.ElementType.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PostUrl {
     String message() default "영문과 숫자 그리고 하이픈과 언더바만 사용 가능합니다.";
-    Class<?>[] groups() default { };
-    Class<? extends Payload>[] payload() default { };
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 }
