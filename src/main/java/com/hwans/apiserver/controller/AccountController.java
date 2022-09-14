@@ -3,6 +3,7 @@ package com.hwans.apiserver.controller;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.service.account.AccountService;
 import com.hwans.apiserver.service.attachment.AttachmentService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
@@ -39,6 +40,13 @@ public class AccountController {
         } else {
             return accountService.createAccount(userCreateDto);
         }
+    }
+
+    @ApiOperation(value = "사용자 계정 정보 수정", notes = "새로운 사용자 계정 정보를 수정한다.", tags = "사용자 계정")
+    @PutMapping(value = "/v1/accounts")
+    public AccountDto modify(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                             @ApiParam(value = "사용자 정보", required = true) @RequestBody @Valid final ModifyAccountDto modifyAccountDto) {
+        return accountService.modifyAccount(userAuthenticationDetails.getId(), modifyAccountDto);
     }
 
     @ApiOperation(value = "사용자 이메일 인증 코드 발송", notes = "새로운 사용자 계정 생성을 위해 이메일 인증 코드를 발송합니다.", tags = "사용자 계정")

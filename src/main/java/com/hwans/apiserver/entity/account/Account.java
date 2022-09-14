@@ -1,5 +1,6 @@
 package com.hwans.apiserver.entity.account;
 
+import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.role.AccountRole;
 import com.hwans.apiserver.entity.account.role.Role;
@@ -92,5 +93,9 @@ public class Account extends BaseEntity {
 
     public void setProfileImage(Attachment attachment) {
         this.profileImage = attachment;
+    }
+
+    public void update(ModifyAccountDto modifyAccountDto) {
+
     }
 }

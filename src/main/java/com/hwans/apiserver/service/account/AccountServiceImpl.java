@@ -6,6 +6,7 @@ import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
@@ -78,6 +79,16 @@ public class AccountServiceImpl implements AccountService {
         var userRole = roleRepository.saveIfNotExist(RoleType.USER.getName());
         savedAccount.addRole(userRole);
         return accountMapper.toDto(savedAccount);
+    }
+
+    @Override
+    @Transactional
+    public AccountDto modifyAccount(UUID accountId, ModifyAccountDto modifyAccountDto) {
+        var foundAccount = accountRepository
+                .findById(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        foundAccount.update(modifyAccountDto);
+        return accountMapper.toDto(foundAccount);
     }
 
     @Override
