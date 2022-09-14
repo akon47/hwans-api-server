@@ -96,6 +96,10 @@ public class Account extends BaseEntity {
     }
 
     public void update(ModifyAccountDto modifyAccountDto) {
-
+        this.name = modifyAccountDto.getName();
+        this.biography = modifyAccountDto.getBiography();
+        this.company = modifyAccountDto.getCompany();
+        this.location = modifyAccountDto.getLocation();
+        this.homepage = modifyAccountDto.getHomepage();
     }
 }
