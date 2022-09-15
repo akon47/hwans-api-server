@@ -101,6 +101,13 @@ public class AccountServiceImpl implements AccountService {
         final var email = jwtTokenProvider
                 .getAccountEmailFromResetPasswordToken(resetPasswordDto.getResetPasswordToken())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST));
+
+        final var passwordResetTokenKey = getPasswordResetTokenKey(email);
+        String passwordResetToken = redisTemplate.opsForValue().getAndDelete(passwordResetTokenKey);
+        if (StringUtils.isBlank(passwordResetToken) || passwordResetToken.equals(resetPasswordDto.getResetPasswordToken()) == false) {
+            throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
+        }
+
         var foundAccount = accountRepository
                 .findByEmailAndDeletedIsFalse(email)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
