@@ -102,4 +102,8 @@ public class Account extends BaseEntity {
         this.location = modifyAccountDto.getLocation();
         this.homepage = modifyAccountDto.getHomepage();
     }
+
+    public void setPassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

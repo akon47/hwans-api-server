@@ -113,13 +113,25 @@ public class JwtTokenProvider implements InitializingBean {
     public String createRegisterToken(String email) {
         long now = (new Date()).getTime();
         Date registerTokenExpiresIn = new Date(now + Constants.REGISTER_TOKEN_EXPIRES_TIME);
-        String accessToken = Jwts.builder()
+        String registerToken = Jwts.builder()
                 .setSubject(email)
                 .claim(AUTHORITIES_KEY, RoleType.SOCIAL.getName())
                 .signWith(registerTokenSecretKey, SignatureAlgorithm.HS256)
                 .setExpiration(registerTokenExpiresIn)
                 .compact();
-        return accessToken;
+        return registerToken;
+    }
+
+    public String createPasswordResetToken(String email) {
+        long now = (new Date()).getTime();
+        Date passwordResetTokenExpiresIn = new Date(now + Constants.PASSWORD_RESET_TOKEN_EXPIRES_TIME);
+        String passwordResetToken = Jwts.builder()
+                .setSubject(email)
+                .claim(AUTHORITIES_KEY, RoleType.GUEST.getName())
+                .signWith(registerTokenSecretKey, SignatureAlgorithm.HS256)
+                .setExpiration(passwordResetTokenExpiresIn)
+                .compact();
+        return passwordResetToken;
     }
 
     public JwtStatus validateAccessToken(String token) {
@@ -159,20 +171,15 @@ public class JwtTokenProvider implements InitializingBean {
     }
 
     public Optional<String> getAccountEmailFromAccessToken(String accessToken) {
-        try {
-            return Optional.ofNullable(
-                    Jwts
-                            .parserBuilder()
-                            .setSigningKey(accessTokenSecretKey)
-                            .build()
-                            .parseClaimsJws(accessToken)
-                            .getBody()
-                            .getSubject());
+        return getAccountEmailFromToken(accessTokenSecretKey, accessToken);
+    }
 
-        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
-                 IllegalArgumentException e) {
-            return Optional.empty();
-        }
+    public Optional<String> getAccountEmailFromRegisterToken(String registerToken) {
+        return getAccountEmailFromToken(registerTokenSecretKey, registerToken);
+    }
+
+    public Optional<String> getAccountEmailFromResetPasswordToken(String resetPasswordToken) {
+        return getAccountEmailFromToken(registerTokenSecretKey, resetPasswordToken);
     }
 
     public Optional<String> getAccountEmailForReissueToken(String accessToken, String refreshToken) {
@@ -198,14 +205,14 @@ public class JwtTokenProvider implements InitializingBean {
         }
     }
 
-    public Optional<String> getAccountEmailFromRegisterToken(String registerToken) {
+    private Optional<String> getAccountEmailFromToken(Key signingKey, String token) {
         try {
             return Optional.ofNullable(
                     Jwts
                             .parserBuilder()
-                            .setSigningKey(registerTokenSecretKey)
+                            .setSigningKey(signingKey)
                             .build()
-                            .parseClaimsJws(registerToken)
+                            .parseClaimsJws(token)
                             .getBody()
                             .getSubject());
 

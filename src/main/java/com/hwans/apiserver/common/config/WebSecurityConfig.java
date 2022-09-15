@@ -94,9 +94,13 @@ public class WebSecurityConfig {
                             Constants.API_PREFIX + "/v1/blog/**",
                             Constants.API_PREFIX + "/v1/attachments/**").permitAll()
                     .antMatchers(
+                            HttpMethod.PUT,
+                            Constants.API_PREFIX + "/v1/accounts/password").permitAll()
+                    .antMatchers(
                             HttpMethod.POST,
                             Constants.API_PREFIX + "/v1/accounts",
                             Constants.API_PREFIX + "/v1/accounts/verify-email",
+                            Constants.API_PREFIX + "/v1/accounts/reset-password-email",
                             Constants.API_PREFIX + "/v1/authentication/token",
                             Constants.API_PREFIX + "/v1/authentication/refresh-token").permitAll()
                     //.antMatchers("/h2-console/**").permitAll() // Local H2 콘솔 테스트 환경

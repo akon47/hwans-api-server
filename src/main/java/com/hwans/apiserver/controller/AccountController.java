@@ -4,6 +4,7 @@ import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.dto.account.ModifyAccountDto;
+import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import com.hwans.apiserver.service.account.AccountService;
 import com.hwans.apiserver.service.attachment.AttachmentService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
@@ -49,11 +50,24 @@ public class AccountController {
         return accountService.modifyAccount(userAuthenticationDetails.getId(), modifyAccountDto);
     }
 
-    @ApiOperation(value = "사용자 이메일 인증 코드 발송", notes = "새로운 사용자 계정 생성을 위해 이메일 인증 코드를 발송합니다.", tags = "사용자 계정")
+    @ApiOperation(value = "사용자 계정 비밀번호 재설정", notes = "사용자 계정 비밀번호를 재설정한다.", tags = "사용자 계정")
+    @PutMapping(value = "/v1/accounts/password")
+    public void modify(@ApiParam(value = "사용자 계정 비밀번호 재설정 정보", required = true) @RequestBody @Valid final ResetPasswordDto resetPasswordDto) {
+        accountService.resetPassword(resetPasswordDto);
+    }
+
+    @ApiOperation(value = "사용자 이메일 인증 코드 이메일 발송", notes = "새로운 사용자 계정 생성을 위해 이메일 인증 코드를 발송합니다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts/verify-email")
-    public void verifyEmail(@ApiParam(value = "인증 코드를 발송할 이메일 주소", required = true) @RequestParam @Email String email) {
+    public void sendVerifyEmail(@ApiParam(value = "인증 코드를 발송할 이메일 주소", required = true) @RequestParam @Email String email) {
         var verifyCode = accountService.setEmailVerifyCode(email);
         mailSenderService.sendMailVerifyCode(email, verifyCode);
+    }
+
+    @ApiOperation(value = "사용자 계정 비밀번호 재설정 요청 이메일 발송", notes = "사용자 계정 비밀번호 재설정을 위해 재설정 요청 URL을 이메일로 발송합니다.", tags = "사용자 계정")
+    @PostMapping(value = "/v1/accounts/reset-password-email")
+    public void sendResetPassword(@ApiParam(value = "재설정 URL을 발송할 이메일 주소", required = true) @RequestParam @Email String email) {
+        var resetPasswordToken = accountService.setResetPasswordToken(email);
+        mailSenderService.sendResetPasswordUrl(email, resetPasswordToken);
     }
 
     @ApiOperation(value = "현재 사용자 계정 정보 조회", notes = "현재 사용자 계정 정보를 조회합니다.", tags = "사용자 계정")

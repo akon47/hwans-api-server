@@ -7,6 +7,7 @@ import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.dto.account.ModifyAccountDto;
+import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
@@ -16,6 +17,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
@@ -68,7 +71,8 @@ public class AccountServiceImpl implements AccountService {
         }
 
         if (needVerifyCode) {
-            String verifyCode = redisTemplate.opsForValue().get(createAccountDto.getEmail());
+            final var emailVerifyCodeKey = getEmailVerifyCodeKey(createAccountDto.getEmail());
+            String verifyCode = redisTemplate.opsForValue().get(emailVerifyCodeKey);
             if (StringUtils.isBlank(verifyCode) || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
                 throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
             }
@@ -92,18 +96,48 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
+    public void resetPassword(ResetPasswordDto resetPasswordDto) {
+        final var email = jwtTokenProvider
+                .getAccountEmailFromResetPasswordToken(resetPasswordDto.getResetPasswordToken())
+                .orElseThrow(() -> new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST));
+        var foundAccount = accountRepository
+                .findByEmailAndDeletedIsFalse(email)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        foundAccount.setPassword(passwordEncoder.encode(resetPasswordDto.getNewPassword()));
+    }
+
+    @Override
     public String setEmailVerifyCode(String email) {
         // 이미 해당 계정 이메일이 존재할 경우
         if (accountRepository.existsByEmail(email)) {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_EMAIL);
         }
 
-        if (redisTemplate.hasKey(email) == false) {
+        final var emailVerifyCodeKey = getEmailVerifyCodeKey(email);
+        if (redisTemplate.hasKey(emailVerifyCodeKey) == false) {
             var verifyCode = createNewVerifyCode();
-            redisTemplate.opsForValue().set(email, verifyCode, Duration.ofMillis(Constants.EMAIL_VERIFY_CODE_EXPIRES_TIME));
+            redisTemplate.opsForValue().set(emailVerifyCodeKey, verifyCode, Duration.ofMillis(Constants.EMAIL_VERIFY_CODE_EXPIRES_TIME));
             return verifyCode;
         } else {
             throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_VERIFY_CODE);
+        }
+    }
+
+    @Override
+    public String setResetPasswordToken(String email) {
+        // 해당 계정 이메일이 존재하지 않을 경우
+        if (!accountRepository.existsByEmail(email)) {
+            throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND_EMAIL);
+        }
+
+        final var passwordResetTokenKey = getPasswordResetTokenKey(email);
+        if (redisTemplate.hasKey(passwordResetTokenKey) == false) {
+            var passwordResetToken = jwtTokenProvider.createPasswordResetToken(email);
+            redisTemplate.opsForValue().set(passwordResetTokenKey, passwordResetToken, Duration.ofMillis(Constants.PASSWORD_RESET_TOKEN_EXPIRES_TIME));
+            return passwordResetToken;
+        } else {
+            throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_PASSWORD_RESET_URL);
         }
     }
 
@@ -146,5 +180,13 @@ public class AccountServiceImpl implements AccountService {
     private String createNewVerifyCode() {
         Random random = new Random();
         return String.valueOf(random.nextInt(100000, 1000000));
+    }
+
+    private String getEmailVerifyCodeKey(String email) {
+        return "email-verify-code: " + email;
+    }
+
+    private String getPasswordResetTokenKey(String email) {
+        return "password-reset-token: " + email;
     }
 }

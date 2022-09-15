@@ -19,6 +19,11 @@ public class MailSenderServiceImpl implements MailSenderService {
         sendMail(createVerifyEmailMessage(email, verifyCode));
     }
 
+    @Override
+    public void sendResetPasswordUrl(String email, String resetPasswordToken) {
+        sendMail(createResetPasswordMessage(email, resetPasswordToken));
+    }
+
     private void sendMail(MailMessageDto mailMessageDto) {
         var mimeMessage = javaMailSender.createMimeMessage();
         try {
@@ -42,6 +47,20 @@ public class MailSenderServiceImpl implements MailSenderService {
                         .toString())
                 .to(email)
                 .isHtmlContent(false)
+                .build();
+    }
+
+    private MailMessageDto createResetPasswordMessage(String email, String resetPasswordToken) {
+        return MailMessageDto.builder()
+                .subject("[Hwan'Story] 비밀번호 재설정 요청")
+                .content(new StringBuilder()
+                        .append("<div>아래 링크를 눌러 비밀번호 재설정이 가능합니다. 본인이 요청한게 아니라면 이 메일은 무시해 주세요.</div>")
+                        .append("<a href=\"https://blog.kimhwan.kr/reset-password?token=") // TODO: 링크 주소에 대해서 설정 파일에 설정하도록 수정 필요.
+                        .append(resetPasswordToken)
+                        .append("\" target=\"_blank\">비밀번호 재설정</a>")
+                        .toString())
+                .to(email)
+                .isHtmlContent(true)
                 .build();
     }
 }
