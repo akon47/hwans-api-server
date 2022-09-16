@@ -1,5 +1,6 @@
 package com.hwans.apiserver.dto.blog;
 
+import com.hwans.apiserver.entity.blog.OpenType;
 import com.hwans.apiserver.support.annotation.PostUrl;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +29,9 @@ public class PostRequestDto implements Serializable {
     @ApiModelProperty(value = "내용", required = true, example = "게시글 내용입니다.")
     @NotBlank
     String content;
+    @ApiModelProperty(value = "게시글 공개 유형", required = true, example = "PUBLIC")
+    @NotNull
+    OpenType openType;
     @ApiModelProperty(value = "요약 내용", example = "요약 내용입니다.")
     @NotBlank
     @Length(max = 255)

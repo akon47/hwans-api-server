@@ -1,6 +1,7 @@
 package com.hwans.apiserver.dto.blog;
 
 import com.hwans.apiserver.dto.account.SimpleAccountDto;
+import com.hwans.apiserver.entity.blog.OpenType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -35,6 +36,9 @@ public class PostDto implements Serializable {
     @ApiModelProperty(value = "내용", required = true, example = "게시글 내용입니다.")
     @NotBlank
     String content;
+    @ApiModelProperty(value = "게시글 공개 유형", required = true)
+    @NotNull
+    OpenType openType;
     @ApiModelProperty(value = "썸네일 이미지 URL", example = "/file-id")
     @NotBlank
     String thumbnailImageUrl;

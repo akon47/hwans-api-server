@@ -34,6 +34,9 @@ public class Post extends BaseEntity {
     @Column
     @Lob
     private String content;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OpenType openType;
     @OneToOne
     @JoinColumn(name = "thumbnail_image_file_id")
     private Attachment thumbnailImage;
