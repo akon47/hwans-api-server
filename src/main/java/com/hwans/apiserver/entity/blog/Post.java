@@ -70,6 +70,10 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
+    public void setOpenType(OpenType openType) {
+        this.openType = openType;
+    }
+
     public void setSummary(String summary) {
         this.summary = summary;
     }

@@ -1,8 +1,11 @@
 package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.common.Constants;
+import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
+import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
+import com.hwans.apiserver.entity.blog.OpenType;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetailsOrElseNull;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
@@ -67,16 +70,22 @@ public class BlogController {
     @ApiOperation(value = "특정 블로그 주인이 좋아요 한 전체 게시글 조회", notes = "특정 블로그 주인이 좋아요 한 전체 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}/likes")
     public SliceDto<SimplePostDto> getBloggerLikePosts(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
-                                                @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
-                                                @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
+                                                       @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+                                                       @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
         return blogService.getBloggerLikePosts(blogId, cursorId, size);
     }
 
     @ApiOperation(value = "블로그 게시글 조회", notes = "블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}")
-    public PostDto getPost(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+    public PostDto getPost(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                           @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
-        return blogService.getPost(blogId, postUrl);
+        boolean findPublicPostOnly = userAuthenticationDetails == null || !userAuthenticationDetails.getBlogId().equals(blogId);
+        var post = blogService.getPost(blogId, postUrl);
+        if (findPublicPostOnly && post.getOpenType() != OpenType.PUBLIC) {
+            new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST);
+        }
+        return post;
     }
 
     @ApiOperation(value = "블로그 정보 조회", notes = "블로그 정보를 조회한다.", tags = "블로그")

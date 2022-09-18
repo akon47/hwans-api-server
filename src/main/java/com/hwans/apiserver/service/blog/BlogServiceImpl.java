@@ -133,6 +133,7 @@ public class BlogServiceImpl implements BlogService {
         foundPost.setSummary(postRequestDto.getSummary());
         foundPost.setTitle(postRequestDto.getTitle());
         foundPost.setContent(postRequestDto.getContent());
+        foundPost.setOpenType(postRequestDto.getOpenType());
         foundPost.updatePostUrlIfNecessary();
         foundPost.setTags(postRequestDto
                 .getTags().stream()
