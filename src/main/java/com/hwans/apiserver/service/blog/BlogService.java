@@ -12,7 +12,7 @@ public interface BlogService {
     PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto);
     PostDto modifyPost(String blogId, String postUrl, PostRequestDto postRequestDto);
     void deletePost(String blogId, String postUrl);
-    SliceDto<SimplePostDto> getBlogPosts(String blogId, Optional<UUID> cursorId, int size);
+    SliceDto<SimplePostDto> getBlogPosts(String blogId, Optional<UUID> cursorId, int size, boolean findPublicPostOnly);
     SliceDto<SimplePostDto> getBloggerLikePosts(String blogId, Optional<UUID> cursorId, int size);
     PostDto getPost(String blogId, String postUrl);
     void likePost(UUID actorAccountId, String blogId, String postUrl);
