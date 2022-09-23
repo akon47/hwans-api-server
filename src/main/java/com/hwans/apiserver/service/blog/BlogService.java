@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface BlogService {
     BlogDetailsDto getBlogDetails(String blogId);
-    SliceDto<SimplePostDto> getAllPosts(Optional<UUID> cursorId, int size);
+    SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size);
     PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto);
     PostDto modifyPost(String blogId, String postUrl, PostRequestDto postRequestDto);
     void deletePost(String blogId, String postUrl);

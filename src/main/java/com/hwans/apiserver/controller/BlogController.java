@@ -31,8 +31,9 @@ public class BlogController {
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")
     public SliceDto<SimplePostDto> getAllPosts(@ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
-                                               @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
-        return blogService.getAllPosts(cursorId, size);
+                                               @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size,
+                                               @ApiParam(value = "검색어") @RequestParam(required = false) String search) {
+        return blogService.getAllPosts(search, cursorId, size);
     }
 
     @ApiOperation(value = "게시글 작성", notes = "게시글을 작성한다.", tags = "블로그")

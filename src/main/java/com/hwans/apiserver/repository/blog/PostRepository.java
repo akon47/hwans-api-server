@@ -27,4 +27,10 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select x from Post as x where x.deleted = false and upper(x.openType) like upper(:#{#findPublicPostOnly ? 'PUBLIC' : '%'}) and x.blogId = :blogId and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
     List<Post> findByIdLessThanOrderByIdDesc(@Param("blogId") String blogId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, @Param("findPublicPostOnly") boolean findPublicPostOnly, Pageable page);
+
+    @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and (x.title like concat('%',:search,'%') or x.content like concat('%',:search,'%')) order by x.createdAt desc, x.id desc")
+    List<Post> findAllByOrderByIdDesc(@Param("search") String search, Pageable page);
+
+    @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) and (x.title like concat('%',:search,'%') or x.content like concat('%',:search,'%')) order by x.createdAt desc, x.id desc")
+    List<Post> findByIdLessThanOrderByIdDesc(@Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, @Param("search") String search, Pageable page);
 }

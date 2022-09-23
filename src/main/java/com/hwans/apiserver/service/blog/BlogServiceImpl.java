@@ -59,17 +59,23 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public SliceDto<SimplePostDto> getAllPosts(Optional<UUID> cursorId, int size) {
+    public SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size) {
         List<Post> foundPosts;
         if (cursorId.isPresent()) {
             var foundCursorPost = postRepository
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
-            foundPosts = postRepository
-                    .findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1));
+            if(search == null) {
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1));
+            } else {
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1));
+            }
         } else {
-            foundPosts = postRepository
-                    .findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
+            if(search == null) {
+                foundPosts = postRepository.findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
+            } else {
+                foundPosts = postRepository.findAllByOrderByIdDesc(search, PageRequest.of(0, size + 1));
+            }
         }
         var last = foundPosts.size() <= size;
         return SliceDto.<SimplePostDto>builder()
