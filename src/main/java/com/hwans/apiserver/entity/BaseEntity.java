@@ -24,4 +24,8 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public LocalDateTime getLastModifiedAt() {
+        return this.updatedAt;
+    }
 }

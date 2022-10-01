@@ -43,8 +43,11 @@ public class SimplePostDto implements Serializable {
     @NotBlank
     SimpleAccountDto author;
     @ApiModelProperty(value = "작성 시간", required = true)
-    @NotBlank
+    @NotNull
     LocalDateTime createdAt;
+    @ApiModelProperty(value = "마지막 수정 시간", required = true)
+    @NotNull
+    LocalDateTime lastModifiedAt;
     @ApiModelProperty(value = "태그")
     Set<TagDto> tags;
     @ApiModelProperty(value = "댓글 수")
