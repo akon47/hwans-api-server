@@ -7,6 +7,12 @@
 
 스프링 프레임워크를 이용한 블로그 서비스 RestAPI 서버 프로젝트 입니다.
 
+## 📋 ERD
+
+![Hwan'Stroy](https://user-images.githubusercontent.com/96401224/194339573-89efdc6c-b00a-469f-9e32-8e7ae43be133.png)
+
+[ERD Cloud](https://www.erdcloud.com/d/pt8Kfyzvrt5TYihpf)
+
 ## 🚀 API Document
 
 [https://api.blog.kimhwan.kr/swagger-ui/index.html](https://api.blog.kimhwan.kr/swagger-ui/index.html)
