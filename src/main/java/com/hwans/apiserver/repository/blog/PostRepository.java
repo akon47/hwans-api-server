@@ -4,6 +4,7 @@ import com.hwans.apiserver.entity.blog.Post;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
@@ -33,4 +34,8 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) and (x.title like concat('%',:search,'%') or x.content like concat('%',:search,'%')) order by x.createdAt desc, x.id desc")
     List<Post> findByIdLessThanOrderByIdDesc(@Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, @Param("search") String search, Pageable page);
+
+    @Modifying
+    @Query("update Post x set x.hits = :hits where x.id = :id")
+    Integer updateHits(@Param("uuid") UUID id, @Param("hits") Integer hits);
 }

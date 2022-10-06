@@ -336,9 +336,7 @@ public class BlogServiceImpl implements BlogService {
             var hits = hashOperations.get(POST_HITS_KEY, postId);
             hashOperations.delete(POST_HITS_KEY, postId);
             if (hits != null) {
-                postRepository.findById(UUID.fromString(postId)).ifPresent((post) -> {
-                    post.setHits(Integer.valueOf(hits));
-                });
+                postRepository.updateHits(UUID.fromString(postId), Integer.valueOf(hits));
             }
         });
     }
