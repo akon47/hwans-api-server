@@ -25,7 +25,7 @@ public class AuthenticationController {
         return authenticationService.issueToken(authenticationInfoDto);
     }
 
-    @ApiOperation(value = "계정 인증 토큰 반환", notes = "현재 사용중인 AccessToken 을 반환한다. (로그아웃)", tags = "인증")
+    @ApiOperation(value = "계정 인증 토큰 반환", notes = "현재 사용중인 AccessToken과 RefreshToken 을 반환한다. (로그아웃)", tags = "인증")
     @DeleteMapping(value = "/v1/authentication/token")
     public void redeemToken(@ApiParam(value = "AccessToken", required = true) @RequestHeader(value = Constants.AUTHORIZATION_HEADER) @NotBlank String accessToken) {
         authenticationService.redeemToken(accessToken);
