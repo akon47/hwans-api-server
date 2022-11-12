@@ -39,6 +39,11 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     private static final String NO_ACCOUNT_ID = "계정 Id 정보를 찾을 수 없습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
     private static final String NO_PASSWORD_MATCH = "계정 비밀번호가 잘못되었습니다."; // TODO: 보안적으로 문제가 될 수 있는 정보 노출이므로 예외 메시지 수정 필요
 
+    /**
+     * 사용자 인증 토큰을 발급합니다.
+     * @param authenticationInfoDto 사용자 인중 정보
+     * @return 발급된 토큰
+     */
     @Override
     @Transactional
     public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto) {
@@ -56,6 +61,10 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         return token;
     }
 
+    /**
+     * 사용자의 엑세스 토큰을 사용 중지시킵니다.
+     * @param accessToken 엑세스 토큰
+     */
     @Override
     @Transactional
     public void redeemToken(String accessToken) {
@@ -75,6 +84,11 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         redisTemplate.opsForValue().set(accessToken, "redeem", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
     }
 
+    /**
+     * @param accessToken 엑세스 토큰
+     * @param refreshToken 리프레시 토큰
+     * @return 재발급된 토큰
+     */
     @Override
     @Transactional
     public TokenDto reissueToken(String accessToken, String refreshToken) {
