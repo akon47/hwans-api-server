@@ -15,7 +15,7 @@ public class UserAuthenticationDetails extends User implements UserDetails {
     private final String blogId;
 
     public UserAuthenticationDetails(String username, String password, Collection<? extends GrantedAuthority> authorities, UUID id, String email, String blogId) {
-        super(username, password, authorities);
+        super(username, password == null ? "" : password, authorities);
 
         this.id = id;
         this.email = email;
