@@ -16,24 +16,33 @@ public class ProviderAttributes {
     private final String email;
     private final String profileImagelUrl;
 
-    private static String getAttributeValue(Map<String, Object> attributes, String key) {
+    private static String getAttributeValue(Map<String, Object> attributes, String key, String defaultValue) {
         if (attributes == null || key == null)
             return null;
 
         int index = key.indexOf('/');
         if (index < 0) {
-            return attributes.getOrDefault(key, "").toString();
+            var value = attributes.getOrDefault(key, defaultValue);
+            if(value == null) {
+                return defaultValue;
+            } else {
+                return value.toString();
+            }
         } else {
             Map<String, Object> children = (Map<String, Object>) attributes.get(key.substring(0, index));
             return getAttributeValue(children, key.substring(index + 1));
         }
     }
 
+    private static String getAttributeValue(Map<String, Object> attributes, String key) {
+        return getAttributeValue(attributes, key, "");
+    }
+
     private static ProviderAttributes ofAttributeKey(ProviderType providerType, Map<String, Object> attributes,
                               String nameAttributeKey, String emailAttributeKey, String profileImagelUrlAttributeKey) {
         return new ProviderAttributes(providerType, attributes,
                 getAttributeValue(attributes, nameAttributeKey),
-                getAttributeValue(attributes, emailAttributeKey),
+                getAttributeValue(attributes, emailAttributeKey, "Unknown"),
                 getAttributeValue(attributes, profileImagelUrlAttributeKey));
     }
 
