@@ -53,7 +53,7 @@ pipeline {
         stage('Clone') {
             steps {
                 echo 'Clonning Repository'
-                git url: 'git@github.com:akon47/hwans-api-server.git', branch: 'master', credentialsId: GITHUB_CREDENTIALS_ID
+                git url: 'git@github.com:akon47/hwans-api-server.git', branch: 'master', credentialsId: GITHUB_CREDENTIALS_ID, changelog: false
             }
             post {
                 success {
