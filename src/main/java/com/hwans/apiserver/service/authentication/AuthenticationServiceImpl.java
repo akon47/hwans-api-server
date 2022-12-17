@@ -3,6 +3,7 @@ package com.hwans.apiserver.service.authentication;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
+import com.hwans.apiserver.common.security.jwt.JwtStatus;
 import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.authentication.AuthenticationInfoDto;
 import com.hwans.apiserver.dto.authentication.TokenDto;
@@ -42,11 +43,12 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     /**
      * 사용자 인증 토큰을 발급합니다.
      * @param authenticationInfoDto 사용자 인중 정보
+     * @param forceIssueRefreshToken 현재 사용중인 리프레시 토큰이 만료되어 있지 않더라도 강제로 다시 리프레시 토큰도 발급할지 여부
      * @return 발급된 토큰
      */
     @Override
     @Transactional
-    public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto) {
+    public TokenDto issueToken(AuthenticationInfoDto authenticationInfoDto, boolean forceIssueRefreshToken) {
         var foundAccount = accountRepository
                 .findByEmailAndDeletedIsFalse(authenticationInfoDto.getEmail())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
@@ -57,29 +59,36 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         var authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var token = tokenProvider.createToken(authentication);
-        accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
+
+        if(forceIssueRefreshToken || tokenProvider.validateRefreshToken(foundAccount.getRefreshToken()) != JwtStatus.ACCESS) {
+            accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
+        }
+
         return token;
     }
 
     /**
      * 사용자의 엑세스 토큰을 사용 중지시킵니다.
      * @param accessToken 엑세스 토큰
+     * @param withRefreshToken 사용자에게 발급되어 있는 리프레시 토큰도 같이 사용을 중지시킬지 여부
      */
     @Override
     @Transactional
-    public void redeemToken(String accessToken) {
+    public void redeemToken(String accessToken, boolean withRefreshToken) {
         accessToken = tokenProvider.extractTokenFromHeader(accessToken);
         var accountEmail = tokenProvider
                 .getAccountEmailFromAccessToken(accessToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
-        accountRepository
-                .findByEmailAndDeletedIsFalse(accountEmail)
-                .ifPresent((foundAccount) ->
-                {
-                    foundAccount.clearRefreshToken();
-                    accountRepository.save(foundAccount);
-                });
+        if(withRefreshToken) {
+            accountRepository
+                    .findByEmailAndDeletedIsFalse(accountEmail)
+                    .ifPresent((foundAccount) ->
+                    {
+                        foundAccount.clearRefreshToken();
+                        accountRepository.save(foundAccount);
+                    });
+        }
 
         redisTemplate.opsForValue().set(accessToken, "redeem", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
     }
