@@ -10,5 +10,5 @@ public final class Constants {
     public static final Long EMAIL_VERIFY_CODE_EXPIRES_TIME = 60 * 3 * 1000L;
     public static final Long PASSWORD_RESET_TOKEN_EXPIRES_TIME = 60 * 3 * 1000L;
 
-    public static final Long MAX_ATTACHMENT_FILE_SIZE = 1024 * 1024 * 20L; // 20MB
+    public static final Long MAX_ATTACHMENT_FILE_SIZE = 1024 * 1024 * 100L; // 100MB
 }
