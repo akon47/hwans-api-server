@@ -2,6 +2,7 @@ package com.hwans.apiserver.service.mail;
 
 import com.hwans.apiserver.dto.mail.MailMessageDto;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -46,8 +47,7 @@ public class MailSenderServiceImpl implements MailSenderService {
     private MailMessageDto createVerifyEmailMessage(String email, String verifyCode) {
         try {
             var templateResource = new ClassPathResource("mail-templates/verify-code.html");
-            var path = Paths.get(templateResource.getURI());
-            var content = Files.readString(path).replace("{{verify-code}}", verifyCode);
+            var content = IOUtils.toString(templateResource.getInputStream(), "UTF-8").replace("{{verify-code}}", verifyCode);
 
             return MailMessageDto.builder()
                     .subject("[Hwan'Story] 회원가입")
