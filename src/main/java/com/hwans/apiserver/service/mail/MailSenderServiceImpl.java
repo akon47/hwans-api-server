@@ -2,12 +2,17 @@ package com.hwans.apiserver.service.mail;
 
 import com.hwans.apiserver.dto.mail.MailMessageDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
@@ -39,15 +44,20 @@ public class MailSenderServiceImpl implements MailSenderService {
     }
 
     private MailMessageDto createVerifyEmailMessage(String email, String verifyCode) {
-        return MailMessageDto.builder()
-                .subject("[Hwan'Story] 회원가입")
-                .content(new StringBuilder()
-                        .append("코드: ")
-                        .append(verifyCode)
-                        .toString())
-                .to(email)
-                .isHtmlContent(false)
-                .build();
+        try {
+            var templateResource = new ClassPathResource("mail-templates/verify-code.html");
+            var path = Paths.get(templateResource.getURI());
+            var content = Files.readString(path).replace("{{verify-code}}", verifyCode);
+
+            return MailMessageDto.builder()
+                    .subject("[Hwan'Story] 회원가입")
+                    .content(content)
+                    .to(email)
+                    .isHtmlContent(true)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private MailMessageDto createResetPasswordMessage(String email, String resetPasswordToken) {
