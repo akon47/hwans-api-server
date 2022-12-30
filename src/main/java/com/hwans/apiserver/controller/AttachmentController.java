@@ -45,7 +45,6 @@ public class AttachmentController {
         var resource = attachmentService.getFileAsResource(fileId, fileTypeWithExt);
 
         var headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(resource.getFileName()).build());
         headers.setContentType(resource.getContentType());
         headers.setContentLength(resource.getContentLength());
 
