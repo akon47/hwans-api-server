@@ -18,4 +18,4 @@
 [https://api.blog.kimhwan.kr/swagger-ui/index.html](https://api.blog.kimhwan.kr/swagger-ui/index.html)
 
 ## 🚀 서비스
-https://blog.kimhwan.kr/
+https://hwanstory.kr/
