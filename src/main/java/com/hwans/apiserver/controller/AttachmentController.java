@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @RestController
@@ -35,6 +37,7 @@ public class AttachmentController {
         headers.setContentType(resource.getContentType());
         headers.setContentLength(resource.getContentLength());
         headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
+        headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
 
         return ResponseEntity.ok()
                 .headers(headers)
@@ -51,6 +54,7 @@ public class AttachmentController {
         headers.setContentType(resource.getContentType());
         headers.setContentLength(resource.getContentLength());
         headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
+        headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
 
         return ResponseEntity.ok()
                 .headers(headers)
