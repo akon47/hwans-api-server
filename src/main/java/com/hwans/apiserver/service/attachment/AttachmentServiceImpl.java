@@ -123,7 +123,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .findById(fileId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
 
-        if (foundFile.getFileTypeWithExt() != fileTypeWithExt) {
+        if (foundFile.getFileTypeWithExt().equals(fileTypeWithExt) == false) {
             throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
         }
 

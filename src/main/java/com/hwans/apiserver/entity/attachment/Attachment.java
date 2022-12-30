@@ -47,18 +47,25 @@ public class Attachment extends BaseEntity {
     }
 
     public String getUrl() {
-        return "/attachments/" + id;
+        var fileTypeWithExt = getFileTypeWithExt();
+
+        if (fileTypeWithExt == null) {
+            return "/attachments/" + id;
+        } else {
+            return "/attachments/" + id + "/" + fileTypeWithExt;
+        }
     }
 
     public String getFileTypeWithExt() {
         var ext = FileUtils.getExtensionFromMimeType(contentType);
-        if (ext == null)
+        if (ext == null) {
             return null;
+        }
 
         if (contentType.matches("(^image\\/.*)")) {
-            return "image." + ext;
+            return "image" + ext;
         } else if (contentType.matches("(^video\\/.*)")) {
-            return "video." + ext;
+            return "video" + ext;
         }
 
         return null;
