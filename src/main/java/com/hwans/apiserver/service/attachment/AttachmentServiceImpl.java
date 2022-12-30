@@ -117,6 +117,23 @@ public class AttachmentServiceImpl implements AttachmentService {
         }
     }
 
+    @Override
+    public AttachmentResource getFileAsResource(UUID fileId, String fileTypeWithExt) {
+        var foundFile = attachmentRepository
+                .findById(fileId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+
+        if (foundFile.getFileTypeWithExt() != fileTypeWithExt) {
+            throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
+        }
+
+        try {
+            return new AttachmentResource(foundFile);
+        } catch (IOException e) {
+            throw new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private String getAttachmentDirectoryPath() {
         var directoryName = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd"));
         var attachmentDirectory = new File(attachmentsBasePath, directoryName);

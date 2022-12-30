@@ -12,4 +12,5 @@ public interface AttachmentService {
     FileDto getFile(UUID fileId);
     File getLocalFile(UUID fileId);
     AttachmentResource getFileAsResource(UUID fileId);
+    AttachmentResource getFileAsResource(UUID fileId, String fileTypeWithExt);
 }

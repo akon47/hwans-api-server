@@ -38,10 +38,26 @@ public class AttachmentController {
                 .body(resource);
     }
 
+    @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일", response = Void.class)
+    @GetMapping(value = "/v1/attachments/{fileId}/{fileTypeWithExt}")
+    public HttpEntity getFile(@ApiParam(value = "파일 Id") @PathVariable UUID fileId,
+                              @ApiParam(value = "파일 타입 + 확장자") @PathVariable String fileTypeWithExt) {
+        var resource = attachmentService.getFileAsResource(fileId, fileTypeWithExt);
+
+        var headers = new HttpHeaders();
+        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(resource.getFileName()).build());
+        headers.setContentType(resource.getContentType());
+        headers.setContentLength(resource.getContentLength());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
+    }
+
     @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
     @PostMapping(value = "/v1/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public SimpleFileDto uploadFile(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                            @ApiParam(value = "파일", required = true) @RequestPart MultipartFile file) {
+                                    @ApiParam(value = "파일", required = true) @RequestPart MultipartFile file) {
         var attachment = attachmentService.saveFile(userAuthenticationDetails.getId(), file);
         return SimpleFileDto.builder()
                 .id(attachment.getId())
@@ -51,9 +67,9 @@ public class AttachmentController {
     }
 
     @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
-    @PostMapping(value = "/v1/attachments", params = { "fileUrl" })
+    @PostMapping(value = "/v1/attachments", params = {"fileUrl"})
     public SimpleFileDto uploadFileFromUrl(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                         @ApiParam(value = "파일", required = true) @RequestParam(value = "fileUrl", required = true) String fileUrl) {
+                                           @ApiParam(value = "파일", required = true) @RequestParam(value = "fileUrl", required = true) String fileUrl) {
         var attachment = attachmentService.saveFileFromUrl(userAuthenticationDetails.getId(), fileUrl);
         return SimpleFileDto.builder()
                 .id(attachment.getId())

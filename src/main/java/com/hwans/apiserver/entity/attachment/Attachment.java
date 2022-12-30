@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.persistence.*;
 import java.io.File;
 import java.nio.file.Files;
@@ -45,7 +46,37 @@ public class Attachment extends BaseEntity {
         this.contentType = contentType;
     }
 
+    public String getExtension() {
+        char ch;
+        int len;
+        if (fileName == null ||
+                (len = fileName.length()) == 0 ||
+                (ch = fileName.charAt(len - 1)) == '/' || ch == '\\' || //in the case of a directory
+                ch == '.') //in the case of . or ..
+            return "";
+        int dotInd = fileName.lastIndexOf('.'),
+                sepInd = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+        if (dotInd <= sepInd)
+            return "";
+        else
+            return fileName.substring(dotInd + 1).toLowerCase();
+    }
+
     public String getUrl() {
         return "/attachments/" + id;
+    }
+
+    public String getFileTypeWithExt() {
+        var ext = getExtension();
+        if (ext == null)
+            return null;
+
+        if (contentType.matches("(^image\\/.*)")) {
+            return "image." + ext;
+        } else if (contentType.matches("(^video\\/.*)")) {
+            return "video." + ext;
+        }
+
+        return null;
     }
 }
