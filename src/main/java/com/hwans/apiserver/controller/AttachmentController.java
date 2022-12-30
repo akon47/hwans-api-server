@@ -38,6 +38,7 @@ public class AttachmentController {
         headers.setContentLength(resource.getContentLength());
         headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
         headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
+        headers.remove(HttpHeaders.CONNECTION);
 
         return ResponseEntity.ok()
                 .headers(headers)
@@ -55,6 +56,7 @@ public class AttachmentController {
         headers.setContentLength(resource.getContentLength());
         headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
         headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
+        headers.remove(HttpHeaders.CONNECTION);
 
         return ResponseEntity.ok()
                 .headers(headers)
