@@ -13,6 +13,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.UUID;
 
 @RestController
@@ -32,6 +34,7 @@ public class AttachmentController {
         headers.setContentDisposition(ContentDisposition.builder("attachment").filename(resource.getFileName()).build());
         headers.setContentType(resource.getContentType());
         headers.setContentLength(resource.getContentLength());
+        headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
 
         return ResponseEntity.ok()
                 .headers(headers)
@@ -47,6 +50,7 @@ public class AttachmentController {
         var headers = new HttpHeaders();
         headers.setContentType(resource.getContentType());
         headers.setContentLength(resource.getContentLength());
+        headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
 
         return ResponseEntity.ok()
                 .headers(headers)
