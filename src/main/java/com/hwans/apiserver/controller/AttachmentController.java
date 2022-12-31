@@ -2,6 +2,7 @@ package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.attachment.SimpleFileDto;
+import com.hwans.apiserver.service.attachment.AttachmentResource;
 import com.hwans.apiserver.service.attachment.AttachmentService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
@@ -34,15 +35,7 @@ public class AttachmentController {
 
         var headers = new HttpHeaders();
         headers.setContentDisposition(ContentDisposition.builder("attachment").filename(resource.getFileName()).build());
-        headers.setContentType(resource.getContentType());
-        headers.setContentLength(resource.getContentLength());
-        headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
-        headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
-        headers.remove(HttpHeaders.CONNECTION);
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(resource);
+        return createAttachmentResponseEntity(resource, headers);
     }
 
     @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일", response = Void.class)
@@ -52,15 +45,7 @@ public class AttachmentController {
         var resource = attachmentService.getFileAsResource(fileId, fileTypeWithExt);
 
         var headers = new HttpHeaders();
-        headers.setContentType(resource.getContentType());
-        headers.setContentLength(resource.getContentLength());
-        headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
-        headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
-        headers.remove(HttpHeaders.CONNECTION);
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(resource);
+        return createAttachmentResponseEntity(resource, headers);
     }
 
     @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
@@ -85,5 +70,16 @@ public class AttachmentController {
                 .url(attachment.getUrl())
                 .fileName(attachment.getFileName())
                 .build();
+    }
+
+    private HttpEntity createAttachmentResponseEntity(AttachmentResource resource, HttpHeaders headers) {
+        headers.setContentType(resource.getContentType());
+        headers.setContentLength(resource.getContentLength());
+        headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
+        headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
     }
 }
