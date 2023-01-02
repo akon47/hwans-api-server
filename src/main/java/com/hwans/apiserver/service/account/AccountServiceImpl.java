@@ -25,6 +25,9 @@ import java.time.Duration;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * 계정 서비스 구현체
+ */
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor

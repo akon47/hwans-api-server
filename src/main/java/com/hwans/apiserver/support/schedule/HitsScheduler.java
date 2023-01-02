@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * 게시글 조회수에 대해서 캐시된 내용을 DB에 반영하는 스케줄러
+ */
 @RequiredArgsConstructor
 @Component
 public class HitsScheduler {

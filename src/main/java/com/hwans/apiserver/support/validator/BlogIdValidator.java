@@ -5,6 +5,9 @@ import com.hwans.apiserver.support.annotation.BlogId;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+/**
+ * 블로그 Id에 대한 유효성 검사 기능을 제공한다.
+ */
 public class BlogIdValidator implements ConstraintValidator<BlogId, String> {
 
     @Override

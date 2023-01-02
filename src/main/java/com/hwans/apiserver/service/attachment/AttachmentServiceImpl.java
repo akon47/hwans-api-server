@@ -24,6 +24,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+/**
+ * 첨부파일 서비스 구현체
+ */
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor

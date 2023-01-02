@@ -15,21 +15,42 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * 메일 전송 서비스 구현체
+ */
 @Service
 @RequiredArgsConstructor
 public class MailSenderServiceImpl implements MailSenderService {
     private final JavaMailSender javaMailSender;
 
+    /**
+     * 이메일 인증을 위한 인증코드 메일을 전송합니다.
+     *
+     * @param email 전송할 대상 메일 주소
+     * @param verifyCode 인증코드
+     */
     @Override
     public void sendMailVerifyCode(String email, String verifyCode) {
         sendMail(createVerifyEmailMessage(email, verifyCode));
     }
 
+    /**
+     * 비밀번호 초기화 메일을 전송합니다.
+     *
+     * @param email 전송할 대상 메일 주소
+     * @param resetPasswordToken 비밀번호 초기화를 위한 토큰
+     */
     @Override
     public void sendResetPasswordUrl(String email, String resetPasswordToken) {
         sendMail(createResetPasswordMessage(email, resetPasswordToken));
     }
 
+
+    /**
+     * 메일을 전송합니다.
+     *
+     * @param mailMessageDto 메일을 전송하기 위한 데이터 모델
+     */
     private void sendMail(MailMessageDto mailMessageDto) {
         var mimeMessage = javaMailSender.createMimeMessage();
         try {
@@ -44,6 +65,13 @@ public class MailSenderServiceImpl implements MailSenderService {
         }
     }
 
+    /**
+     * 인증코드 메일에 대한 데이터 모델을 생성합니다.
+     *
+     * @param email 전송할 대상 메일 주소
+     * @param verifyCode 인증코드
+     * @return 인증코드 메일에 대한 데이터 모델
+     */
     private MailMessageDto createVerifyEmailMessage(String email, String verifyCode) {
         try {
             var templateResource = new ClassPathResource("mail-templates/verify-code.html");
@@ -60,6 +88,13 @@ public class MailSenderServiceImpl implements MailSenderService {
         }
     }
 
+    /**
+     * 비밀번호 초기화 메일을 위한 데이터 모델을 생성합니다.
+     *
+     * @param email 전송할 대상 메일 주소
+     * @param resetPasswordToken 비밀번호 초기화를 위한 토큰
+     * @return 비밀번호 재설정 메일에 대한 데이터 모델
+     */
     private MailMessageDto createResetPasswordMessage(String email, String resetPasswordToken) {
         try {
             var templateResource = new ClassPathResource("mail-templates/reset-password.html");

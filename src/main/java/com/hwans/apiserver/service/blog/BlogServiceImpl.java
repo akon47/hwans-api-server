@@ -29,6 +29,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * 블로그 서비스 구현체
+ */
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
