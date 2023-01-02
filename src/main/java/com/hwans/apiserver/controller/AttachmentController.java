@@ -14,7 +14,6 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -28,7 +27,7 @@ public class AttachmentController {
     private final AttachmentService attachmentService;
 
     // TODO: API 서버에서 처리하는게 아닌 파일 서버를 따로 구성하여 해당 서버가 정적 파일에 대한 응답을 해주도록 수정 필요
-    @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일", response = Void.class)
+    @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일")
     @GetMapping(value = "/v1/attachments/{fileId}")
     public HttpEntity getFile(@ApiParam(value = "파일 Id") @PathVariable UUID fileId) {
         var resource = attachmentService.getFileAsResource(fileId);
@@ -38,7 +37,7 @@ public class AttachmentController {
         return createAttachmentResponseEntity(resource, headers);
     }
 
-    @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일", response = Void.class)
+    @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일")
     @GetMapping(value = "/v1/attachments/{fileId}/{fileTypeWithExt}")
     public HttpEntity getFile(@ApiParam(value = "파일 Id") @PathVariable UUID fileId,
                               @ApiParam(value = "파일 타입 + 확장자") @PathVariable String fileTypeWithExt) {
@@ -63,7 +62,7 @@ public class AttachmentController {
     @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
     @PostMapping(value = "/v1/attachments", params = {"fileUrl"})
     public SimpleFileDto uploadFileFromUrl(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                           @ApiParam(value = "파일", required = true) @RequestParam(value = "fileUrl", required = true) String fileUrl) {
+                                           @ApiParam(value = "파일", required = true) @RequestParam(value = "fileUrl") String fileUrl) {
         var attachment = attachmentService.saveFileFromUrl(userAuthenticationDetails.getId(), fileUrl);
         return SimpleFileDto.builder()
                 .id(attachment.getId())
