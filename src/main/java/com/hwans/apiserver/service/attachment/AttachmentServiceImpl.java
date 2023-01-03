@@ -137,6 +137,11 @@ public class AttachmentServiceImpl implements AttachmentService {
         }
     }
 
+    /**
+     * 첨부파일의 기본 디렉토리를 반환한다.
+     * 
+     * @return 디렉토리 경로
+     */
     private String getAttachmentDirectoryPath() {
         var directoryName = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd"));
         var attachmentDirectory = new File(attachmentsBasePath, directoryName);

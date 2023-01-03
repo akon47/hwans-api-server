@@ -344,6 +344,12 @@ public class BlogServiceImpl implements BlogService {
         });
     }
 
+    /**
+     * 게시글의 조회수를 1 증가시킵니다.
+     *
+     * @param post 증가시킬 게시글
+     * @return 증가된 후 게시글의 조회수
+     */
     private Long increaseHits(Post post) {
         HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
         final String hashKey = post.getId().toString();

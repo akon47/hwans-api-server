@@ -187,15 +187,32 @@ public class AccountServiceImpl implements AccountService {
         return authentication.getName();
     }
 
+    /**
+     * 무작위 6자리 숫자를 반환한다.
+     *
+     * @return 6자리 숫자 문자열
+     */
     private String createNewVerifyCode() {
         Random random = new Random();
         return String.valueOf(random.nextInt(100000, 1000000));
     }
 
+    /**
+     * 이메일 인증을 위한 인증코드를 Redis에 캐시하기 위해 사용할 Key를 반환한다.
+     *
+     * @param email 인증코드 발급을 위한 이메일
+     * @return Key
+     */
     private String getEmailVerifyCodeKey(String email) {
         return "email-verify-code: " + email;
     }
 
+    /**
+     * 비밀번호 리셋을 위한 토큰을 Redis에 캐시하기 위해 사용할 Key를 반환한다.
+     *
+     * @param email 리셋 토큰 발급을 위한 이메일
+     * @return Key
+     */
     private String getPasswordResetTokenKey(String email) {
         return "password-reset-token: " + email;
     }

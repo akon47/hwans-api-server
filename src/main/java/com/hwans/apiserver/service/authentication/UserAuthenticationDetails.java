@@ -8,6 +8,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.UUID;
 
+/**
+ * 인증된 사용자의 상세 정보를 제공한다.
+ */
 @Getter
 public class UserAuthenticationDetails extends User implements UserDetails {
     private final UUID id;
