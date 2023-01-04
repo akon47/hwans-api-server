@@ -13,6 +13,9 @@ import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
+/**
+ * 모든 엔티티가 기본적으로 가지고 있는 공통 엔티티
+ */
 @Getter
 @MappedSuperclass
 @EntityListeners(value = {AuditingEntityListener.class})

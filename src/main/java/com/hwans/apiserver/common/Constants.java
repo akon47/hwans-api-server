@@ -1,5 +1,8 @@
 package com.hwans.apiserver.common;
 
+/**
+ * 공통적으로 사용할 상수 필드
+ */
 public final class Constants {
     public static final String API_PREFIX = "/api";
     public static final String AUTHORIZATION_HEADER = "Authorization";

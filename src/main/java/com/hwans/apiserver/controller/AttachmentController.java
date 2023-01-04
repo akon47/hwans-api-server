@@ -19,6 +19,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+/**
+ * 파일 Controller
+ */
 @RestController
 @Api(tags = "파일")
 @RequestMapping(value = Constants.API_PREFIX)

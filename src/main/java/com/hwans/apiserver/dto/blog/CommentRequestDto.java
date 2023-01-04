@@ -7,6 +7,9 @@ import lombok.Getter;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
+/**
+ * 댓글 작성/수정 Dto
+ */
 @Getter
 @ApiModel(description = "댓글 작성/수정 Dto")
 public class CommentRequestDto implements Serializable {

@@ -14,6 +14,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * 댓글 리스트 조회용 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "댓글 리스트 조회용 Dto")

@@ -7,6 +7,9 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+/**
+ * 메일 전송을 위한 Dto
+ */
 @Getter
 @Builder
 public class MailMessageDto implements Serializable {

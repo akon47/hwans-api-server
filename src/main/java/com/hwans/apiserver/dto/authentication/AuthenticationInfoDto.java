@@ -8,6 +8,9 @@ import lombok.Getter;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
+/**
+ * 계정 인증 정보 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "계정 인증 정보 Dto")

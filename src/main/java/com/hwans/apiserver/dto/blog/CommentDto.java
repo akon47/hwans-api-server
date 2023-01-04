@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * 댓글 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "댓글 Dto")

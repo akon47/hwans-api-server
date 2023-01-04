@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * 인증 Controller
+ */
 @RestController
 @Api(tags = "인증")
 @RequestMapping(value = Constants.API_PREFIX)

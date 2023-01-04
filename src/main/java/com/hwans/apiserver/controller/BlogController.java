@@ -21,6 +21,9 @@ import javax.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * 블로그 Controller
+ */
 @RestController
 @Api(tags = "블로그")
 @RequestMapping(value = Constants.API_PREFIX)
@@ -84,7 +87,7 @@ public class BlogController {
         boolean findPublicPostOnly = userAuthenticationDetails == null || !userAuthenticationDetails.getBlogId().equals(blogId);
         var post = blogService.getPost(blogId, postUrl);
         if (findPublicPostOnly && post.getOpenType() != OpenType.PUBLIC) {
-            new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST);
+            throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST);
         }
         return post;
     }

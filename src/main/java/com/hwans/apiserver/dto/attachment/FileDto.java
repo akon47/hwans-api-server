@@ -10,6 +10,9 @@ import lombok.With;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * 파일 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "파일 Dto")

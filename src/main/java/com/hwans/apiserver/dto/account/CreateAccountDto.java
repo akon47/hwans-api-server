@@ -12,6 +12,9 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
 
+/**
+ * 사용자 생성 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "사용자 생성 Dto")
@@ -27,7 +30,7 @@ public class CreateAccountDto implements Serializable {
     @Length(max = 320)
     @Email
     String email;
-    @ApiModelProperty(value = "사용자 로그인 비밀번호", required = false, example = "12345")
+    @ApiModelProperty(value = "사용자 로그인 비밀번호", example = "12345")
     @NotBlank(groups = ByEmailVerifyCode.class)
     @Null(groups = ByRegisterToken.class)
     String password;
@@ -40,7 +43,7 @@ public class CreateAccountDto implements Serializable {
     @Length(min = 2, max = 64)
     @BlogId
     String blogId;
-    @ApiModelProperty(value = "사용자 이메일 인증 코드", required = false, example = "123456")
+    @ApiModelProperty(value = "사용자 이메일 인증 코드", example = "123456")
     @NotBlank(groups = ByEmailVerifyCode.class)
     @Null(groups = ByRegisterToken.class)
     String emailVerifyCode;

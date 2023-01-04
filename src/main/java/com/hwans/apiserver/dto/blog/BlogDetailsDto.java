@@ -9,6 +9,9 @@ import lombok.Getter;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+/**
+ * 블로그 상세 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "블로그 상세 Dto")

@@ -10,6 +10,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 예외 발생시 공통적으로 응답에 사용할 Dto
+ */
 @Getter
 @Accessors(chain = true)
 @Builder

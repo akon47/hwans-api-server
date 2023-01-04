@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
+/**
+ * 게시글 태그 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "태그 Dto")

@@ -7,6 +7,9 @@ import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * 계정 엔티티와 계정 데이터 모델 사이의 변환을 제공한다.
+ */
 @Mapper(componentModel = "spring")
 public abstract class AccountMapper {
     @Autowired

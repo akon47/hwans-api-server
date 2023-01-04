@@ -14,6 +14,9 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * 게시글 작성/수정 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "게시글 작성/수정 Dto")

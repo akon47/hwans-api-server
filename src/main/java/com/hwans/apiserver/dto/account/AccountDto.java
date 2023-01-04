@@ -12,6 +12,9 @@ import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Set;
 
+/**
+ * 사용자 정보 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "사용자 정보 Dto")

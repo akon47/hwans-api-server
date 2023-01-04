@@ -10,6 +10,9 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+/**
+ * 좋아요 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "좋아요 Dto")

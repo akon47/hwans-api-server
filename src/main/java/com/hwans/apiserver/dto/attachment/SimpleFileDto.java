@@ -8,6 +8,9 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * 간단한 파일 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "간단한 파일 Dto")

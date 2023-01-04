@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * 게시글 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "게시글 Dto")

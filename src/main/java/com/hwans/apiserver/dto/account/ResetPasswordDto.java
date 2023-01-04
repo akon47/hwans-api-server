@@ -7,6 +7,9 @@ import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * 사용자 계정 비밀번호 재설정 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "사용자 계정 비밀번호 재설정 Dto")

@@ -9,6 +9,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 커서 페이징 조회 응답을 위한 Dto
+ *
+ * @param <T> Serializable 객체
+ */
 @Getter
 @Builder
 @ApiModel(description = "커서 페이징 조회 응답을 위한 Dto")

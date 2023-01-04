@@ -9,6 +9,9 @@ import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Set;
 
+/**
+ * 간단한 계정 정보 Dto
+ */
 @Getter
 @Builder
 @ApiModel(description = "간단한 계정 정보 Dto")

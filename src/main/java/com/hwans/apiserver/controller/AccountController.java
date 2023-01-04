@@ -22,6 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 
+/**
+ * 사용자 계정 Controller
+ */
 @Validated
 @RestController
 @Api(tags = "사용자 계정")
@@ -35,7 +38,7 @@ public class AccountController {
     @ApiOperation(value = "사용자 계정 생성", notes = "새로운 사용자 계정을 생성한다.", tags = "사용자 계정")
     @PostMapping(value = "/v1/accounts")
     public AccountDto signup(@ApiParam(value = "새로운 사용자 생성 정보", required = true) @RequestBody @Valid final CreateAccountDto userCreateDto,
-                             @ApiParam(value = "OAuth2 인증을 통해 계정을 생성하는 경우 Register 토큰", required = false) @RequestParam(required = false) String registerToken) {
+                             @ApiParam(value = "OAuth2 인증을 통해 계정을 생성하는 경우 Register 토큰") @RequestParam(required = false) String registerToken) {
         if (registerToken != null) {
             return accountService.createAccount(userCreateDto, registerToken);
         } else {
