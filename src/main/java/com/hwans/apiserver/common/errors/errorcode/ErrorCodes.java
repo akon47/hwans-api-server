@@ -3,7 +3,14 @@ package com.hwans.apiserver.common.errors.errorcode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+/**
+ * API 에러 코드 모음
+ */
 public class ErrorCodes {
+
+    /**
+     * Bad Request (400)
+     */
     @RequiredArgsConstructor
     public enum BadRequest implements ErrorCode {
         BAD_REQUEST("잘못된 요청입니다."),
@@ -29,6 +36,9 @@ public class ErrorCodes {
         }
     }
 
+    /**
+     * Unauthorized (401)
+     */
     @RequiredArgsConstructor
     public enum Unauthorized implements ErrorCode {
         UNAUTHORIZED("유효한 자격증명이 존재하지 않습니다."),
@@ -53,6 +63,9 @@ public class ErrorCodes {
         }
     }
 
+    /**
+     * Forbidden (403)
+     */
     @RequiredArgsConstructor
     public enum Forbidden implements ErrorCode {
         FORBIDDEN("접근 권한이 없습니다."),
@@ -76,6 +89,9 @@ public class ErrorCodes {
         }
     }
 
+    /**
+     * NotFound (404)
+     */
     @RequiredArgsConstructor
     public enum NotFound implements ErrorCode {
         NOT_FOUND("존재하지 않습니다."),
@@ -104,6 +120,9 @@ public class ErrorCodes {
         }
     }
 
+    /**
+     * Conflict (409)
+     */
     @RequiredArgsConstructor
     public enum Conflict implements ErrorCode {
         CONFLICT("요청이 충돌하여 요청을 완료 할 수 없습니다."),
@@ -133,6 +152,9 @@ public class ErrorCodes {
         }
     }
 
+    /**
+     * InternalServerError (500)
+     */
     @RequiredArgsConstructor
     public enum InternalServerError implements ErrorCode {
         INTERNAL_SERVER_ERROR("서버 내부 오류입니다."),

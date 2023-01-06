@@ -48,17 +48,17 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /*
+    /**
      * Oauth 인증 성공 핸들러
-     * */
+     */
     @Bean
     public OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
         return new OAuth2AuthenticationSuccessHandler();
     }
 
-    /*
+    /**
      * Oauth 인증 실패 핸들러
-     * */
+     */
     @Bean
     public OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler() {
         return new OAuth2AuthenticationFailureHandler();
@@ -125,6 +125,11 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+    /**
+     * Cors 설정을 생성하여 반환한다.
+     *
+     * @return Cors 설정
+     */
     private CorsConfiguration corsConfiguration() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedMethods(Collections.singletonList(CorsConfiguration.ALL));
