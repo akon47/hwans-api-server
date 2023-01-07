@@ -35,6 +35,8 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final FileMapper fileMapper;
 
+    private static final String BAD_ATTACHMENT_CONTENT_TYPE = "업로드가 불가능한 파일 형식입니다.";
+
     @Value("${attachments.path}")
     private String attachmentsBasePath;
 
@@ -42,7 +44,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         if (!StringUtils.hasText(contentType)) {
             return false;
         }
-        return contentType.matches("(^video\\/(mp4|webm))|(^image\\/.*)");
+        return contentType.matches("(^video\\/(mp4|webm))|(^image\\/.*)|(^application\\/(zip|pdf|x-msdownload))");
     }
 
     @Override
@@ -50,7 +52,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     public FileDto saveFile(UUID uploaderAccountId, MultipartFile multipartFile) {
         var contentType = multipartFile.getContentType();
         if (!isSavableContentType(contentType)) {
-            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, BAD_ATTACHMENT_CONTENT_TYPE);
         }
         var uploaderAccount = accountRepository
                 .findById(uploaderAccountId)
@@ -79,7 +81,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             String contentType = connection.getContentType();
             long contentLength = connection.getContentLengthLong();
             if (!isSavableContentType(contentType) || contentLength <= 0 || contentLength > Constants.MAX_ATTACHMENT_FILE_SIZE) {
-                throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+                throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, BAD_ATTACHMENT_CONTENT_TYPE);
             }
             var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());
             Files.copy(connection.getInputStream(), savePath);

@@ -11,6 +11,8 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.activation.MimetypesFileTypeMap;
 import javax.persistence.*;
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.UUID;
 
@@ -52,10 +54,17 @@ public class Attachment extends BaseEntity {
         if (fileTypeWithExt == null) {
             return "/attachments/" + id;
         } else {
-            return "/attachments/" + id + "/" + fileTypeWithExt;
+            return "/attachments/" + id + "/" + URLEncoder.encode(fileTypeWithExt, StandardCharsets.UTF_8);
         }
     }
 
+    /**
+     * 현재 ContentType에 따른 기본 파일 이름 + 확장자를 반환한다.
+     * 이미지, 비디오, 오디오 파일이 아닌 경우에는 업로드 시 사용했던 파일 이름에 확장자가 있는 경우에 해당 파일 이름을 사용한다.
+     * 업로드 시 사용했던 파일 이름에 확장자가 없는 경우에는 null을 반환한다.
+     *
+     * @return 파일 이름 + 확장자
+     */
     public String getFileTypeWithExt() {
         var ext = FileUtils.getExtensionFromMimeType(contentType);
         if (ext == null) {
@@ -66,8 +75,14 @@ public class Attachment extends BaseEntity {
             return "image" + ext;
         } else if (contentType.matches("(^video\\/.*)")) {
             return "video" + ext;
-        }
+        } else if (contentType.matches("(^audio\\/.*)")) {
+            return "audio" + ext;
+        } else {
+            int lastIndexOf = fileName.lastIndexOf('.');
+            if(lastIndexOf < 0)
+                return null;
 
-        return null;
+            return fileName;
+        }
     }
 }
