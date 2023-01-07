@@ -85,4 +85,13 @@ public class Attachment extends BaseEntity {
             return fileName;
         }
     }
+
+    /**
+     * 캐시가 가능한 파일 형식인지 여부
+     *
+     * @return 캐시가 가능한지 여부
+     */
+    public boolean isCacheable() {
+        return contentType.matches("(^image\\/.*)|(^video\\/.*)|(^audio\\/.*)");
+    }
 }

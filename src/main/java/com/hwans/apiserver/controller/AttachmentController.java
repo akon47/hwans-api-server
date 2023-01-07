@@ -14,6 +14,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -34,10 +36,7 @@ public class AttachmentController {
     @GetMapping(value = "/v1/attachments/{fileId}")
     public HttpEntity getFile(@ApiParam(value = "파일 Id") @PathVariable UUID fileId) {
         var resource = attachmentService.getFileAsResource(fileId);
-
-        var headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(resource.getFileName()).build());
-        return createAttachmentResponseEntity(resource, headers);
+        return createAttachmentResponseEntity(resource, new HttpHeaders());
     }
 
     @ApiOperation(value = "파일 다운로드", notes = "파일 Id를 이용하여 파일을 다운로드한다.", tags = "파일")
@@ -45,9 +44,7 @@ public class AttachmentController {
     public HttpEntity getFile(@ApiParam(value = "파일 Id") @PathVariable UUID fileId,
                               @ApiParam(value = "파일 타입 + 확장자") @PathVariable String fileTypeWithExt) {
         var resource = attachmentService.getFileAsResource(fileId, fileTypeWithExt);
-
-        var headers = new HttpHeaders();
-        return createAttachmentResponseEntity(resource, headers);
+        return createAttachmentResponseEntity(resource, new HttpHeaders());
     }
 
     @ApiOperation(value = "파일 업로드", notes = "파일을 업로드합니다.", tags = "파일")
@@ -77,7 +74,12 @@ public class AttachmentController {
     private HttpEntity createAttachmentResponseEntity(AttachmentResource resource, HttpHeaders headers) {
         headers.setContentType(resource.getContentType());
         headers.setContentLength(resource.getContentLength());
-        headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
+        if (resource.isCacheable()) {
+            headers.setCacheControl(CacheControl.maxAge(Duration.ofDays(7)));
+        } else {
+            headers.setCacheControl(CacheControl.noCache());
+            headers.setContentDisposition(ContentDisposition.builder("attachment").filename(URLEncoder.encode(resource.getFileName(), StandardCharsets.UTF_8)).build());
+        }
         headers.setLastModified(ZonedDateTime.of(resource.getLastModifiedAt(), ZoneId.systemDefault()));
 
         return ResponseEntity.ok()

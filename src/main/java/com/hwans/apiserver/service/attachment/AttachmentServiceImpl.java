@@ -40,6 +40,12 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Value("${attachments.path}")
     private String attachmentsBasePath;
 
+    /**
+     * 해당 ContentType이 저장이 가능한 파일 형식인지 여부를 반환한다.
+     *
+     * @param contentType 확인할 ContentType
+     * @return 저장 가능한 파일 형식인지 여부
+     */
     private boolean isSavableContentType(String contentType) {
         if (!StringUtils.hasText(contentType)) {
             return false;

@@ -18,6 +18,7 @@ public class AttachmentResource extends InputStreamResource {
     private final MediaType contentType;
     private final long contentLength;
     private final String fileName;
+    private final boolean cacheable;
 
     private final LocalDateTime lastModifiedAt;
 
@@ -27,6 +28,7 @@ public class AttachmentResource extends InputStreamResource {
         this.contentLength = attachment.getFileSize();
         this.fileName = attachment.getFileName();
         this.lastModifiedAt = attachment.getLastModifiedAt();
+        this.cacheable = attachment.isCacheable();
     }
 
     @Override
