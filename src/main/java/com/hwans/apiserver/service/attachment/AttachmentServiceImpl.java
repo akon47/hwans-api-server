@@ -50,7 +50,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         if (!StringUtils.hasText(contentType)) {
             return false;
         }
-        return contentType.matches("(^video\\/(mp4|webm))|(^image\\/.*)|(^application\\/(zip|pdf|x-msdownload))");
+        return contentType.matches("(^video\\/(mp4|webm))|(^image\\/.*)|(^application\\/(pdf|x-msdownload|x-zip-compressed))");
     }
 
     @Override
