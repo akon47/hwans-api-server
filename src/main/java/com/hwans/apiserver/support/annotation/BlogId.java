@@ -10,6 +10,9 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.*;
 
+/**
+ * 블로그 Id 유효성 검사 어노테이션
+ */
 @Constraint(validatedBy = BlogIdValidator.class)
 @Target({TYPE, FIELD, PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

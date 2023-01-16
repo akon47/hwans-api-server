@@ -10,6 +10,9 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.*;
 
+/**
+ * 게시글 주소 유효성 검사 어노테이션
+ */
 @Constraint(validatedBy = PostUrlValidator.class)
 @Target({TYPE, FIELD, PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
