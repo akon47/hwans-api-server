@@ -15,7 +15,7 @@
 
 ## 🚀 API Document
 
-[https://api.blog.kimhwan.kr/swagger-ui/index.html](https://api.blog.kimhwan.kr/swagger-ui/index.html)
+[https://api.hwanstory.kr/swagger-ui/index.html](https://api.hwanstory.kr/swagger-ui/index.html)
 
 ## 🚀 서비스
 https://hwanstory.kr/
