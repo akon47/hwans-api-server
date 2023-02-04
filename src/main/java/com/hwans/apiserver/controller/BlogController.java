@@ -175,11 +175,15 @@ public class BlogController {
      * @param password                  댓글 비밀번호
      */
     private void checkCommentPermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
+        // 비밀번호가 전달되었는데 일치하지 않으면 예외를 발생시킨다.
+        if (StringUtils.isNotBlank(password) && !blogService.matchCommentAuthorPassword(commentId, password)) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+
+        // 인증정보가 없거나 댓글의 글쓴이가 아니라면 예외를 발생시킨다.
         var authorId = blogService.getCommentAuthorId(commentId);
-        if (userAuthenticationDetails != null && !userAuthenticationDetails.getId().equals(authorId)) {
-            if (StringUtils.isBlank(password) || !blogService.matchCommentAuthorPassword(commentId, password)) {
-                throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
-            }
+        if (userAuthenticationDetails == null || !userAuthenticationDetails.getId().equals(authorId)) {
+            throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
         }
     }
 }
