@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,7 @@ public class BlogServiceImpl implements BlogService {
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
     private final RedisTemplate<String, Integer> redisTemplate;
+    private final PasswordEncoder passwordEncoder;
 
     private static final String POST_HITS_KEY = "post-hits";
 
@@ -68,13 +70,13 @@ public class BlogServiceImpl implements BlogService {
             var foundCursorPost = postRepository
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
-            if(search == null) {
+            if (search == null) {
                 foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1));
             } else {
                 foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1));
             }
         } else {
-            if(search == null) {
+            if (search == null) {
                 foundPosts = postRepository.findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
             } else {
                 foundPosts = postRepository.findAllByOrderByIdDesc(search, PageRequest.of(0, size + 1));
@@ -329,6 +331,22 @@ public class BlogServiceImpl implements BlogService {
                 .findById(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
         foundComment.delete();
+    }
+
+    @Override
+    public UUID getCommentAuthorId(UUID commentId) {
+        var foundComment = commentRepository
+                .findById(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+        return foundComment.getAuthor().getId();
+    }
+
+    @Override
+    public boolean matchCommentAuthorPassword(UUID commentId, String password) {
+        var foundComment = commentRepository
+                .findById(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+        return passwordEncoder.matches(password, foundComment.getAuthor().getPassword());
     }
 
     @Override

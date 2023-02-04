@@ -158,6 +158,25 @@ public interface BlogService {
      */
     void deleteComment(UUID commentId);
 
+
+    /**
+     * 댓글 작성자의 Id를 조회합니다.
+     *
+     * @param commentId 댓글 Id
+     * @return 작성자 Id
+     */
+    UUID getCommentAuthorId(UUID commentId);
+
+
+    /**
+     * 댓글 작성자의 비밀번호가 맞는지 검사합니다.
+     *
+     * @param commentId 댓글 Id
+     * @param password 댓글 작성자 비밀번호
+     * @return 일치하는지 여부
+     */
+    boolean matchCommentAuthorPassword(UUID commentId, String password);
+
     /**
      * 현재 캐시되어 있는 게시글 조회수를 DB에 반영합니다.
      */

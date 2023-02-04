@@ -10,6 +10,7 @@ import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetailsOrElseNull;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.blog.BlogService;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -109,14 +110,20 @@ public class BlogController {
 
     @ApiOperation(value = "댓글 수정", notes = "댓글을 수정한다.", tags = "블로그")
     @PutMapping(value = "/v1/blog/comments/{commentId}")
-    public CommentDto modifyComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
-                                    @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
+    public CommentDto modifyComment(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                                    @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
+                                    @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto,
+                                    @ApiParam(value = "비회원 댓글인 경우 비밀번호") @RequestParam(required = false) String password) {
+        checkCommentPermission(commentId, userAuthenticationDetails, password);
         return blogService.modifyComment(commentId, commentRequestDto);
     }
 
     @ApiOperation(value = "댓글 삭제", notes = "댓글을 삭제한다.", tags = "블로그")
     @DeleteMapping(value = "/v1/blog/comments/{commentId}")
-    public void deleteComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
+    public void deleteComment(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                              @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
+                              @ApiParam(value = "비회원 댓글인 경우 비밀번호") @RequestParam(required = false) String password) {
+        checkCommentPermission(commentId, userAuthenticationDetails, password);
         blogService.deleteComment(commentId);
     }
 
@@ -157,5 +164,22 @@ public class BlogController {
                                      @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
         var exists = blogService.isLikePost(userAuthenticationDetails.getId(), blogId, postUrl);
         return exists ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    /**
+     * 전달된 인증정보 또는 비밀번호에 따라 해당 댓글에 대해서 수정/삭제 동작이 가능한지 검사한다.
+     * 가능하지 않으면 예외를 발생시킨다.
+     *
+     * @param commentId                 댓글 Id
+     * @param userAuthenticationDetails 인증정보에 따른 사용자 정보
+     * @param password                  댓글 비밀번호
+     */
+    private void checkCommentPermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
+        var authorId = blogService.getCommentAuthorId(commentId);
+        if (userAuthenticationDetails != null && !userAuthenticationDetails.getId().equals(authorId)) {
+            if (!blogService.matchCommentAuthorPassword(commentId, password)) {
+                throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
+            }
+        }
     }
 }
