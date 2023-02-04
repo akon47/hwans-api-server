@@ -177,7 +177,7 @@ public class BlogController {
     private void checkCommentPermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
         var authorId = blogService.getCommentAuthorId(commentId);
         if (userAuthenticationDetails != null && !userAuthenticationDetails.getId().equals(authorId)) {
-            if (!blogService.matchCommentAuthorPassword(commentId, password)) {
+            if (StringUtils.isBlank(password) || !blogService.matchCommentAuthorPassword(commentId, password)) {
                 throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
             }
         }
