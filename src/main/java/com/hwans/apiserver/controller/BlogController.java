@@ -191,8 +191,12 @@ public class BlogController {
      */
     private void checkCommentPermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
         // 비밀번호가 전달되었는데 일치하지 않으면 예외를 발생시킨다.
-        if (StringUtils.isNotBlank(password) && !blogService.matchCommentAuthorPassword(commentId, password)) {
-            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        if (StringUtils.isNotBlank(password)) {
+            if (blogService.matchCommentAuthorPassword(commentId, password)) {
+                throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+            } else {
+                return;
+            }
         }
 
         // 인증정보가 없거나 댓글의 글쓴이가 아니라면 예외를 발생시킨다.
