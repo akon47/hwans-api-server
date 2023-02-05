@@ -4,6 +4,7 @@ import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.entity.BaseEntity;
 import com.hwans.apiserver.entity.account.role.AccountRole;
 import com.hwans.apiserver.entity.account.role.Role;
+import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.entity.attachment.Attachment;
 import com.hwans.apiserver.entity.blog.Comment;
 import com.hwans.apiserver.entity.blog.Like;
@@ -89,6 +90,10 @@ public class Account extends BaseEntity {
         return Optional.ofNullable(this.profileImage)
                 .map(Attachment::getUrl)
                 .orElse(null);
+    }
+
+    public boolean isGuest() {
+        return this.getRoles().stream().anyMatch(x -> x.getName().equals(RoleType.GUEST.getName()));
     }
 
     public void setProfileImage(Attachment attachment) {

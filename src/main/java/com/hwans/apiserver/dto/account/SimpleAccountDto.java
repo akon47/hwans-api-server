@@ -25,5 +25,5 @@ public class SimpleAccountDto implements Serializable {
     @ApiModelProperty(value = "프로필 이미지 URL", example = "/attachments/file-id")
     String profileImageUrl;
     @ApiModelProperty(value = "비회원인지 여부", required = true)
-    Boolean guest;
+    boolean guest;
 }
