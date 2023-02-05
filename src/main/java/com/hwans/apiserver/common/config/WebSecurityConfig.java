@@ -95,7 +95,11 @@ public class WebSecurityConfig {
                             Constants.API_PREFIX + "/v1/attachments/**").permitAll()
                     .antMatchers(
                             HttpMethod.PUT,
-                            Constants.API_PREFIX + "/v1/accounts/password").permitAll()
+                            Constants.API_PREFIX + "/v1/accounts/password",
+                            Constants.API_PREFIX + "/v1/blog/comments/*").permitAll()
+                    .antMatchers(
+                            HttpMethod.DELETE,
+                            Constants.API_PREFIX + "/v1/blog/comments/*").permitAll()
                     .antMatchers(
                             HttpMethod.POST,
                             Constants.API_PREFIX + "/v1/accounts",
