@@ -7,6 +7,7 @@ import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
 /**

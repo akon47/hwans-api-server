@@ -106,4 +106,22 @@ public class Account extends BaseEntity {
     public void setPassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    /**
+     * 이름과 비밀번호로 손님 계정을 생성합니다.
+     *
+     * @param name 이름
+     * @param encodedPassword 비밀번호
+     * @return 계정
+     */
+    public static Account createGuestAccount(String name, String encodedPassword) {
+        var uuid = UUID.randomUUID();
+        var account = new Account();
+        account.id = uuid;
+        account.name = name;
+        account.password = encodedPassword;
+        account.email = uuid.toString();
+        account.blogId = uuid.toString();
+        return account;
+    }
 }

@@ -4,6 +4,8 @@ import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
+import com.hwans.apiserver.entity.account.Account;
+import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
@@ -16,6 +18,7 @@ import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.blog.LikeRepository;
 import com.hwans.apiserver.repository.blog.PostRepository;
 import com.hwans.apiserver.repository.blog.tag.TagRepository;
+import com.hwans.apiserver.repository.role.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +42,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BlogServiceImpl implements BlogService {
     private final AccountRepository accountRepository;
+    private final RoleRepository roleRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final TagRepository tagRepository;
@@ -289,6 +293,24 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
+    public CommentDto createGuestComment(String blogId, String postUrl, GuestCommentRequestDto guestCommentRequestDto) {
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+
+        // 비회원 계정 정보 생성
+        var guestAccount = createGuestAccount(guestCommentRequestDto.getName(), guestCommentRequestDto.getPassword());
+
+        // 비회원 댓글 정보 생성
+        var comment = commentMapper.toEntity(guestCommentRequestDto);
+        comment.setAuthor(guestAccount);
+        comment.setPost(foundPost);
+        var savedComment = commentRepository.save(comment);
+        return commentMapper.toDto(savedComment);
+    }
+
+    @Override
+    @Transactional
     public CommentDto createComment(UUID authorAccountId, UUID commentId, CommentRequestDto commentRequestDto) {
         var authorAccount = accountRepository
                 .findById(authorAccountId)
@@ -299,6 +321,25 @@ public class BlogServiceImpl implements BlogService {
 
         var comment = commentMapper.toEntity(commentRequestDto);
         comment.setAuthor(authorAccount);
+        comment.setPost(foundComment.getPost());
+        comment.setParent(foundComment);
+        var savedComment = commentRepository.save(comment);
+        return commentMapper.toDto(savedComment);
+    }
+
+    @Override
+    @Transactional
+    public CommentDto createGuestComment(UUID commentId, GuestCommentRequestDto guestCommentRequestDto) {
+        var foundComment = commentRepository
+                .findByIdAndDeletedIsFalse(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+
+        // 비회원 계정 정보 생성
+        var guestAccount = createGuestAccount(guestCommentRequestDto.getName(), guestCommentRequestDto.getPassword());
+
+        // 비회원 댓글 정보 생성
+        var comment = commentMapper.toEntity(guestCommentRequestDto);
+        comment.setAuthor(guestAccount);
         comment.setPost(foundComment.getPost());
         comment.setParent(foundComment);
         var savedComment = commentRepository.save(comment);
@@ -377,5 +418,19 @@ public class BlogServiceImpl implements BlogService {
             });
         }
         return hashOperations.increment(POST_HITS_KEY, hashKey, 1L);
+    }
+
+    /**
+     * 비회원 계정을 생성합니다.
+     *
+     * @param name 이름
+     * @param password 비밀번호
+     */
+    private Account createGuestAccount(String name, String password) {
+        var guestAccount = Account.createGuestAccount(name, passwordEncoder.encode(password));
+        var savedAccount = accountRepository.save(guestAccount);
+        var userRole = roleRepository.saveIfNotExist(RoleType.GUEST.getName());
+        savedAccount.addRole(userRole);
+        return savedAccount;
     }
 }

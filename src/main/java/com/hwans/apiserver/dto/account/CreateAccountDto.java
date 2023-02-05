@@ -38,7 +38,7 @@ public class CreateAccountDto implements Serializable {
     @NotBlank
     @Length(max = 32)
     String name;
-    @ApiModelProperty(value = "블로그 Id", required = true, example = "kim-hwan")
+    @ApiModelProperty(value = "블로그 Id", required = true, example = "@kim-hwan")
     @NotBlank
     @Length(min = 2, max = 64)
     @BlogId

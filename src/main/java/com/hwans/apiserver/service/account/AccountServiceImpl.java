@@ -8,6 +8,7 @@ import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
 import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.dto.account.ResetPasswordDto;
+import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;

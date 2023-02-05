@@ -102,7 +102,9 @@ public class WebSecurityConfig {
                             Constants.API_PREFIX + "/v1/accounts/verify-email",
                             Constants.API_PREFIX + "/v1/accounts/reset-password-email",
                             Constants.API_PREFIX + "/v1/authentication/token",
-                            Constants.API_PREFIX + "/v1/authentication/refresh-token").permitAll()
+                            Constants.API_PREFIX + "/v1/authentication/refresh-token",
+                            Constants.API_PREFIX + "/v1/blog/*/posts/*/comments/guest",
+                            Constants.API_PREFIX + "/v1/blog/comments/*/guest").permitAll()
                     //.antMatchers("/h2-console/**").permitAll() // Local H2 콘솔 테스트 환경
                     .anyRequest().authenticated()
                     //.and().headers().frameOptions().disable() // Local H2 콘솔 테스트 환경

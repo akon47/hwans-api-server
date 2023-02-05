@@ -16,6 +16,6 @@ public class BlogIdValidator implements ConstraintValidator<BlogId, String> {
             return false;
         }
 
-        return value.matches("^@?[-a-zA-Z\\d_]+$");
+        return value.matches("^@[-a-zA-Z\\d_]+$");
     }
 }

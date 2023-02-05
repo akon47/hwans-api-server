@@ -108,6 +108,14 @@ public class BlogController {
         return blogService.createComment(userAuthenticationDetails.getId(), blogId, postUrl, commentRequestDto);
     }
 
+    @ApiOperation(value = "비회원 댓글 작성", notes = "게시글에 비회원 댓글을 작성한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/comments/guest")
+    public CommentDto createComment(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                    @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
+                                    @ApiParam(value = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto) {
+        return blogService.createGuestComment(blogId, postUrl, guestCommentRequestDto);
+    }
+
     @ApiOperation(value = "댓글 수정", notes = "댓글을 수정한다.", tags = "블로그")
     @PutMapping(value = "/v1/blog/comments/{commentId}")
     public CommentDto modifyComment(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
@@ -139,6 +147,13 @@ public class BlogController {
                                              @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
                                              @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
         return blogService.createComment(userAuthenticationDetails.getId(), commentId, commentRequestDto);
+    }
+
+    @ApiOperation(value = "비회원 대댓글 작성", notes = "댓글에 댓글을 작성한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/comments/{commentId}/guest")
+    public CommentDto createCommentToComment(@ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
+                                             @ApiParam(value = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto) {
+        return blogService.createGuestComment(commentId, guestCommentRequestDto);
     }
 
     @ApiOperation(value = "게시글 좋아요 하기", notes = "게시글을 좋아요 한다.", tags = "블로그")

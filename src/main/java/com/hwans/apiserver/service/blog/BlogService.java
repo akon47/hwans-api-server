@@ -125,6 +125,16 @@ public interface BlogService {
     CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto);
 
     /**
+     * 비회원 댓글을 생성합니다
+     *
+     * @param blogId 댓글을 달려고 하는 blogId
+     * @param postUrl 댓글을 달려고 하는 postUrl
+     * @param guestCommentRequestDto 생성할 비회원 댓글 데이터 모델
+     * @return 생성된 댓글 데이터 모델
+     */
+    CommentDto createGuestComment(String blogId, String postUrl, GuestCommentRequestDto guestCommentRequestDto);
+
+    /**
      * 대댓글을 생성합니다.
      *
      * @param authorAccountId 댓글 작성자 계정 Id
@@ -133,6 +143,15 @@ public interface BlogService {
      * @return 생성된 댓글 데이터 모델
      */
     CommentDto createComment(UUID authorAccountId, UUID commentId, CommentRequestDto commentRequestDto);
+
+    /**
+     * 비회원 대댓글을 생성합니다.
+     *
+     * @param commentId 대댓글 작성을 위한 부모 댓글 Id
+     * @param guestCommentRequestDto 생성할 비회원 댓글 데이터 모델
+     * @return 생성된 댓글 데이터 모델
+     */
+    CommentDto createGuestComment(UUID commentId, GuestCommentRequestDto guestCommentRequestDto);
 
     /**
      * 댓글을 수정합니다

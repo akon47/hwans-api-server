@@ -21,7 +21,7 @@ public class GuestCommentRequestDto implements Serializable {
     @NotBlank
     @Length(max = 32)
     String name;
-    @ApiModelProperty(value = "사용자 로그인 비밀번호", example = "12345")
+    @ApiModelProperty(value = "사용자 로그인 비밀번호", required = true, example = "12345")
     @NotBlank
     String password;
 }
