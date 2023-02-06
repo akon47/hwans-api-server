@@ -92,8 +92,23 @@ public class Account extends BaseEntity {
                 .orElse(null);
     }
 
+    /**
+     * 손님 계정인지 여부를 반환한다.
+     *
+     * @return 손님 계정인지 여부
+     */
     public boolean isGuest() {
-        return this.getRoles().stream().anyMatch(x -> x.getName().equals(RoleType.GUEST.getName()));
+        return this.hasRole(RoleType.GUEST);
+    }
+
+    /**
+     * 해당 역할을 가지고 있는지 여부를 반환한다.
+     *
+     * @param roleType 역할
+     * @return 해당 역할을 가지고 있는지 여부
+     */
+    public boolean hasRole(RoleType roleType) {
+        return this.getRoles().stream().anyMatch(x -> x.getName().equals(roleType.getName()));
     }
 
     public void setProfileImage(Attachment attachment) {
@@ -115,7 +130,7 @@ public class Account extends BaseEntity {
     /**
      * 이름과 비밀번호로 손님 계정을 생성합니다.
      *
-     * @param name 이름
+     * @param name            이름
      * @param encodedPassword 비밀번호
      * @return 계정
      */

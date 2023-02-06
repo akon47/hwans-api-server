@@ -43,7 +43,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     /**
      * 사용자 인증 토큰을 발급합니다.
      *
-     * @param authenticationInfoDto 사용자 인중 정보
+     * @param authenticationInfoDto  사용자 인중 정보
      * @param forceIssueRefreshToken 현재 사용중인 리프레시 토큰이 만료되어 있지 않더라도 강제로 다시 리프레시 토큰도 발급할지 여부
      * @return 발급된 토큰
      */
@@ -53,6 +53,9 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         var foundAccount = accountRepository
                 .findByEmailAndDeletedIsFalse(authenticationInfoDto.getEmail())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+        if (foundAccount.isGuest()) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
         if (!passwordEncoder.matches(authenticationInfoDto.getPassword(), foundAccount.getPassword())) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, NO_PASSWORD_MATCH);
         }
@@ -61,7 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var token = tokenProvider.createToken(authentication);
 
-        if(forceIssueRefreshToken || tokenProvider.validateRefreshToken(foundAccount.getRefreshToken()) != JwtStatus.ACCESS) {
+        if (forceIssueRefreshToken || tokenProvider.validateRefreshToken(foundAccount.getRefreshToken()) != JwtStatus.ACCESS) {
             accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
         }
 
@@ -71,7 +74,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     /**
      * 사용자의 엑세스 토큰을 사용 중지시킵니다.
      *
-     * @param accessToken 엑세스 토큰
+     * @param accessToken      엑세스 토큰
      * @param withRefreshToken 사용자에게 발급되어 있는 리프레시 토큰도 같이 사용을 중지시킬지 여부
      */
     @Override
@@ -82,7 +85,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
                 .getAccountEmailFromAccessToken(accessToken)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
 
-        if(withRefreshToken) {
+        if (withRefreshToken) {
             accountRepository
                     .findByEmailAndDeletedIsFalse(accountEmail)
                     .ifPresent((foundAccount) ->
@@ -96,7 +99,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     }
 
     /**
-     * @param accessToken 엑세스 토큰
+     * @param accessToken  엑세스 토큰
      * @param refreshToken 리프레시 토큰
      * @return 재발급된 토큰
      */
@@ -153,7 +156,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
     @Bean
     public Function<UserDetails, UserAuthenticationDetails> fetchCurrentUserAuthenticationDetails() {
         return (principal -> {
-            if(principal == null)
+            if (principal == null)
                 throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
 
             String email = principal.getUsername();

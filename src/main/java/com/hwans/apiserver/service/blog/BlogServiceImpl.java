@@ -58,12 +58,15 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public BlogDetailsDto getBlogDetails(String blogId) {
-        var account = accountRepository
+        var foundAccount = accountRepository
                 .findByBlogId(blogId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        if (foundAccount.isGuest()) {
+            throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
+        }
 
         return BlogDetailsDto.builder()
-                .owner(accountMapper.toDto(account))
+                .owner(accountMapper.toDto(foundAccount))
                 .build();
     }
 
@@ -100,16 +103,19 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto) {
-        var account = accountRepository
+        var foundAccount = accountRepository
                 .findById(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        if (foundAccount.isGuest()) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
         postRepository
-                .findByBlogIdAndPostUrl(account.getBlogId(), postRequestDto.getPostUrl())
+                .findByBlogIdAndPostUrl(foundAccount.getBlogId(), postRequestDto.getPostUrl())
                 .ifPresent(x -> {
                     throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_POST_URL);
                 });
         var post = postMapper.PostRequestDtoToEntity(postRequestDto);
-        post.setAuthor(account);
+        post.setAuthor(foundAccount);
         post.updatePostUrlIfNecessary();
         post.setTags(postRequestDto
                 .getTags().stream()
@@ -423,7 +429,7 @@ public class BlogServiceImpl implements BlogService {
     /**
      * 비회원 계정을 생성합니다.
      *
-     * @param name 이름
+     * @param name     이름
      * @param password 비밀번호
      */
     private Account createGuestAccount(String name, String password) {
