@@ -19,9 +19,15 @@ import java.io.Serializable;
 @Builder
 @ApiModel(description = "사용자 생성 Dto")
 public class CreateAccountDto implements Serializable {
+    /**
+     * 이메일 인증 코드를 사용하여 계정 생성 시 사용하는 Validation 그룹
+     */
     public interface ByEmailVerifyCode {
     }
 
+    /**
+     * 계정 생성 토큰을 사용하여 계정 생성 시 사용하는 Validation 그룹
+     */
     public interface ByRegisterToken {
     }
 

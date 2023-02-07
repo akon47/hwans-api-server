@@ -54,6 +54,9 @@ public class BlogServiceImpl implements BlogService {
     private final RedisTemplate<String, Integer> redisTemplate;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * 레디스에 조회수 저장을 위한 키값
+     */
     private static final String POST_HITS_KEY = "post-hits";
 
     @Override
