@@ -19,4 +19,7 @@ public class BlogDetailsDto implements Serializable {
     @ApiModelProperty(value = "블로그 주인", required = true)
     @NotNull
     AccountDto owner;
+    @ApiModelProperty(value = "전체 게시글 수")
+    int postCount;
+
 }

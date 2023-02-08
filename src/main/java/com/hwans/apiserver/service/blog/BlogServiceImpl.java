@@ -60,7 +60,7 @@ public class BlogServiceImpl implements BlogService {
     private static final String POST_HITS_KEY = "post-hits";
 
     @Override
-    public BlogDetailsDto getBlogDetails(String blogId) {
+    public BlogDetailsDto getBlogDetails(String blogId, boolean findPublicPostOnly) {
         var foundAccount = accountRepository
                 .findByBlogId(blogId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
@@ -68,8 +68,11 @@ public class BlogServiceImpl implements BlogService {
             throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
         }
 
+        var postCount = postRepository.getCountByBlogId(blogId, findPublicPostOnly);
+
         return BlogDetailsDto.builder()
                 .owner(accountMapper.toDto(foundAccount))
+                .postCount(postCount)
                 .build();
     }
 

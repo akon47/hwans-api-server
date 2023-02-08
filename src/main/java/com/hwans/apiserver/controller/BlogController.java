@@ -95,8 +95,10 @@ public class BlogController {
 
     @ApiOperation(value = "블로그 정보 조회", notes = "블로그 정보를 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}")
-    public BlogDetailsDto getBlogDetails(@ApiParam(value = "블로그 Id") @PathVariable String blogId) {
-        return blogService.getBlogDetails(blogId);
+    public BlogDetailsDto getBlogDetails(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                                         @ApiParam(value = "블로그 Id") @PathVariable String blogId) {
+        boolean findPublicPostOnly = userAuthenticationDetails == null || !userAuthenticationDetails.getBlogId().equals(blogId);
+        return blogService.getBlogDetails(blogId, findPublicPostOnly);
     }
 
     @ApiOperation(value = "댓글 작성", notes = "게시글에 댓글을 작성한다.", tags = "블로그")

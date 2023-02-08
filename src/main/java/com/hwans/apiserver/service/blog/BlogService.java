@@ -16,7 +16,7 @@ public interface BlogService {
      * @param blogId 블로그 Id
      * @return 블로그 상세정보
      */
-    BlogDetailsDto getBlogDetails(String blogId);
+    BlogDetailsDto getBlogDetails(String blogId, boolean findPublicPostOnly);
 
     /**
      * 모든 블로거의 Public 상태의 게시글을 조회한다.
@@ -177,7 +177,6 @@ public interface BlogService {
      */
     void deleteComment(UUID commentId);
 
-
     /**
      * 댓글 작성자의 Id를 조회합니다.
      *
@@ -185,7 +184,6 @@ public interface BlogService {
      * @return 작성자 Id
      */
     UUID getCommentAuthorId(UUID commentId);
-
 
     /**
      * 댓글 작성자의 비밀번호가 맞는지 검사합니다.
