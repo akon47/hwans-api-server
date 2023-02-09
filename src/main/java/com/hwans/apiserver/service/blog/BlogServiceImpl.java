@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -68,11 +69,17 @@ public class BlogServiceImpl implements BlogService {
             throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND);
         }
 
-        var postCount = postRepository.getCountByBlogId(blogId, findPublicPostOnly);
+        var posts = postRepository.findAllByBlogId(blogId, findPublicPostOnly);
+        var tagCounts = posts.stream().flatMap(x -> x.getTags().stream())
+                .collect(Collectors.groupingBy(Tag::getName, Collectors.summingInt(x -> 1)))
+                .entrySet().stream()
+                .map(x -> new TagCountDto(x.getKey(), x.getValue()))
+                .collect(Collectors.toList());
 
         return BlogDetailsDto.builder()
                 .owner(accountMapper.toDto(foundAccount))
-                .postCount(postCount)
+                .postCount(posts.size())
+                .tagCounts(tagCounts)
                 .build();
     }
 

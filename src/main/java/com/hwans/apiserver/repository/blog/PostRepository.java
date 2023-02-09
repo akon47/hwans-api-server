@@ -38,6 +38,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query("select count(*) from Post as x where x.deleted = false and upper(x.openType) like upper(:#{#findPublicPostOnly ? 'PUBLIC' : '%'}) and x.blogId = :blogId")
     int getCountByBlogId(@Param("blogId") String blogId, @Param("findPublicPostOnly") boolean findPublicPostOnly);
 
+    @Query("select x from Post as x where x.deleted = false and upper(x.openType) like upper(:#{#findPublicPostOnly ? 'PUBLIC' : '%'}) and x.blogId = :blogId order by x.createdAt desc, x.id desc")
+    List<Post> findAllByBlogId(@Param("blogId") String blogId, @Param("findPublicPostOnly") boolean findPublicPostOnly);
+
     @Modifying
     @Query("update Post x set x.hits = :hits where x.id = :id")
     Integer updateHits(@Param("uuid") UUID id, @Param("hits") Integer hits);
