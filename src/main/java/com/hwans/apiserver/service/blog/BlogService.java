@@ -64,7 +64,7 @@ public interface BlogService {
      * @param findPublicPostOnly Public 게시글만 조회할지 여부
      * @return 조회된 게시글 목록 (페이징)
      */
-    SliceDto<SimplePostDto> getBlogPosts(String blogId, Optional<UUID> cursorId, int size, boolean findPublicPostOnly);
+    SliceDto<SimplePostDto> getBlogPosts(String blogId, String tag, Optional<UUID> cursorId, int size, boolean findPublicPostOnly);
 
     /**
      * 해당 blogId의 주인이 좋아요 한 게시글을 조회합니다.

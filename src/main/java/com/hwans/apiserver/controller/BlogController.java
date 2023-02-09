@@ -66,10 +66,11 @@ public class BlogController {
     @GetMapping(value = "/v1/blog/{blogId}/posts")
     public SliceDto<SimplePostDto> getBlogPosts(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
                                                 @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                                @ApiParam(value = "특정 태그만 조회 시 해당 태그") @RequestParam(required = false) String tag,
                                                 @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
                                                 @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
         boolean findPublicPostOnly = userAuthenticationDetails == null || !userAuthenticationDetails.getBlogId().equals(blogId);
-        return blogService.getBlogPosts(blogId, cursorId, size, findPublicPostOnly);
+        return blogService.getBlogPosts(blogId, tag, cursorId, size, findPublicPostOnly);
     }
 
     @ApiOperation(value = "특정 블로그 주인이 좋아요 한 전체 게시글 조회", notes = "특정 블로그 주인이 좋아요 한 전체 게시글을 조회한다.", tags = "블로그")

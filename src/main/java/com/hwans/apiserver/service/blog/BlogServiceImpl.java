@@ -197,17 +197,17 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public SliceDto<SimplePostDto> getBlogPosts(String blogId, Optional<UUID> cursorId, int size, boolean findPublicPostOnly) {
+    public SliceDto<SimplePostDto> getBlogPosts(String blogId, String tag, Optional<UUID> cursorId, int size, boolean findPublicPostOnly) {
         List<Post> foundPosts;
         if (cursorId.isPresent()) {
             var foundCursorPost = postRepository
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             foundPosts = postRepository
-                    .findByIdLessThanOrderByIdDesc(blogId, foundCursorPost.getId(), foundCursorPost.getCreatedAt(), findPublicPostOnly, PageRequest.of(0, size + 1));
+                    .findByIdLessThanOrderByIdDesc(blogId, tag, foundCursorPost.getId(), foundCursorPost.getCreatedAt(), findPublicPostOnly, PageRequest.of(0, size + 1));
         } else {
             foundPosts = postRepository
-                    .findAllByOrderByIdDesc(blogId, findPublicPostOnly, PageRequest.of(0, size + 1));
+                    .findAllByOrderByIdDesc(blogId, tag, findPublicPostOnly, PageRequest.of(0, size + 1));
         }
         var last = foundPosts.size() <= size;
         return SliceDto.<SimplePostDto>builder()
