@@ -6,8 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * 간단한 계정 정보 Dto

@@ -253,6 +253,35 @@ public class BlogServiceImpl implements BlogService {
         return postMapper.EntityToPostDto(foundPost);
     }
 
+    /**
+     * 게시글 작성자의 Id를 조회합니다.
+     *
+     * @param postId 게시글 Id
+     * @return 작성자 Id
+     */
+    @Override
+    public UUID getPostAuthorId(UUID postId) {
+        var foundPost = postRepository
+                .findById(postId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        return foundPost.getAuthor().getId();
+    }
+
+    /**
+     * 게시글 작성자의 Id를 조회합니다.
+     *
+     * @param blogId  조회를 원하는 게시글의 blogId
+     * @param postUrl 조회를 원하는 게시글의 postUrl
+     * @return 작성자 Id
+     */
+    @Override
+    public UUID getPostAuthorId(String blogId, String postUrl) {
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrl(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        return foundPost.getAuthor().getId();
+    }
+
     @Override
     @Transactional
     public void likePost(UUID actorAccountId, String blogId, String postUrl) {

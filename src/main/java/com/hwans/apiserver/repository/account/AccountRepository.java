@@ -21,6 +21,14 @@ public interface AccountRepository extends JpaRepository<Account, UUID>, Account
     Optional<Account> findByEmailAndDeletedIsFalse(String email);
 
     /**
+     * 삭제되지 않은 계정을 Id로 찾아 반환한다.
+     *
+     * @param id 계정 Id
+     * @return 찾은 경우 계정 엔티티
+     */
+    Optional<Account> findByIdAndDeletedIsFalse(UUID id);
+
+    /**
      * 이메일로 계정이 존재하는지 여부를 반환한다.
      *
      * @param email 이메일

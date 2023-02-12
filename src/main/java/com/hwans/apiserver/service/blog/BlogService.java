@@ -79,11 +79,28 @@ public interface BlogService {
     /**
      * 게시글을 조회합니다.
      *
-     * @param blogId 조회를 원하는 게시글의 blogId
+     * @param blogId  조회를 원하는 게시글의 blogId
      * @param postUrl 조회를 원하는 게시글의 postUrl
      * @return 게시글 데이터 모델
      */
     PostDto getPost(String blogId, String postUrl);
+
+    /**
+     * 게시글 작성자의 Id를 조회합니다.
+     *
+     * @param postId 게시글 Id
+     * @return 작성자 Id
+     */
+    UUID getPostAuthorId(UUID postId);
+
+    /**
+     * 게시글 작성자의 Id를 조회합니다.
+     *
+     * @param blogId 조회를 원하는 게시글의 blogId
+     * @param postUrl 조회를 원하는 게시글의 postUrl
+     * @return 작성자 Id
+     */
+    UUID getPostAuthorId(String blogId, String postUrl);
 
     /**
      * 게시글에 좋아요를 합니다.

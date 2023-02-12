@@ -100,6 +100,7 @@ public class ErrorCodes {
         NOT_FOUND_COMMENT("댓글을 찾을 수 없습니다."),
         NOT_FOUND_BLOG("블로그를 찾을 수 없습니다."),
         NOT_FOUND_EMAIL("이메일을 찾을 수 없습니다."),
+        NOT_FOUND_NOTIFICATION("알림을 찾을 수 없습니다."),
         ;
 
         private final String defaultMessage;

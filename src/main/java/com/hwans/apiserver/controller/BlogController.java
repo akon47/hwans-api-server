@@ -10,6 +10,7 @@ import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetailsOrElseNull;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.blog.BlogService;
+import com.hwans.apiserver.service.notification.NotificationService;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,6 +32,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BlogController {
     private final BlogService blogService;
+    private final NotificationService notificationService;
 
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")
@@ -108,7 +110,9 @@ public class BlogController {
                                     @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                                     @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
                                     @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
-        return blogService.createComment(userAuthenticationDetails.getId(), blogId, postUrl, commentRequestDto);
+        var comment = blogService.createComment(userAuthenticationDetails.getId(), blogId, postUrl, commentRequestDto);
+        notificationService.createCommentNotification(comment);
+        return comment;
     }
 
     @ApiOperation(value = "비회원 댓글 작성", notes = "게시글에 비회원 댓글을 작성한다.", tags = "블로그")
@@ -116,7 +120,9 @@ public class BlogController {
     public CommentDto createComment(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
                                     @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
                                     @ApiParam(value = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto) {
-        return blogService.createGuestComment(blogId, postUrl, guestCommentRequestDto);
+        var comment = blogService.createGuestComment(blogId, postUrl, guestCommentRequestDto);
+        notificationService.createCommentNotification(comment);
+        return comment;
     }
 
     @ApiOperation(value = "댓글 수정", notes = "댓글을 수정한다.", tags = "블로그")

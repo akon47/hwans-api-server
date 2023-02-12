@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -13,12 +14,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "notification_type", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "tb_notification")
 @Getter
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Notification extends BaseEntity {
+public abstract class Notification extends BaseEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -31,11 +34,10 @@ public class Notification extends BaseEntity {
     private Account account;
     @Column(nullable = true)
     private LocalDateTime readAt;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private NotificationType notificationType;
-    @Column(length = 100, nullable = false)
-    private String subject;
-    @Column(length = 1000, nullable = false)
-    private String body;
+
+    public abstract NotificationType getNotificationType();
+
+    public Account getReceiver() {
+        return this.account;
+    }
 }
