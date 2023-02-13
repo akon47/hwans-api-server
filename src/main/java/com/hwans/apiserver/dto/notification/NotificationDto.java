@@ -29,9 +29,6 @@ public class NotificationDto implements Serializable {
     @ApiModelProperty(value = "알림 유형", required = true)
     @NotNull
     NotificationType notificationType;
-    @ApiModelProperty(value = "알림 메세지", required = true)
-    @NotBlank
-    String message;
     @ApiModelProperty(value = "알림이 발생한 시간", required = true)
     @NotBlank
     LocalDateTime createdAt;
