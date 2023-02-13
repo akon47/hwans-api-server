@@ -26,7 +26,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @ApiOperation(value = "알림 목록 조회", notes = "받은 알림 목록을 조회한다.", tags = "알림")
-    @GetMapping(value = "/v1/notification/notifications")
+    @GetMapping(value = "/v1/notifications")
     public SliceDto<NotificationDto> getNotifications(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                                       @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
                                                       @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size,
@@ -35,14 +35,14 @@ public class NotificationController {
     }
 
     @ApiOperation(value = "알림 조회", notes = "알림을 조회한다.", tags = "알림")
-    @GetMapping(value = "/v1/notification/notifications/{notificationId}")
+    @GetMapping(value = "/v1/notifications/{notificationId}")
     public NotificationDto getNotification(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                            @ApiParam(value = "알림 Id") @PathVariable UUID notificationId) {
         return notificationService.getNotification(userAuthenticationDetails.getId(), notificationId);
     }
 
     @ApiOperation(value = "알림 삭제", notes = "알림을 삭제한다.", tags = "알림")
-    @DeleteMapping(value = "/v1/notification/notifications/{notificationId}")
+    @DeleteMapping(value = "/v1/notifications/{notificationId}")
     public void deleteNotification(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                    @ApiParam(value = "알림 Id") @PathVariable UUID notificationId) {
         notificationService.deleteNotification(userAuthenticationDetails.getId(), notificationId);
