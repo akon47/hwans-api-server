@@ -41,6 +41,19 @@ public class NotificationController {
         return notificationService.getNotification(userAuthenticationDetails.getId(), notificationId);
     }
 
+    @ApiOperation(value = "알림 읽기", notes = "알림을 읽음 상태로 변경한다.", tags = "알림")
+    @PutMapping(value = "/v1/notifications/{notificationId}/mark-as-read")
+    public NotificationDto markNotificationAsRead(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                   @ApiParam(value = "알림 Id") @PathVariable UUID notificationId) {
+        return notificationService.markNotificationAsRead(userAuthenticationDetails.getId(), notificationId);
+    }
+
+    @ApiOperation(value = "모든 알림 삭제", notes = "모든 알림을 삭제한다.", tags = "알림")
+    @DeleteMapping(value = "/v1/notifications")
+    public void deleteNotifications(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails) {
+        notificationService.deleteNotifications(userAuthenticationDetails.getId());
+    }
+
     @ApiOperation(value = "알림 삭제", notes = "알림을 삭제한다.", tags = "알림")
     @DeleteMapping(value = "/v1/notifications/{notificationId}")
     public void deleteNotification(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,

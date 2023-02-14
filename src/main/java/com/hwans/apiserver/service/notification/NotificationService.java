@@ -32,6 +32,22 @@ public interface NotificationService {
     NotificationDto getNotification(UUID accountId, UUID notificationId);
 
     /**
+     * 알림을 읽음 상태로 변경합니다.
+     *
+     * @param notificationId 읽기를 원하는 알림 Id
+     * @return 읽은 알림
+     */
+    NotificationDto markNotificationAsRead(UUID accountId, UUID notificationId);
+
+
+    /**
+     * 모든 알림을 삭제합니다.
+     *
+     * @param accountId 삭제할 대상의 계정 Id
+     */
+    void deleteNotifications(UUID accountId);
+
+    /**
      * 알림을 삭제합니다.
      *
      * @param notificationId 삭제를 원하는 알림 Id

@@ -193,7 +193,7 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        foundPost.delete();
+        foundPost.setDeleted();
     }
 
     @Override
@@ -419,7 +419,7 @@ public class BlogServiceImpl implements BlogService {
         var foundComment = commentRepository
                 .findById(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
-        foundComment.delete();
+        foundComment.setDeleted();
     }
 
     @Override

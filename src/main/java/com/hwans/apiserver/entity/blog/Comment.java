@@ -56,7 +56,10 @@ public class Comment extends BaseEntity {
                 .orElse(null);
     }
 
-    public void delete() {
+    /**
+     * 삭제 상태로 변경합니다.
+     */
+    public void setDeleted() {
         this.deleted = true;
     }
 

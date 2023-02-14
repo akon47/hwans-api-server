@@ -40,4 +40,18 @@ public abstract class Notification extends BaseEntity {
     public Account getReceiver() {
         return this.account;
     }
+
+    /**
+     * 알림을 읽은 시간을 현재 시간으로 설정합니다.
+     */
+    public void setReadAtNow() {
+        this.readAt = LocalDateTime.now();
+    }
+
+    /**
+     * 삭제된 상태로 변경합니다.
+     */
+    public void setDeleted() {
+        this.deleted = true;
+    }
 }

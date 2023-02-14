@@ -83,11 +83,11 @@ public class Post extends BaseEntity {
         tags.forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));
     }
 
-    public void delete() {
+    /**
+     * 삭제 상태로 변경합니다.
+     */
+    public void setDeleted() {
         this.deleted = true;
-        if (!this.postUrl.endsWith("-deleted")) {
-            this.postUrl += "-deleted";
-        }
     }
 
     public void setPostUrl(String postUrl) {

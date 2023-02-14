@@ -82,6 +82,28 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.EntityToNotificationDto(foundNotification);
     }
 
+    @Override
+    @Transactional
+    public NotificationDto markNotificationAsRead(UUID accountId, UUID notificationId) {
+        var foundNotification = notificationRepository
+                .findByAccountIdAndId(accountId, notificationId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_NOTIFICATION));
+        foundNotification.setReadAtNow();
+        var savedNotification = notificationRepository.save(foundNotification);
+        return notificationMapper.EntityToNotificationDto(savedNotification);
+    }
+
+    /**
+     * 모든 알림을 삭제합니다.
+     *
+     * @param accountId 삭제할 대상의 계정 Id
+     */
+    @Override
+    @Transactional
+    public void deleteNotifications(UUID accountId) {
+        notificationRepository.setDeletedAllByAccountId(accountId);
+    }
+
     /**
      * 알림을 삭제합니다.
      *
@@ -94,7 +116,8 @@ public class NotificationServiceImpl implements NotificationService {
         var foundNotification = notificationRepository
                 .findByAccountIdAndId(accountId, notificationId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_NOTIFICATION));
-        notificationRepository.delete(foundNotification);
+        foundNotification.setDeleted();
+        notificationRepository.save(foundNotification);
     }
 
     /**
