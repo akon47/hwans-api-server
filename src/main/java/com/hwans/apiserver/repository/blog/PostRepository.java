@@ -23,10 +23,10 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
     List<Post> findByIdLessThanOrderByIdDesc(@Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
 
-    @Query("select distinct post from Post as post join post.postTags as tag where post.deleted = false and (:findPublicPostOnly is false or post.openType = 'PUBLIC') and post.blogId = :blogId and (:tag is null or tag.tag.name = :tag) order by post.createdAt desc, post.id desc")
+    @Query("select distinct post from Post as post left outer join post.postTags as postTag left outer join postTag.tag as tag where post.deleted = false and (:findPublicPostOnly is false or post.openType = 'PUBLIC') and post.blogId = :blogId and (:tag is null or tag.name = :tag) order by post.createdAt desc, post.id desc")
     List<Post> findAllByOrderByIdDesc(@Param("blogId") String blogId, @Param("tag") String tag, @Param("findPublicPostOnly") boolean findPublicPostOnly, Pageable page);
 
-    @Query("select distinct post from Post as post join post.postTags as tag where post.deleted = false and (:findPublicPostOnly is false or post.openType = 'PUBLIC') and post.blogId = :blogId and (:tag is null or tag.tag.name = :tag) and ((post.createdAt < :createdAt and post.id < :id) or (post.createdAt < :createdAt)) order by post.createdAt desc, post.id desc")
+    @Query("select distinct post from Post as post left outer join post.postTags as postTag left outer join postTag.tag as tag where post.deleted = false and (:findPublicPostOnly is false or post.openType = 'PUBLIC') and post.blogId = :blogId and (:tag is null or tag.name = :tag) and ((post.createdAt < :createdAt and post.id < :id) or (post.createdAt < :createdAt)) order by post.createdAt desc, post.id desc")
     List<Post> findByIdLessThanOrderByIdDesc(@Param("blogId") String blogId, @Param("tag") String tag, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, @Param("findPublicPostOnly") boolean findPublicPostOnly, Pageable page);
 
     @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and (x.title like concat('%',:search,'%') or x.content like concat('%',:search,'%')) order by x.createdAt desc, x.id desc")
