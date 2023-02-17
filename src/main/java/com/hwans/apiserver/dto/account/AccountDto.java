@@ -50,4 +50,6 @@ public class AccountDto implements Serializable {
     String homepage;
     @ApiModelProperty(value = "계정에 할당된 역할", required = true, example = "사용자")
     Set<RoleDto> roles;
+    @ApiModelProperty(value = "비회원인지 여부", required = true)
+    boolean guest;
 }
