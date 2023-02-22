@@ -52,17 +52,17 @@ public class Account extends BaseEntity {
     @Column(length = 255)
     @With
     private String refreshToken;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "profile_image_file_id")
     private Attachment profileImage;
-    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     @Getter(AccessLevel.NONE)
     private final Set<AccountRole> accountRoles = new HashSet<>();
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.REMOVE)
     private final Set<Post> posts = new HashSet<>();
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.REMOVE)
     private final Set<Comment> comments = new HashSet<>();
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.REMOVE)
     private final Set<Like> likes = new HashSet<>();
 
     public Set<Role> getRoles() {

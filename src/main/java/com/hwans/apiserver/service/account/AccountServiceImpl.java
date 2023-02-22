@@ -4,11 +4,10 @@ import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
-import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.dto.account.ResetPasswordDto;
-import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
@@ -117,6 +116,20 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         foundAccount.update(modifyAccountDto);
         return accountMapper.toDto(foundAccount);
+    }
+
+    /**
+     * 사용자 계정을 삭제한다.
+     *
+     * @param accountId 계정 Id
+     */
+    @Override
+    @Transactional
+    public void deleteAccount(UUID accountId) {
+        var foundAccount = accountRepository
+                .findByIdAndDeletedIsFalse(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        accountRepository.delete(foundAccount);
     }
 
     /**

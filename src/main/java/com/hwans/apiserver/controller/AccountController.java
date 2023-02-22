@@ -1,8 +1,8 @@
 package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.common.Constants;
-import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import com.hwans.apiserver.service.account.AccountService;
@@ -51,6 +51,12 @@ public class AccountController {
     public AccountDto modify(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                              @ApiParam(value = "사용자 정보", required = true) @RequestBody @Valid final ModifyAccountDto modifyAccountDto) {
         return accountService.modifyAccount(userAuthenticationDetails.getId(), modifyAccountDto);
+    }
+
+    @ApiOperation(value = "현재 사용자 계정 삭제", notes = "현재 사용자 계정을 삭제한다.", tags = "사용자 계정")
+    @DeleteMapping(value = "/v1/accounts/me")
+    public void delete(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails) {
+        accountService.deleteAccount(userAuthenticationDetails.getId());
     }
 
     @ApiOperation(value = "사용자 계정 비밀번호 재설정", notes = "사용자 계정 비밀번호를 재설정한다.", tags = "사용자 계정")

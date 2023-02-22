@@ -1,13 +1,12 @@
 package com.hwans.apiserver.service.account;
 
-import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
 /**
@@ -42,6 +41,13 @@ public interface AccountService {
      * @return 수정된 사용자 계정 데이터 모델
      */
     AccountDto modifyAccount(UUID accountId, ModifyAccountDto modifyAccountDto);
+
+    /**
+     * 사용자 계정을 삭제한다.
+     *
+     * @param accountId 계정 Id
+     */
+    void deleteAccount(UUID accountId);
 
     /**
      * 사용자 계정의 비밀번호를 변경한다.
