@@ -61,7 +61,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, BAD_ATTACHMENT_CONTENT_TYPE);
         }
         var uploaderAccount = accountRepository
-                .findById(uploaderAccountId)
+                .findByIdAndDeletedIsFalse(uploaderAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
         var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());
         try {
@@ -80,7 +80,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     public FileDto saveFileFromUrl(UUID uploaderAccountId, String fileUrl) {
         try {
             var uploaderAccount = accountRepository
-                    .findById(uploaderAccountId)
+                    .findByIdAndDeletedIsFalse(uploaderAccountId)
                     .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
             var url = new URL(fileUrl);
             var connection = url.openConnection();

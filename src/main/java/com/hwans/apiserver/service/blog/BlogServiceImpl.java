@@ -117,7 +117,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto) {
         var foundAccount = accountRepository
-                .findById(authorAccountId)
+                .findByIdAndDeletedIsFalse(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         if (foundAccount.isGuest()) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
@@ -286,7 +286,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public void likePost(UUID actorAccountId, String blogId, String postUrl) {
         var account = accountRepository
-                .findById(actorAccountId)
+                .findByIdAndDeletedIsFalse(actorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
 
         var foundPost = postRepository
@@ -300,7 +300,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public void unlikePost(UUID actorAccountId, String blogId, String postUrl) {
         var account = accountRepository
-                .findById(actorAccountId)
+                .findByIdAndDeletedIsFalse(actorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
 
         var foundPost = postRepository
@@ -327,7 +327,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto) {
         var authorAccount = accountRepository
-                .findById(authorAccountId)
+                .findByIdAndDeletedIsFalse(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
@@ -361,7 +361,7 @@ public class BlogServiceImpl implements BlogService {
     @Transactional
     public CommentDto createComment(UUID authorAccountId, UUID commentId, CommentRequestDto commentRequestDto) {
         var authorAccount = accountRepository
-                .findById(authorAccountId)
+                .findByIdAndDeletedIsFalse(authorAccountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
         var foundComment = commentRepository
                 .findByIdAndDeletedIsFalse(commentId)

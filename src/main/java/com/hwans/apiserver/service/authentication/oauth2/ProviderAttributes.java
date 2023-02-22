@@ -9,7 +9,7 @@ import java.util.Map;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class ProviderAttributes {
+public class  ProviderAttributes {
     private final ProviderType providerType;
     private final Map<String, Object> attributes;
     private final String name;

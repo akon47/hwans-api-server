@@ -113,7 +113,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public AccountDto modifyAccount(UUID accountId, ModifyAccountDto modifyAccountDto) {
         var foundAccount = accountRepository
-                .findById(accountId)
+                .findByIdAndDeletedIsFalse(accountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         foundAccount.update(modifyAccountDto);
         return accountMapper.toDto(foundAccount);
@@ -200,7 +200,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public AccountDto setProfileImage(UUID accountId, UUID fileId) {
         var foundAccount = accountRepository
-                .findById(accountId)
+                .findByIdAndDeletedIsFalse(accountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         var attachment = attachmentRepository
                 .findById(fileId)
@@ -218,7 +218,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountDto getAccount(UUID accountId) {
         var foundAccount = accountRepository
-                .findById(accountId)
+                .findByIdAndDeletedIsFalse(accountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         return accountMapper.toDto(foundAccount);
     }
