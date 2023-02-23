@@ -17,7 +17,7 @@ import static java.lang.annotation.ElementType.*;
 @Target({TYPE, FIELD, PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BlogId {
-    String message() default "영문과 숫자 그리고 하이픈과 언더바만 사용 가능합니다.";
+    String message() default "@로 시작하는 영문과 숫자 그리고 하이픈과 언더바만 사용 가능합니다.";
 
     Class<?>[] groups() default {};
 
