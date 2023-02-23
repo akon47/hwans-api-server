@@ -9,5 +9,5 @@ import java.util.UUID;
  * 첨부파일 Repository
  */
 public interface AttachmentRepository extends JpaRepository<Attachment, UUID> {
-
+    void deleteAllByAccountId(UUID accountId);
 }

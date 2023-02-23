@@ -52,7 +52,7 @@ public class Account extends BaseEntity {
     @Column(length = 255)
     @With
     private String refreshToken;
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @OneToOne
     @JoinColumn(name = "profile_image_file_id")
     private Attachment profileImage;
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)

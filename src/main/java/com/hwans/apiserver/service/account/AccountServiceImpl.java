@@ -129,6 +129,7 @@ public class AccountServiceImpl implements AccountService {
         var foundAccount = accountRepository
                 .findByIdAndDeletedIsFalse(accountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        attachmentRepository.deleteAllByAccountId(accountId);
         accountRepository.delete(foundAccount);
     }
 
