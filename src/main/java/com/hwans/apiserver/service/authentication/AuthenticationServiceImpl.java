@@ -163,7 +163,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
             return accountRepository
                     .findByEmailAndDeletedIsFalse(email)
                     .map(this::createAuthenticationDetails)
-                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND, NO_ACCOUNT_ID));
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
         });
     }
 }
