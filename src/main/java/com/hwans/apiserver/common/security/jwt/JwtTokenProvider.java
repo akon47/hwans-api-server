@@ -22,6 +22,9 @@ import java.security.Key;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * JWT 토큰 관련 기능을 제공하는 Provider
+ */
 @Component
 @Slf4j
 public class JwtTokenProvider implements InitializingBean {

@@ -17,5 +17,5 @@ public enum JwtStatus {
     /**
      * 잘못된 토큰
      */
-    DENIED
+    DENIED,
 }
