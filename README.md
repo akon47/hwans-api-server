@@ -13,7 +13,7 @@
 
 [ERD Cloud](https://www.erdcloud.com/d/pt8Kfyzvrt5TYihpf)
 
-## 🚀 API Document
+## 📄 API Document
 
 [https://api.hwanstory.kr/swagger-ui/index.html](https://api.hwanstory.kr/swagger-ui/index.html)
 
