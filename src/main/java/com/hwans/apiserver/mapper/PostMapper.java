@@ -13,7 +13,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PostMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "blogId", ignore = true)
     @Mapping(target = "account", ignore = true)
     @Mapping(target = "deleted", constant = "false")
     @Mapping(target = "thumbnailImage", ignore = true)

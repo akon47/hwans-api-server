@@ -24,9 +24,6 @@ public class PostDto implements Serializable {
     @ApiModelProperty(value = "게시글 Id", required = true)
     @NotNull
     UUID id;
-    @ApiModelProperty(value = "게시글이 작성되어진 블로그 Id", required = true, example = "kim-hwan")
-    @NotBlank
-    String blogId;
     @ApiModelProperty(value = "게시글 URL", required = true, example = "my-first-post")
     @NotBlank
     String postUrl;

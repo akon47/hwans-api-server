@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "tb_post", uniqueConstraints = @UniqueConstraint(columnNames = {"blogId", "postUrl"}))
+@Table(name = "tb_post", uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "postUrl"}))
 @Getter
 @Builder
 @AllArgsConstructor
@@ -23,8 +23,6 @@ public class Post extends BaseEntity {
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-    @Column(length = 32, nullable = false)
-    private String blogId;
     @Column(length = 320, nullable = false)
     private String postUrl;
     @Column(length = 2000, nullable = false)
@@ -59,7 +57,6 @@ public class Post extends BaseEntity {
 
     public void setAuthor(Account account) {
         this.account = account;
-        this.blogId = account.getBlogId();
     }
 
     public void setTitle(String title) {
