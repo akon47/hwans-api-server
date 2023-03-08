@@ -9,7 +9,7 @@
 
 ## 📋 ERD
 
-![Hwan'Stroy](https://user-images.githubusercontent.com/49547202/221574410-5401720b-c841-4617-b1f2-0856a0cba7f1.png)
+![Hwan'Stroy](https://user-images.githubusercontent.com/49547202/223760618-88112080-a9e1-4876-b7fc-188de69a1b9d.png)
 
 [ERD Cloud](https://www.erdcloud.com/d/pt8Kfyzvrt5TYihpf)
 
