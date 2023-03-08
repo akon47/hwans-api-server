@@ -54,6 +54,8 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST, orphanRemoval = true)
     @Getter(AccessLevel.NONE)
     private final Set<PostTag> postTags = new HashSet<>();
+    @OneToOne(mappedBy = "post")
+    private PostSeries postSeries;
 
     public void setAuthor(Account account) {
         this.account = account;
