@@ -129,11 +129,10 @@ public class Post extends BaseEntity {
         this.hits = hits;
     }
 
-    public Series getSeries() {
-        if(postSeries == null) {
-            return null;
-        }
-
-        return postSeries.getSeries();
+    public String getSeriesUrl() {
+        return Optional.ofNullable(postSeries)
+                .map(PostSeries::getSeries)
+                .map(Series::getSeriesUrl)
+                .orElse(null);
     }
 }

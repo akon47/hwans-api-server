@@ -6,6 +6,9 @@ spring:
       matching-strategy: ant_path_matcher
   jpa:
     defer-datasource-initialization: true
+    properties:
+      hibernate:
+        auto_quote_keyword: true
   servlet:
     multipart:
       enabled: true

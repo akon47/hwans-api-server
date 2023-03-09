@@ -19,14 +19,12 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PostSeries extends BaseEntity implements Serializable {
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @Column(columnDefinition = "BINARY(16)")
-    private UUID id;
     @OneToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
     @ManyToOne
     @JoinColumn(name = "series_id", nullable = false)
     private Series series;
+    @Column
+    private Integer order;
 }

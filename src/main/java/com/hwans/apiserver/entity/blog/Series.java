@@ -31,6 +31,7 @@ public class Series extends BaseEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
     @OneToMany(mappedBy = "series")
+    @OrderBy("order asc, createdAt asc")
     private final Set<PostSeries> postSeries = new HashSet<>();
 
     public void setAuthor(Account account) {
