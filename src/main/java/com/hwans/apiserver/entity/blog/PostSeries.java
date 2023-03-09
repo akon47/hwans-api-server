@@ -29,6 +29,4 @@ public class PostSeries extends BaseEntity implements Serializable {
     @ManyToOne
     @JoinColumn(name = "series_id", nullable = false)
     private Series series;
-    @Column
-    private int order;
 }
