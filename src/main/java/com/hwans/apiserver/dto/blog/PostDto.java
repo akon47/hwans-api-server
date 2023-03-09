@@ -59,4 +59,6 @@ public class PostDto implements Serializable {
     int likeCount;
     @ApiModelProperty(value = "조회수")
     int hits;
+    @ApiModelProperty(value = "시리즈")
+    SeriesDto series;
 }

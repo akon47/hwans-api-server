@@ -97,6 +97,7 @@ public class ErrorCodes {
         NOT_FOUND("존재하지 않습니다."),
         NO_CURRENT_ACCOUNT_INFO("현재 계정에 대한 정보를 찾을 수 없습니다."),
         NOT_FOUND_POST("게시글을 찾을 수 없습니다."),
+        NOT_FOUND_SERIES("시리즈를 찾을 수 없습니다."),
         NOT_FOUND_COMMENT("댓글을 찾을 수 없습니다."),
         NOT_FOUND_BLOG("블로그를 찾을 수 없습니다."),
         NOT_FOUND_EMAIL("이메일을 찾을 수 없습니다."),
@@ -131,6 +132,7 @@ public class ErrorCodes {
         ALREADY_EXISTS_EMAIL("이미 존재하는 사용자 계정 이메일 입니다."),
         ALREADY_EXISTS_BLOG_ID("이미 존재하는 블로그 Id 입니다."),
         ALREADY_EXISTS_POST_URL("이미 존재하는 게시글 URL 입니다."),
+        ALREADY_EXISTS_SERIES_URL("이미 존재하는 시리즈 URL 입니다."),
         ALREADY_EXISTS_VERIFY_CODE("이전에 발송한 인증 코드가 아직 유효합니다."),
         ALREADY_EXISTS_PASSWORD_RESET_URL("이전에 발송한 비밀번호 재설정 요청 토큰이 아직 유효합니다.")
         ;

@@ -6,7 +6,6 @@ import com.hwans.apiserver.common.errors.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
@@ -26,16 +25,16 @@ public class JwtFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        String bearerToken = httpServletRequest.getHeader(Constants.AUTHORIZATION_HEADER);
-        String jwt = tokenProvider.extractTokenFromHeader(bearerToken);
-        String requestURI = httpServletRequest.getRequestURI();
+        var httpServletRequest = (HttpServletRequest) request;
+        var bearerToken = httpServletRequest.getHeader(Constants.AUTHORIZATION_HEADER);
+        var jwt = tokenProvider.extractTokenFromHeader(bearerToken);
+        var requestURI = httpServletRequest.getRequestURI();
 
         if (StringUtils.hasText(jwt)) {
             var jwtStatus = tokenProvider.validateAccessToken(jwt);
             if (jwtStatus == JwtStatus.ACCESS) {
-                Authentication authentication = tokenProvider.getAuthentication(jwt);
-                if(redisTemplate.opsForValue().get(jwt) == null) {
+                var authentication = tokenProvider.getAuthentication(jwt);
+                if ("issue".equals(redisTemplate.opsForValue().get(jwt))) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.trace("set Authentication to security context for '{}', uri: {}", authentication.getName(), requestURI);
                 } else {

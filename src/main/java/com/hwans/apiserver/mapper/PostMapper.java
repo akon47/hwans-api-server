@@ -17,6 +17,7 @@ public interface PostMapper {
     @Mapping(target = "deleted", constant = "false")
     @Mapping(target = "thumbnailImage", ignore = true)
     @Mapping(target = "hits", ignore = true)
+    @Mapping(target = "postSeries", ignore = true)
     Post PostRequestDtoToEntity(PostRequestDto postRequestDto);
 
     PostDto EntityToPostDto(Post post);

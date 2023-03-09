@@ -12,11 +12,13 @@ import com.hwans.apiserver.entity.blog.Tag;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
+import com.hwans.apiserver.mapper.SeriesMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.blog.LikeRepository;
 import com.hwans.apiserver.repository.blog.PostRepository;
+import com.hwans.apiserver.repository.blog.SeriesRepository;
 import com.hwans.apiserver.repository.blog.tag.TagRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,9 +50,11 @@ public class BlogServiceImpl implements BlogService {
     private final TagRepository tagRepository;
     private final LikeRepository likeRepository;
     private final AttachmentRepository attachmentRepository;
+    private final SeriesRepository seriesRepository;
     private final AccountMapper accountMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
+    private final SeriesMapper seriesMapper;
     private final RedisTemplate<String, Integer> redisTemplate;
     private final PasswordEncoder passwordEncoder;
 
@@ -436,6 +439,56 @@ public class BlogServiceImpl implements BlogService {
                 .findById(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
         return passwordEncoder.matches(password, foundComment.getAuthor().getPassword());
+    }
+
+    @Override
+    @Transactional
+    public SeriesDto createSeries(UUID authorAccountId, SeriesRequestDto seriesRequestDto) {
+        var foundAccount = accountRepository
+                .findByIdAndDeletedIsFalse(authorAccountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        if (foundAccount.isGuest()) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+        seriesRepository
+                .findByBlogIdAndSeriesUrl(foundAccount.getBlogId(), seriesRequestDto.getSeriesUrl())
+                .ifPresent(x -> {
+                    throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_SERIES_URL);
+                });
+        var series = seriesMapper.SeriesRequestDtoToEntity(seriesRequestDto);
+        series.setAuthor(foundAccount);
+
+        var savedSeries = seriesRepository.save(series);
+        return seriesMapper.EntityToSeriesDto(savedSeries);
+    }
+
+    @Override
+    @Transactional
+    public SeriesDto modifySeries(String blogId, String seriesUrl, SeriesRequestDto seriesRequestDto) {
+        var foundSeries = seriesRepository
+                .findByBlogIdAndSeriesUrl(blogId, seriesUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
+        if (!foundSeries.getSeriesUrl().equals(seriesRequestDto.getSeriesUrl())) {
+            seriesRepository
+                    .findByBlogIdAndSeriesUrl(blogId, seriesRequestDto.getSeriesUrl())
+                    .ifPresent(x -> {
+                        throw new RestApiException(ErrorCodes.Conflict.ALREADY_EXISTS_SERIES_URL);
+                    });
+            foundSeries.setSeriesUrl(seriesRequestDto.getSeriesUrl());
+        }
+
+        foundSeries.setTitle(seriesRequestDto.getTitle());
+
+        return seriesMapper.EntityToSeriesDto(foundSeries);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSeries(String blogId, String seriesUrl) {
+        var foundSeries = seriesRepository
+                .findByBlogIdAndSeriesUrl(blogId, seriesUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
+        seriesRepository.delete(foundSeries);
     }
 
     @Override

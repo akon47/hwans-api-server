@@ -59,7 +59,7 @@ public class BlogController {
 
     @ApiOperation(value = "게시글 삭제", notes = "게시글을 삭제한다.", tags = "블로그")
     @DeleteMapping(value = "/v1/blog/posts/{postUrl}")
-    public void modifyPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+    public void deletePost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
         blogService.deletePost(userAuthenticationDetails.getBlogId(), postUrl);
     }
@@ -188,6 +188,28 @@ public class BlogController {
                                      @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
         var exists = blogService.isLikePost(userAuthenticationDetails.getId(), blogId, postUrl);
         return exists ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @ApiOperation(value = "시리즈 생성", notes = "시리즈를 작성한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/series")
+    public SeriesDto createSeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                              @ApiParam(value = "시리즈", required = true) @RequestBody @Valid final SeriesRequestDto seriesRequestDto) {
+        return blogService.createSeries(userAuthenticationDetails.getId(), seriesRequestDto);
+    }
+
+    @ApiOperation(value = "시리즈 수정", notes = "시리즈를 수정한다.", tags = "블로그")
+    @PutMapping(value = "/v1/blog/series/{seriesUrl}")
+    public SeriesDto modifySeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                              @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl,
+                              @ApiParam(value = "시리즈", required = true) @RequestBody @Valid final SeriesRequestDto seriesRequestDto) {
+        return blogService.modifySeries(userAuthenticationDetails.getBlogId(), seriesUrl, seriesRequestDto);
+    }
+
+    @ApiOperation(value = "시리즈 삭제", notes = "시리즈를 삭제한다.", tags = "블로그")
+    @DeleteMapping(value = "/v1/blog/series/{seriesUrl}")
+    public void deleteSeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                           @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
+        blogService.deleteSeries(userAuthenticationDetails.getBlogId(), seriesUrl);
     }
 
     /**

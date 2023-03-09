@@ -128,4 +128,12 @@ public class Post extends BaseEntity {
     public void setHits(Integer hits) {
         this.hits = hits;
     }
+
+    public Series getSeries() {
+        if(postSeries == null) {
+            return null;
+        }
+
+        return postSeries.getSeries();
+    }
 }

@@ -63,6 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var token = tokenProvider.createToken(authentication);
         accountRepository.save(foundAccount.withRefreshToken(token.getRefreshToken()));
+        redisTemplate.opsForValue().set(token.getAccessToken(), "issue", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
 
         return token;
     }
@@ -118,6 +119,7 @@ public class AuthenticationServiceImpl implements AuthenticationService, UserDet
 
             // 새로 토큰을 발급받았으므로 이전에 발급하여 사용중인 AccessToken은 사용중지 처리한다.
             redisTemplate.opsForValue().set(accessToken, "redeem", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
+            redisTemplate.opsForValue().set(token.getAccessToken(), "issue", Duration.ofMillis(Constants.ACCESS_TOKEN_EXPIRES_TIME));
             return token;
         } else {
             throw new RestApiException(ErrorCodes.Unauthorized.INVALID_REFRESH_TOKEN);

@@ -31,5 +31,22 @@ public class Series extends BaseEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
     @OneToMany(mappedBy = "series")
+    @OrderBy("order asc, createdAt asc")
     private final Set<PostSeries> postSeries = new HashSet<>();
+
+    public void setAuthor(Account account) {
+        this.account = account;
+    }
+
+    public void setSeriesUrl(String seriesUrl) {
+        this.seriesUrl = seriesUrl;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Set<Post> getPosts() {
+        return postSeries.stream().map(PostSeries::getPost).collect(Collectors.toSet());
+    }
 }

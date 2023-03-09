@@ -212,6 +212,33 @@ public interface BlogService {
     boolean matchCommentAuthorPassword(UUID commentId, String password);
 
     /**
+     * 시리즈를 생성합니다.
+     *
+     * @param authorAccountId 시리즈 계정 Id
+     * @param seriesRequestDto 생성할 시리즈의 데이터 모델
+     * @return 생성된 시리즈의 데이터 모델
+     */
+    SeriesDto createSeries(UUID authorAccountId, SeriesRequestDto seriesRequestDto);
+
+    /**
+     * 시리즈를 수정합니다.
+     *
+     * @param blogId 수정할 시리즈의 blogId
+     * @param seriesUrl 수정할 시리즈의 serialUrl
+     * @param seriesRequestDto 수정할 시리즈의 데이터 모델
+     * @return 수정된 시리즈의 데이터 모델
+     */
+    SeriesDto modifySeries(String blogId, String seriesUrl, SeriesRequestDto seriesRequestDto);
+
+    /**
+     * 시리즈를 삭제합니다.
+     *
+     * @param blogId 삭제할 시리즈의 blogId
+     * @param seriesUrl 삭제할 시리즈의 seriesUrl
+     */
+    void deleteSeries(String blogId, String seriesUrl);
+
+    /**
      * 현재 캐시되어 있는 게시글 조회수를 DB에 반영합니다.
      */
     void updatePostHitsFromCache();
