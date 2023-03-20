@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -210,6 +211,15 @@ public class BlogController {
     public void deleteSeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                            @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
         blogService.deleteSeries(userAuthenticationDetails.getBlogId(), seriesUrl);
+    }
+
+    @ApiOperation(value = "특정 블로그 시리즈 게시글 조회", notes = "특정 블로그 시리즈 게시글을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/series/{seriesUrl}")
+    public List<SimplePostDto> getBlogSeriesPosts(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                                                  @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                                  @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
+        boolean findPublicPostOnly = userAuthenticationDetails == null || !userAuthenticationDetails.getBlogId().equals(blogId);
+        return blogService.getBlogSeriesPosts(blogId, seriesUrl, findPublicPostOnly);
     }
 
     /**

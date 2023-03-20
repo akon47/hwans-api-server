@@ -3,6 +3,7 @@ package com.hwans.apiserver.service.blog;
 import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -237,6 +238,16 @@ public interface BlogService {
      * @param seriesUrl 삭제할 시리즈의 seriesUrl
      */
     void deleteSeries(String blogId, String seriesUrl);
+
+    /**
+     * 해당 blogId의 주인이 시리즈로 쓴 게시글을 조회합니다.
+     *
+     * @param blogId 조회할 대상의 blogId
+     * @param seriesUrl 조회할 대상의 seriesUrl
+     * @param findPublicPostOnly Public 게시글만 조회할지 여부
+     * @return 조회된 게시글 목록
+     */
+    List<SimplePostDto> getBlogSeriesPosts(String blogId, String seriesUrl, boolean findPublicPostOnly);
 
     /**
      * 현재 캐시되어 있는 게시글 조회수를 DB에 반영합니다.

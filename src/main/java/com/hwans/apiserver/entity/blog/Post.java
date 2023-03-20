@@ -54,7 +54,7 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST, orphanRemoval = true)
     @Getter(AccessLevel.NONE)
     private final Set<PostTag> postTags = new HashSet<>();
-    @OneToOne(mappedBy = "post")
+    @OneToOne(mappedBy = "post", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private PostSeries postSeries;
 
     public void setAuthor(Account account) {
@@ -80,6 +80,14 @@ public class Post extends BaseEntity {
     public void setTags(Collection<Tag> tags) {
         this.postTags.clear();
         tags.forEach(tag -> this.postTags.add(PostTag.builder().post(this).tag(tag).build()));
+    }
+
+    public void setSeries(Series series) {
+        if (series == null) {
+            postSeries = null;
+        } else {
+            postSeries = PostSeries.builder().post(this).series(series).order(null).build();
+        }
     }
 
     /**

@@ -141,6 +141,15 @@ public class BlogServiceImpl implements BlogService {
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
 
+        if (postRequestDto.getSeriesUrl() == null) {
+            post.setSeries(null);
+        } else {
+            var foundSeries = seriesRepository
+                    .findByBlogIdAndSeriesUrl(foundAccount.getBlogId(), postRequestDto.getSeriesUrl())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
+            post.setSeries(foundSeries);
+        }
+
         if (postRequestDto.getThumbnailFileId() != null) {
             var attachment = attachmentRepository
                     .findById(postRequestDto.getThumbnailFileId())
@@ -179,6 +188,15 @@ public class BlogServiceImpl implements BlogService {
                         .findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName))))
                 .collect(Collectors.toSet()));
+
+        if (postRequestDto.getSeriesUrl() == null) {
+            foundPost.setSeries(null);
+        } else {
+            var foundSeries = seriesRepository
+                    .findByBlogIdAndSeriesUrl(blogId, postRequestDto.getSeriesUrl())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
+            foundPost.setSeries(foundSeries);
+        }
 
         if (postRequestDto.getThumbnailFileId() != null) {
             var attachment = attachmentRepository
@@ -489,6 +507,15 @@ public class BlogServiceImpl implements BlogService {
                 .findByBlogIdAndSeriesUrl(blogId, seriesUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
         seriesRepository.delete(foundSeries);
+    }
+
+    @Override
+    public List<SimplePostDto> getBlogSeriesPosts(String blogId, String seriesUrl, boolean findPublicPostOnly) {
+        return postRepository
+                .findByBlogIdAndSeriesUrl(blogId, seriesUrl, findPublicPostOnly)
+                .stream()
+                .map(postMapper::EntityToSimplePostDto)
+                .toList();
     }
 
     @Override

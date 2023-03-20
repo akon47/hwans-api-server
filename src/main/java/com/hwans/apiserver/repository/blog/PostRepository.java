@@ -43,6 +43,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query("select x from Post as x where x.deleted = false and (:findPublicPostOnly is false or x.openType = 'PUBLIC') and x.account.blogId = :blogId order by x.createdAt desc, x.id desc")
     List<Post> findAllByBlogId(@Param("blogId") String blogId, @Param("findPublicPostOnly") boolean findPublicPostOnly);
 
+    @Query("select distinct post from Post as post where post.deleted = false and (:findPublicPostOnly is false or post.openType = 'PUBLIC') and post.account.blogId = :blogId and (post.postSeries.series.seriesUrl = :seriesUrl) order by post.createdAt desc, post.id desc")
+    List<Post> findByBlogIdAndSeriesUrl(@Param("blogId") String blogId, @Param("seriesUrl") String seriesUrl, @Param("findPublicPostOnly") boolean findPublicPostOnly);
+
     @Modifying
     @Query("update Post x set x.hits = :hits where x.id = :id")
     Integer updateHits(@Param("uuid") UUID id, @Param("hits") Integer hits);

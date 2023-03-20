@@ -43,4 +43,7 @@ public class PostRequestDto implements Serializable {
     UUID thumbnailFileId;
     @ApiModelProperty(value = "태그", required = true)
     Set<TagDto> tags;
+    @ApiModelProperty(value = "시리즈 Url", example = "series_url")
+    @Length(max = 320)
+    String seriesUrl;
 }
