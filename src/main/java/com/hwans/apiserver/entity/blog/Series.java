@@ -30,8 +30,8 @@ public class Series extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
-    @OneToMany(mappedBy = "series")
-    @OrderBy("createdAt asc")
+    @OneToMany(mappedBy = "series", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @OrderBy(value = "createdAt asc")
     private final Set<PostSeries> postSeries = new HashSet<>();
 
     public void setAuthor(Account account) {
