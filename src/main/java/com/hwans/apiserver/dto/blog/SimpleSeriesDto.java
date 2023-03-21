@@ -12,12 +12,12 @@ import java.io.Serializable;
 import java.util.Set;
 
 /**
- * 시리즈 Dto
+ * 시리즈 리스트 조회용 Dto
  */
 @Getter
 @Builder
-@ApiModel(description = "시리즈 Dto")
-public class SeriesDto implements Serializable {
+@ApiModel(description = "시리즈 리스트 조회용 Dto")
+public class SimpleSeriesDto implements Serializable {
     @ApiModelProperty(value = "시리즈 URL", required = true, example = "my-first-series")
     @Length(max = 320)
     @PostUrl
@@ -26,6 +26,6 @@ public class SeriesDto implements Serializable {
     @NotBlank
     @Length(max = 2000)
     String title;
-    @ApiModelProperty(value = "게시글 목록")
-    Set<SimplePostDto> posts;
+    @ApiModelProperty(value = "게시글 수")
+    int postCount;
 }

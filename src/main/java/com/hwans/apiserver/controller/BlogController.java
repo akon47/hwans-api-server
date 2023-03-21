@@ -194,26 +194,39 @@ public class BlogController {
     @ApiOperation(value = "시리즈 생성", notes = "시리즈를 작성한다.", tags = "블로그")
     @PostMapping(value = "/v1/blog/series")
     public SeriesDto createSeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                              @ApiParam(value = "시리즈", required = true) @RequestBody @Valid final SeriesRequestDto seriesRequestDto) {
+                                  @ApiParam(value = "시리즈", required = true) @RequestBody @Valid final SeriesRequestDto seriesRequestDto) {
         return blogService.createSeries(userAuthenticationDetails.getId(), seriesRequestDto);
     }
 
     @ApiOperation(value = "시리즈 수정", notes = "시리즈를 수정한다.", tags = "블로그")
     @PutMapping(value = "/v1/blog/series/{seriesUrl}")
     public SeriesDto modifySeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                              @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl,
-                              @ApiParam(value = "시리즈", required = true) @RequestBody @Valid final SeriesRequestDto seriesRequestDto) {
+                                  @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl,
+                                  @ApiParam(value = "시리즈", required = true) @RequestBody @Valid final SeriesRequestDto seriesRequestDto) {
         return blogService.modifySeries(userAuthenticationDetails.getBlogId(), seriesUrl, seriesRequestDto);
     }
 
     @ApiOperation(value = "시리즈 삭제", notes = "시리즈를 삭제한다.", tags = "블로그")
     @DeleteMapping(value = "/v1/blog/series/{seriesUrl}")
     public void deleteSeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                           @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
+                             @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
         blogService.deleteSeries(userAuthenticationDetails.getBlogId(), seriesUrl);
     }
 
-    @ApiOperation(value = "특정 블로그 시리즈 게시글 조회", notes = "특정 블로그 시리즈 게시글을 조회한다.", tags = "블로그")
+    @ApiOperation(value = "특정 블로그 시리즈 상세 조회", notes = "특정 블로그의 시리즈를 상세 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/series/{seriesUrl}")
+    public SeriesDto getBlogSeriesDetail(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                         @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
+        return blogService.getSeries(blogId, seriesUrl);
+    }
+
+    @ApiOperation(value = "특정 블로그 시리즈 목록 조회", notes = "특정 블로그 시리즈 목록을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/series")
+    public List<SimpleSeriesDto> getBlogSeries(@ApiParam(value = "블로그 Id") @PathVariable String blogId) {
+        return blogService.getBlogSeries(blogId);
+    }
+
+    @ApiOperation(value = "특정 블로그 시리즈 게시글 목록 조회", notes = "특정 블로그 시리즈 게시글 목록을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}/series/{seriesUrl}/posts")
     public List<SimplePostDto> getBlogSeriesPosts(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
                                                   @ApiParam(value = "블로그 Id") @PathVariable String blogId,

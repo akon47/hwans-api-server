@@ -510,6 +510,23 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    public SeriesDto getSeries(String blogId, String seriesUrl) {
+        var foundSeries = seriesRepository
+                .findByBlogIdAndSeriesUrl(blogId, seriesUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
+        return seriesMapper.EntityToSeriesDto(foundSeries);
+    }
+
+    @Override
+    public List<SimpleSeriesDto> getBlogSeries(String blogId) {
+        return seriesRepository
+                .findByBlogId(blogId)
+                .stream()
+                .map(seriesMapper::EntityToSimpleSeriesDto)
+                .toList();
+    }
+
+    @Override
     public List<SimplePostDto> getBlogSeriesPosts(String blogId, String seriesUrl, boolean findPublicPostOnly) {
         return postRepository
                 .findByBlogIdAndSeriesUrl(blogId, seriesUrl, findPublicPostOnly)

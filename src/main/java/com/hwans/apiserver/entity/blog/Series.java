@@ -49,4 +49,8 @@ public class Series extends BaseEntity {
     public Set<Post> getPosts() {
         return postSeries.stream().map(PostSeries::getPost).collect(Collectors.toSet());
     }
+
+    public int getPostCount() {
+        return this.postSeries.size();
+    }
 }

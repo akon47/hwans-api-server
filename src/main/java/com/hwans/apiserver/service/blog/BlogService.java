@@ -240,6 +240,21 @@ public interface BlogService {
     void deleteSeries(String blogId, String seriesUrl);
 
     /**
+     * 시리즈를 조회합니다.
+     *
+     * @param blogId 조회할 시리즈의 blogId
+     * @param seriesUrl 조회할 시리즈의 seriesUrl
+     */
+    SeriesDto getSeries(String blogId, String seriesUrl);
+
+    /**
+     * 특정 블로그의 시리즈 목록을 조회합니다.
+     *
+     * @param blogId 조회할 시리즈의 blogId
+     */
+    List<SimpleSeriesDto> getBlogSeries(String blogId);
+
+    /**
      * 해당 blogId의 주인이 시리즈로 쓴 게시글을 조회합니다.
      *
      * @param blogId 조회할 대상의 blogId

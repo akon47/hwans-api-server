@@ -1,9 +1,8 @@
 package com.hwans.apiserver.mapper;
 
-import com.hwans.apiserver.dto.blog.PostRequestDto;
 import com.hwans.apiserver.dto.blog.SeriesDto;
 import com.hwans.apiserver.dto.blog.SeriesRequestDto;
-import com.hwans.apiserver.entity.blog.Post;
+import com.hwans.apiserver.dto.blog.SimpleSeriesDto;
 import com.hwans.apiserver.entity.blog.Series;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -18,4 +17,6 @@ public interface SeriesMapper {
     Series SeriesRequestDtoToEntity(SeriesRequestDto seriesRequestDto);
 
     SeriesDto EntityToSeriesDto(Series series);
+
+    SimpleSeriesDto EntityToSimpleSeriesDto(Series series);
 }
