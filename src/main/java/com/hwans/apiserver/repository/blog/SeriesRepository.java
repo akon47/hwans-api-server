@@ -17,6 +17,6 @@ public interface SeriesRepository extends JpaRepository<Series, UUID> {
     @Query("select x from Series as x where x.account.blogId = :blogId and x.seriesUrl = :seriesUrl")
     Optional<Series> findByBlogIdAndSeriesUrl(String blogId, String seriesUrl);
 
-    @Query("select x from Series as x where x.account.blogId = :blogId")
+    @Query("select x from Series as x where x.account.blogId = :blogId order by x.createdAt desc, x.id desc")
     List<Series> findByBlogId(String blogId);
 }

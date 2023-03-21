@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,5 +28,5 @@ public class SeriesDto implements Serializable {
     @Length(max = 2000)
     String title;
     @ApiModelProperty(value = "게시글 목록")
-    Set<SimplePostDto> posts;
+    List<SimplePostDto> posts;
 }

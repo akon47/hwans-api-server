@@ -48,12 +48,12 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post")
     @Where(clause = "deleted = false and parent_id is null")
     @OrderBy(value = "createdAt asc")
-    private final Set<Comment> comments = new HashSet<>();
+    private final List<Comment> comments = new ArrayList<>();
     @OneToMany(mappedBy = "post")
     private final Set<Like> likes = new HashSet<>();
     @OneToMany(mappedBy = "post", cascade = CascadeType.PERSIST, orphanRemoval = true)
     @Getter(AccessLevel.NONE)
-    private final Set<PostTag> postTags = new HashSet<>();
+    private final List<PostTag> postTags = new ArrayList<>();
     @OneToOne(mappedBy = "post", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private PostSeries postSeries;
 
@@ -107,8 +107,8 @@ public class Post extends BaseEntity {
         }
     }
 
-    public Set<Tag> getTags() {
-        return postTags.stream().map(PostTag::getTag).collect(Collectors.toSet());
+    public List<Tag> getTags() {
+        return postTags.stream().map(PostTag::getTag).collect(Collectors.toList());
     }
 
     public int getLikeCount() {

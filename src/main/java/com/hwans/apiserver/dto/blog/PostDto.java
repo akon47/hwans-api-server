@@ -11,6 +11,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -52,9 +53,9 @@ public class PostDto implements Serializable {
     @NotNull
     LocalDateTime lastModifiedAt;
     @ApiModelProperty(value = "태그")
-    Set<TagDto> tags;
+    List<TagDto> tags;
     @ApiModelProperty(value = "댓글")
-    Set<SimpleCommentDto> comments;
+    List<SimpleCommentDto> comments;
     @ApiModelProperty(value = "좋아요 수")
     int likeCount;
     @ApiModelProperty(value = "조회수")

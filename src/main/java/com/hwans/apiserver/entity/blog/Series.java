@@ -32,7 +32,7 @@ public class Series extends BaseEntity {
     private Account account;
     @OneToMany(mappedBy = "series", cascade = CascadeType.PERSIST, orphanRemoval = true)
     @OrderBy(value = "createdAt asc")
-    private final Set<PostSeries> postSeries = new HashSet<>();
+    private final List<PostSeries> postSeries = new ArrayList<>();
 
     public void setAuthor(Account account) {
         this.account = account;
@@ -46,8 +46,8 @@ public class Series extends BaseEntity {
         this.title = title;
     }
 
-    public Set<Post> getPosts() {
-        return postSeries.stream().map(PostSeries::getPost).collect(Collectors.toSet());
+    public List<Post> getPosts() {
+        return postSeries.stream().map(PostSeries::getPost).collect(Collectors.toList());
     }
 
     public int getPostCount() {
