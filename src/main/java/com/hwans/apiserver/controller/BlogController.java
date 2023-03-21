@@ -214,7 +214,7 @@ public class BlogController {
     }
 
     @ApiOperation(value = "특정 블로그 시리즈 게시글 조회", notes = "특정 블로그 시리즈 게시글을 조회한다.", tags = "블로그")
-    @GetMapping(value = "/v1/blog/{blogId}/series/{seriesUrl}")
+    @GetMapping(value = "/v1/blog/{blogId}/series/{seriesUrl}/posts")
     public List<SimplePostDto> getBlogSeriesPosts(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
                                                   @ApiParam(value = "블로그 Id") @PathVariable String blogId,
                                                   @ApiParam(value = "시리즈 Url") @PathVariable String seriesUrl) {
