@@ -191,7 +191,7 @@ public class BlogServiceImpl implements BlogService {
 
         if (postRequestDto.getSeriesUrl() == null) {
             foundPost.setSeries(null);
-        } else {
+        } else if (!postRequestDto.getSeriesUrl().equals(foundPost.getSeriesUrl())) {
             var foundSeries = seriesRepository
                     .findByBlogIdAndSeriesUrl(blogId, postRequestDto.getSeriesUrl())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_SERIES));
