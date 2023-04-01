@@ -1,6 +1,6 @@
 package com.hwans.apiserver.dto.blog;
 
-import com.hwans.apiserver.support.annotation.PostUrl;
+import com.hwans.apiserver.support.annotation.SeriesUrl;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -19,7 +19,7 @@ import java.io.Serializable;
 public class SeriesRequestDto implements Serializable {
     @ApiModelProperty(value = "시리즈 URL", required = true, example = "my-first-series")
     @Length(max = 320)
-    @PostUrl
+    @SeriesUrl
     String seriesUrl;
     @ApiModelProperty(value = "제목", required = true, example = "제목입니다.")
     @NotBlank
