@@ -1,6 +1,6 @@
 package com.hwans.apiserver.dto.notification;
 
-import com.hwans.apiserver.dto.blog.SimpleCommentDto;
+import com.hwans.apiserver.dto.blog.CommentDto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -17,5 +17,5 @@ import javax.validation.constraints.NotNull;
 public class CommentNotificationDto extends NotificationDto {
     @ApiModelProperty(value = "알림을 발생시킨 댓글", required = true)
     @NotNull
-    SimpleCommentDto comment;
+    CommentDto comment;
 }

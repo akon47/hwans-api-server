@@ -69,7 +69,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         } catch (IOException e) {
             throw new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR, e.getMessage());
         }
-        File savedFile = savePath.toFile();
+        var savedFile = savePath.toFile();
         var attachment = attachmentRepository
                 .save(new Attachment(uploaderAccount, savedFile, multipartFile.getOriginalFilename(), multipartFile.getContentType()));
         return fileMapper.EntityToFileDto(attachment);
@@ -91,7 +91,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             }
             var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());
             Files.copy(connection.getInputStream(), savePath);
-            File savedFile = savePath.toFile();
+            var savedFile = savePath.toFile();
             var attachment = attachmentRepository
                     .save(new Attachment(uploaderAccount, savedFile, null, contentType));
             return fileMapper.EntityToFileDto(attachment);
