@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- Logstash -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>10.10.10.5:5000</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="LOGSTASH" />
+    </root>
+</configuration>

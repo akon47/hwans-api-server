@@ -49,6 +49,9 @@ dependencies {
 	// H2 Database for Local Development
 	implementation 'com.h2database:h2'
 
+	// Log
+	implementation 'net.logstash.logback:logstash-logback-encoder:7.3'
+
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
