@@ -30,10 +30,8 @@ public class LoggingFilter extends OncePerRequestFilter {
         try {
             MDC.put("traceId", UUID.randomUUID().toString());
             MDC.put("uri", getUri(request));
-            MDC.put("remoteAddr", request.getRemoteAddr());
+            MDC.put("remoteAddr", getRemoteAddr(request));
             MDC.put("method", request.getMethod().toUpperCase());
-
-            MDC.put("X-Forwarded-For", request.getHeader("X-Forwarded-For"));
             if (isAsyncDispatch(request)) {
                 filterChain.doFilter(request, response);
             } else {
@@ -64,6 +62,28 @@ public class LoggingFilter extends OncePerRequestFilter {
         }
 
         log.info(marker, null);
+    }
+
+    public static String getRemoteAddr(HttpServletRequest request) {
+        var clientIp = request.getHeader("X-Forwarded-For");
+
+        if (clientIp == null || clientIp.length() == 0 || "unknown".equalsIgnoreCase(clientIp)) {
+            clientIp = request.getHeader("Proxy-Client-IP");
+        }
+        if (clientIp == null || clientIp.length() == 0 || "unknown".equalsIgnoreCase(clientIp)) {
+            clientIp = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (clientIp == null || clientIp.length() == 0 || "unknown".equalsIgnoreCase(clientIp)) {
+            clientIp = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (clientIp == null || clientIp.length() == 0 || "unknown".equalsIgnoreCase(clientIp)) {
+            clientIp = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (clientIp == null || clientIp.length() == 0 || "unknown".equalsIgnoreCase(clientIp)) {
+            clientIp = request.getRemoteAddr();
+        }
+
+        return clientIp;
     }
 
     private static String getUri(HttpServletRequest request) {
