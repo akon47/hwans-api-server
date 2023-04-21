@@ -32,6 +32,8 @@ public class LoggingFilter extends OncePerRequestFilter {
             MDC.put("uri", getUri(request));
             MDC.put("remoteAddr", request.getRemoteAddr());
             MDC.put("method", request.getMethod().toUpperCase());
+
+            MDC.put("X-Forwarded-For", request.getHeader("X-Forwarded-For"));
             if (isAsyncDispatch(request)) {
                 filterChain.doFilter(request, response);
             } else {
@@ -53,7 +55,6 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     private static void logRequest(RequestWrapper request) throws IOException {
-        var queryString = request.getQueryString();
         var marker = append("type", "REQUEST")
                 .and(append("contentLength", request.getContentLength()))
                 .and(append("contentType", request.getContentType()));
