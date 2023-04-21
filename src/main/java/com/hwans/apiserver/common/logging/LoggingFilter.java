@@ -88,7 +88,7 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private static String getUri(HttpServletRequest request) {
         var queryString = request.getQueryString();
-        return queryString == null ? request.getRequestURI() : request.getRequestURI() + queryString;
+        return queryString == null ? request.getRequestURI() : request.getRequestURI() + "?" + queryString;
     }
 
     private static void logResponse(ContentCachingResponseWrapper response) throws IOException {
