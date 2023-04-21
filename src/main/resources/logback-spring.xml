@@ -2,13 +2,18 @@
 <configuration scan="true" scanPeriod="30 seconds">
 
     <!-- Logstash -->
-    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>10.10.10.5:5000</destination>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        </encoder>
-    </appender>
+    <springProfile name="prod">
+        <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>10.10.10.5:5000</destination>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            </encoder>
+        </appender>
+    </springProfile>
 
-    <root level="info">
-        <appender-ref ref="LOGSTASH" />
+    <root level="INFO" additivity="false">
+        <springProfile name="prod">
+            <appender-ref ref="LOGSTASH" />
+        </springProfile>
     </root>
+
 </configuration>

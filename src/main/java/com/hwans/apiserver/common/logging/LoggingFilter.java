@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import static net.logstash.logback.marker.Markers.append;
+
 @Component
 public class LoggingFilter extends OncePerRequestFilter {
     protected static final Logger log = LoggerFactory.getLogger(LoggingFilter.class);
@@ -46,30 +48,41 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private static void logRequest(RequestWrapper request) throws IOException {
         String queryString = request.getQueryString();
-        log.info("Request : {} uri=[{}] content-type=[{}]",
-                request.getMethod(),
-                queryString == null ? request.getRequestURI() : request.getRequestURI() + queryString,
-                request.getContentType()
-        );
+        var marker = append("type", "REQUEST")
+                .and(append("method", request.getMethod().toUpperCase()))
+                .and(append("uri", queryString == null ? request.getRequestURI() : request.getRequestURI() + queryString))
+                .and(append("content_type", request.getContentType()));
+        var payload = getPayloadString(request.getContentType(), request.getInputStream());
+        if (payload != null) {
+            marker = marker.and(append("payload", payload));
+        }
 
-        logPayload("Request", request.getContentType(), request.getInputStream());
+        log.info(marker, null);
     }
 
     private static void logResponse(ContentCachingResponseWrapper response) throws IOException {
-        logPayload("Response", response.getContentType(), response.getContentInputStream());
+        var marker = append("content_type", response.getContentType());
+        var payload = getPayloadString(response.getContentType(), response.getContentInputStream());
+        if (payload != null) {
+            marker = marker.and(append("payload", payload));
+        }
+
+        log.info(marker, null);
     }
 
-    private static void logPayload(String prefix, String contentType, InputStream inputStream) throws IOException {
+    private static String getPayloadString(String contentType, InputStream inputStream) throws IOException {
         boolean visible = isVisible(MediaType.valueOf(contentType == null ? "application/json" : contentType));
         if (visible) {
             byte[] content = StreamUtils.copyToByteArray(inputStream);
             if (content.length > 0) {
-                String contentString = new String(content);
-                log.info("{} Payload: {}", prefix, contentString);
+                var contentString = new String(content);
+                return contentString;
             }
         } else {
-            log.info("{} Payload: Binary Content", prefix);
+            return null;
         }
+
+        return null;
     }
 
     private static boolean isVisible(MediaType mediaType) {
