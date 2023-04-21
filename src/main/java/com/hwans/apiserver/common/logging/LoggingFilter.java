@@ -27,13 +27,19 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        MDC.put("traceId", UUID.randomUUID().toString());
-        if (isAsyncDispatch(request)) {
-            filterChain.doFilter(request, response);
-        } else {
-            doFilterWrapped(new RequestWrapper(request), new ResponseWrapper(response), filterChain);
+        try {
+            MDC.put("traceId", UUID.randomUUID().toString());
+            MDC.put("uri", getUri(request));
+            MDC.put("remoteAddr", request.getRemoteAddr());
+            MDC.put("method", request.getMethod().toUpperCase());
+            if (isAsyncDispatch(request)) {
+                filterChain.doFilter(request, response);
+            } else {
+                doFilterWrapped(new RequestWrapper(request), new ResponseWrapper(response), filterChain);
+            }
+        } finally {
+            MDC.clear();
         }
-        MDC.clear();
     }
 
     protected void doFilterWrapped(RequestWrapper request, ContentCachingResponseWrapper response, FilterChain filterChain) throws ServletException, IOException {
@@ -47,11 +53,10 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     private static void logRequest(RequestWrapper request) throws IOException {
-        String queryString = request.getQueryString();
+        var queryString = request.getQueryString();
         var marker = append("type", "REQUEST")
-                .and(append("method", request.getMethod().toUpperCase()))
-                .and(append("uri", queryString == null ? request.getRequestURI() : request.getRequestURI() + queryString))
-                .and(append("content_type", request.getContentType()));
+                .and(append("contentLength", request.getContentLength()))
+                .and(append("contentType", request.getContentType()));
         var payload = getPayloadString(request.getContentType(), request.getInputStream());
         if (payload != null) {
             marker = marker.and(append("payload", payload));
@@ -60,8 +65,16 @@ public class LoggingFilter extends OncePerRequestFilter {
         log.info(marker, null);
     }
 
+    private static String getUri(HttpServletRequest request) {
+        var queryString = request.getQueryString();
+        return queryString == null ? request.getRequestURI() : request.getRequestURI() + queryString;
+    }
+
     private static void logResponse(ContentCachingResponseWrapper response) throws IOException {
-        var marker = append("content_type", response.getContentType());
+        var marker = append("type", "RESPONSE")
+                .and(append("httpStatus", response.getStatus()))
+                .and(append("contentLength", response.getContentSize()))
+                .and(append("contentType", response.getContentType()));
         var payload = getPayloadString(response.getContentType(), response.getContentInputStream());
         if (payload != null) {
             marker = marker.and(append("payload", payload));
