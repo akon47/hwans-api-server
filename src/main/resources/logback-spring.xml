@@ -10,7 +10,7 @@
         </appender>
     </springProfile>
 
-    <root level="DEBUG" additivity="false">
+    <root level="INFO" additivity="false">
         <springProfile name="prod">
             <appender-ref ref="LOGSTASH" />
         </springProfile>
