@@ -1,5 +1,6 @@
 package com.hwans.apiserver.common.logging;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -22,16 +23,15 @@ import java.util.UUID;
 import static net.logstash.logback.marker.Markers.append;
 
 @Component
+@Slf4j(topic = "ioLog")
 public class LoggingFilter extends OncePerRequestFilter {
-    protected static final Logger log = LoggerFactory.getLogger(LoggingFilter.class);
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             MDC.put("traceId", UUID.randomUUID().toString());
-            MDC.put("uri", getUri(request));
-            MDC.put("remoteAddr", getRemoteAddr(request));
-            MDC.put("method", request.getMethod().toUpperCase());
+            MDC.put("io.uri", getUri(request));
+            MDC.put("io.remoteAddr", getRemoteAddr(request));
+            MDC.put("io.method", request.getMethod().toUpperCase());
             if (isAsyncDispatch(request)) {
                 filterChain.doFilter(request, response);
             } else {
@@ -53,12 +53,12 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     private static void logRequest(RequestWrapper request) throws IOException {
-        var marker = append("type", "REQUEST")
-                .and(append("contentLength", request.getContentLength()))
-                .and(append("contentType", request.getContentType()));
+        var marker = append("io.type", "REQUEST")
+                .and(append("io.contentLength", request.getContentLength()))
+                .and(append("io.contentType", request.getContentType()));
         var payload = getPayloadString(request.getContentType(), request.getInputStream());
         if (payload != null) {
-            marker = marker.and(append("payload", payload));
+            marker = marker.and(append("io.payload", payload));
         }
 
         log.info(marker, null);
@@ -92,13 +92,13 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     private static void logResponse(ContentCachingResponseWrapper response) throws IOException {
-        var marker = append("type", "RESPONSE")
-                .and(append("httpStatus", response.getStatus()))
-                .and(append("contentLength", response.getContentSize()))
-                .and(append("contentType", response.getContentType()));
+        var marker = append("io.type", "RESPONSE")
+                .and(append("io.httpStatus", response.getStatus()))
+                .and(append("io.contentLength", response.getContentSize()))
+                .and(append("io.contentType", response.getContentType()));
         var payload = getPayloadString(response.getContentType(), response.getContentInputStream());
         if (payload != null) {
-            marker = marker.and(append("payload", payload));
+            marker = marker.and(append("io.payload", payload));
         }
 
         log.info(marker, null);
