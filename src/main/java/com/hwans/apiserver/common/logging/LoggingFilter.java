@@ -1,8 +1,10 @@
 package com.hwans.apiserver.common.logging;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.logstash.logback.marker.Markers;
 import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -16,22 +18,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-import static net.logstash.logback.marker.Markers.append;
+import java.util.*;
 
 @Component
 @Slf4j(topic = "ioLog")
 public class LoggingFilter extends OncePerRequestFilter {
+    private static final String RequestType = "REQUEST";
+    private static final String ResponseType = "RESPONSE";
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             MDC.put("traceId", UUID.randomUUID().toString());
-            MDC.put("io.uri", getUri(request));
-            MDC.put("io.remoteAddr", getRemoteAddr(request));
-            MDC.put("io.method", request.getMethod().toUpperCase());
+            MDC.put("clientIp", getRemoteAddr(request));
             if (isAsyncDispatch(request)) {
                 filterChain.doFilter(request, response);
             } else {
@@ -47,24 +46,47 @@ public class LoggingFilter extends OncePerRequestFilter {
             logRequest(request);
             filterChain.doFilter(request, response);
         } finally {
-            logResponse(response);
+            logResponse(request, response);
             response.copyBodyToResponse();
         }
     }
 
     private static void logRequest(RequestWrapper request) throws IOException {
-        var marker = append("io.type", "REQUEST")
-                .and(append("io.contentLength", request.getContentLength()))
-                .and(append("io.contentType", request.getContentType()));
-        var payload = getPayloadString(request.getContentType(), request.getInputStream());
-        if (payload != null) {
-            marker = marker.and(append("io.payload", payload));
-        }
+        var headers = new HashMap<String, Object>();
+        headers.put("content-type", request.getContentType());
+        headers.put("content-length", request.getContentLength());
+
+        var marker = Markers.append("io", HttpData
+                .builder()
+                .Type(RequestType)
+                .Uri(getUri(request))
+                .Method(request.getMethod().toUpperCase())
+                .Payload(getPayloadString(request.getContentType(), request.getInputStream()))
+                .Headers(headers)
+                .build());
 
         log.info(marker, null);
     }
 
-    public static String getRemoteAddr(HttpServletRequest request) {
+    private static void logResponse(RequestWrapper request, ContentCachingResponseWrapper response) throws IOException {
+        var headers = new HashMap<String, Object>();
+        headers.put("content-type", response.getContentType());
+        headers.put("content-length", response.getContentSize());
+
+        var marker = Markers.append("io", HttpData
+                .builder()
+                .Type(ResponseType)
+                .Uri(getUri(request))
+                .Method(request.getMethod().toUpperCase())
+                .HttpStatus(response.getStatus())
+                .Payload(getPayloadString(response.getContentType(), response.getContentInputStream()))
+                .Headers(headers)
+                .build());
+
+        log.info(marker, null);
+    }
+
+    private static String getRemoteAddr(HttpServletRequest request) {
         var clientIp = request.getHeader("X-Forwarded-For");
 
         if (clientIp == null || clientIp.length() == 0 || "unknown".equalsIgnoreCase(clientIp)) {
@@ -89,19 +111,6 @@ public class LoggingFilter extends OncePerRequestFilter {
     private static String getUri(HttpServletRequest request) {
         var queryString = request.getQueryString();
         return queryString == null ? request.getRequestURI() : request.getRequestURI() + "?" + queryString;
-    }
-
-    private static void logResponse(ContentCachingResponseWrapper response) throws IOException {
-        var marker = append("io.type", "RESPONSE")
-                .and(append("io.httpStatus", response.getStatus()))
-                .and(append("io.contentLength", response.getContentSize()))
-                .and(append("io.contentType", response.getContentType()));
-        var payload = getPayloadString(response.getContentType(), response.getContentInputStream());
-        if (payload != null) {
-            marker = marker.and(append("io.payload", payload));
-        }
-
-        log.info(marker, null);
     }
 
     private static String getPayloadString(String contentType, InputStream inputStream) throws IOException {
@@ -132,5 +141,17 @@ public class LoggingFilter extends OncePerRequestFilter {
 
         return VISIBLE_TYPES.stream()
                 .anyMatch(visibleType -> visibleType.includes(mediaType));
+    }
+
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class HttpData {
+        String Type;
+        int HttpStatus;
+        String Uri;
+        String Method;
+        String Payload;
+        Map<String, Object> Headers;
     }
 }

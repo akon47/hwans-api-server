@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
 
+    <springProfile name="local">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"profile":"local"}</customFields>
+            </encoder>
+        </appender>
+    </springProfile>
+
     <!-- Logstash -->
     <springProfile name="prod">
         <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
             <destination>10.10.10.5:5000</destination>
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"profile":"prod"}</customFields>
             </encoder>
         </appender>
     </springProfile>
@@ -13,6 +22,10 @@
     <root level="INFO" additivity="false">
         <springProfile name="prod">
             <appender-ref ref="LOGSTASH" />
+        </springProfile>
+
+        <springProfile name="local">
+            <appender-ref ref="STDOUT" />
         </springProfile>
     </root>
 
