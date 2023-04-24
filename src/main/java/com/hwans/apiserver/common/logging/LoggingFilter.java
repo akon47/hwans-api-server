@@ -148,7 +148,7 @@ public class LoggingFilter extends OncePerRequestFilter {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class HttpData {
         String Type;
-        int HttpStatus;
+        Integer HttpStatus;
         String Uri;
         String Method;
         String Payload;
