@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "ioLog")
@@ -52,32 +53,38 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     private static void logRequest(RequestWrapper request) throws IOException {
-        var headers = new HashMap<String, Object>();
-        headers.put("content-type", request.getContentType());
-        headers.put("content-length", request.getContentLength());
+        var headers = Collections.list(request.getHeaderNames()).stream()
+                .collect(Collectors.toMap(name -> name, request::getHeader));
+
+        var parameters = Collections.list(request.getParameterNames()).stream()
+                .collect(Collectors.toMap(name -> name, request::getParameter));
 
         var marker = Markers.append("io", HttpData
                 .builder()
                 .Type(RequestType)
                 .Uri(getUri(request))
                 .Method(request.getMethod().toUpperCase())
+                .ContentType(request.getContentType())
+                .ContentLength(request.getContentLength())
                 .Payload(getPayloadString(request.getContentType(), request.getInputStream()))
                 .Headers(headers)
+                .Parameters(parameters)
                 .build());
 
         log.info(marker, null);
     }
 
     private static void logResponse(RequestWrapper request, ContentCachingResponseWrapper response) throws IOException {
-        var headers = new HashMap<String, Object>();
-        headers.put("content-type", response.getContentType());
-        headers.put("content-length", response.getContentSize());
+        var headers = Collections.list(request.getHeaderNames()).stream()
+                .collect(Collectors.toMap(name -> name, request::getHeader));
 
         var marker = Markers.append("io", HttpData
                 .builder()
                 .Type(ResponseType)
                 .Uri(getUri(request))
                 .Method(request.getMethod().toUpperCase())
+                .ContentType(response.getContentType())
+                .ContentLength(response.getContentSize())
                 .HttpStatus(response.getStatus())
                 .Payload(getPayloadString(response.getContentType(), response.getContentInputStream()))
                 .Headers(headers)
@@ -145,13 +152,16 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     @Data
     @Builder
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private static class HttpData {
         String Type;
         Integer HttpStatus;
+        String ContentType;
+        Integer ContentLength;
         String Uri;
         String Method;
         String Payload;
-        Map<String, Object> Headers;
+        Map<String, String> Headers;
+        Map<String, String> Parameters;
     }
 }
