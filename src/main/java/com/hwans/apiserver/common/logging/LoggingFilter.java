@@ -2,7 +2,7 @@ package com.hwans.apiserver.common.logging;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.marker.Markers;
 import org.slf4j.MDC;
@@ -59,16 +59,17 @@ public class LoggingFilter extends OncePerRequestFilter {
         var parameters = Collections.list(request.getParameterNames()).stream()
                 .collect(Collectors.toMap(name -> name, request::getParameter));
 
+
         var marker = Markers.append("io", HttpData
                 .builder()
-                .Type(RequestType)
-                .Uri(getUri(request))
-                .Method(request.getMethod().toUpperCase())
-                .ContentType(request.getContentType())
-                .ContentLength(request.getContentLength())
-                .Payload(getPayloadString(request.getContentType(), request.getInputStream()))
-                .Headers(headers)
-                .Parameters(parameters)
+                .type(RequestType)
+                .uri(getUri(request))
+                .method(request.getMethod().toUpperCase())
+                .contentType(request.getContentType())
+                .contentLength(request.getContentLength())
+                .payload(getPayloadString(request.getContentType(), request.getInputStream()))
+                .headers(headers)
+                .parameters(parameters)
                 .build());
 
         log.info(marker, null);
@@ -80,14 +81,14 @@ public class LoggingFilter extends OncePerRequestFilter {
 
         var marker = Markers.append("io", HttpData
                 .builder()
-                .Type(ResponseType)
-                .Uri(getUri(request))
-                .Method(request.getMethod().toUpperCase())
-                .ContentType(response.getContentType())
-                .ContentLength(response.getContentSize())
-                .HttpStatus(response.getStatus())
-                .Payload(getPayloadString(response.getContentType(), response.getContentInputStream()))
-                .Headers(headers)
+                .type(ResponseType)
+                .uri(getUri(request))
+                .method(request.getMethod().toUpperCase())
+                .contentType(response.getContentType())
+                .contentLength(response.getContentSize())
+                .httpStatus(response.getStatus())
+                .payload(getPayloadString(response.getContentType(), response.getContentInputStream()))
+                .headers(headers)
                 .build());
 
         log.info(marker, null);
@@ -150,18 +151,26 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .anyMatch(visibleType -> visibleType.includes(mediaType));
     }
 
-    @Data
+    @Getter
     @Builder
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private static class HttpData {
-        String Type;
-        Integer HttpStatus;
-        String ContentType;
-        Integer ContentLength;
-        String Uri;
-        String Method;
-        String Payload;
-        Map<String, String> Headers;
-        Map<String, String> Parameters;
+        String type;
+        Integer httpStatus;
+        String contentType;
+        Integer contentLength;
+        String uri;
+        String method;
+        String payload;
+        Map<String, String> headers;
+        Map<String, String> parameters;
+
+        public Integer getContentLength() {
+            if (this.contentLength < 0) {
+                return null;
+            }
+
+            return this.contentLength;
+        }
     }
 }
