@@ -4,7 +4,7 @@
     <springProfile name="local">
         <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                <customFields>{"profile":"local"}</customFields>
+                <customFields>{"app":"hwanstory","profile":"local"}</customFields>
             </encoder>
         </appender>
     </springProfile>
@@ -14,7 +14,7 @@
         <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
             <destination>10.10.10.5:5000</destination>
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                <customFields>{"profile":"prod"}</customFields>
+                <customFields>{"app":"hwanstory","profile":"prod"}</customFields>
             </encoder>
         </appender>
     </springProfile>
