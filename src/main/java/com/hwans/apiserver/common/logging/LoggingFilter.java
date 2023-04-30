@@ -8,8 +8,8 @@ import net.logstash.logback.marker.Markers;
 import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
@@ -17,7 +17,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +41,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         }
     }
 
-    protected void doFilterWrapped(RequestWrapper request, ContentCachingResponseWrapper response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterWrapped(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response, FilterChain filterChain) throws ServletException, IOException {
         try {
             logRequest(request);
             filterChain.doFilter(request, response);
@@ -52,13 +51,12 @@ public class LoggingFilter extends OncePerRequestFilter {
         }
     }
 
-    private static void logRequest(RequestWrapper request) throws IOException {
+    private static void logRequest(ContentCachingRequestWrapper request) {
         var headers = Collections.list(request.getHeaderNames()).stream()
                 .collect(Collectors.toMap(name -> name, request::getHeader));
 
         var parameters = Collections.list(request.getParameterNames()).stream()
                 .collect(Collectors.toMap(name -> name, request::getParameter));
-
 
         var marker = Markers.append("io", HttpData
                 .builder()
@@ -67,7 +65,6 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .method(request.getMethod().toUpperCase())
                 .contentType(request.getContentType())
                 .contentLength(request.getContentLength())
-                .payload(getPayloadString(request.getContentType(), request.getInputStream()))
                 .headers(headers)
                 .parameters(parameters)
                 .build());
@@ -75,7 +72,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         log.info(marker, null);
     }
 
-    private static void logResponse(RequestWrapper request, ContentCachingResponseWrapper response) throws IOException {
+    private static void logResponse(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) throws IOException {
         var headers = Collections.list(request.getHeaderNames()).stream()
                 .collect(Collectors.toMap(name -> name, request::getHeader));
 
@@ -87,7 +84,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .contentType(response.getContentType())
                 .contentLength(response.getContentSize())
                 .httpStatus(response.getStatus())
-                .payload(getPayloadString(response.getContentType(), response.getContentInputStream()))
+                .payload(getPayloadString(response.getContentType(), response.getContentAsByteArray()))
                 .headers(headers)
                 .build());
 
@@ -121,10 +118,9 @@ public class LoggingFilter extends OncePerRequestFilter {
         return queryString == null ? request.getRequestURI() : request.getRequestURI() + "?" + queryString;
     }
 
-    private static String getPayloadString(String contentType, InputStream inputStream) throws IOException {
+    private static String getPayloadString(String contentType, byte[] content) {
         boolean visible = isVisible(MediaType.valueOf(contentType == null ? "application/json" : contentType));
         if (visible) {
-            byte[] content = StreamUtils.copyToByteArray(inputStream);
             if (content.length > 0) {
                 var contentString = new String(content);
                 return contentString;
