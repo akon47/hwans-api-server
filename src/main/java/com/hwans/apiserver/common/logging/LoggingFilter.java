@@ -28,9 +28,13 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        var traceId = UUID.randomUUID().toString();
+        var clientIp = getRemoteAddr(request);
+
         try {
-            MDC.put("traceId", UUID.randomUUID().toString());
-            MDC.put("clientIp", getRemoteAddr(request));
+            MDC.put("traceId", traceId);
+            MDC.put("clientIp", clientIp);
+
             if (isAsyncDispatch(request)) {
                 filterChain.doFilter(request, response);
             } else {
@@ -43,8 +47,8 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     protected void doFilterWrapped(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            logRequest(request);
             filterChain.doFilter(request, response);
+            logRequest(request);
         } finally {
             logResponse(request, response);
             response.copyBodyToResponse();
@@ -72,9 +76,9 @@ public class LoggingFilter extends OncePerRequestFilter {
         log.info(marker, null);
     }
 
-    private static void logResponse(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) throws IOException {
-        var headers = Collections.list(request.getHeaderNames()).stream()
-                .collect(Collectors.toMap(name -> name, request::getHeader));
+    private static void logResponse(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
+        var headers = response.getHeaderNames().stream()
+                .collect(Collectors.toMap(name -> name, response::getHeader));
 
         var marker = Markers.append("io", HttpData
                 .builder()
