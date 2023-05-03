@@ -57,7 +57,7 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private static void logRequest(ContentCachingRequestWrapper request) {
         var headers = Collections.list(request.getHeaderNames()).stream()
-                .collect(Collectors.toMap(name -> name, request::getHeader));
+                .distinct().collect(Collectors.toMap(name -> name, name -> Collections.list(request.getHeaders(name)).stream().toList()));
 
         var parameters = Collections.list(request.getParameterNames()).stream()
                 .collect(Collectors.toMap(name -> name, request::getParameter));
@@ -69,6 +69,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .method(request.getMethod().toUpperCase())
                 .contentType(request.getContentType())
                 .contentLength(request.getContentLength())
+                .payload(getPayloadString(request.getContentType(), request.getContentAsByteArray()))
                 .headers(headers)
                 .parameters(parameters)
                 .build());
@@ -78,7 +79,7 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private static void logResponse(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
         var headers = response.getHeaderNames().stream()
-                .collect(Collectors.toMap(name -> name, response::getHeader));
+                .distinct().collect(Collectors.toMap(name -> name, name -> response.getHeaders(name).stream().toList()));
 
         var marker = Markers.append("io", HttpData
                 .builder()
@@ -162,7 +163,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         String uri;
         String method;
         String payload;
-        Map<String, String> headers;
+        Map<String, List<String>> headers;
         Map<String, String> parameters;
 
         public Integer getContentLength() {
