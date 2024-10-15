@@ -132,7 +132,7 @@ public class BlogController {
                                     @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
                                     @ApiParam(value = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto,
                                     @ApiParam(value = "비회원 댓글인 경우 비밀번호") @RequestParam(required = false) String password) {
-        checkCommentPermission(commentId, userAuthenticationDetails, password);
+        checkCommentModifyPermission(commentId, userAuthenticationDetails, password);
         return blogService.modifyComment(commentId, commentRequestDto);
     }
 
@@ -141,7 +141,7 @@ public class BlogController {
     public void deleteComment(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
                               @ApiParam(value = "댓글 Id") @PathVariable UUID commentId,
                               @ApiParam(value = "비회원 댓글인 경우 비밀번호") @RequestParam(required = false) String password) {
-        checkCommentPermission(commentId, userAuthenticationDetails, password);
+        checkCommentDeletePermission(commentId, userAuthenticationDetails, password);
         blogService.deleteComment(commentId);
     }
 
@@ -236,17 +236,19 @@ public class BlogController {
     }
 
     /**
-     * 전달된 인증정보 또는 비밀번호에 따라 해당 댓글에 대해서 수정/삭제 동작이 가능한지 검사한다.
+     * 전달된 인증정보 또는 비밀번호에 따라 해당 댓글에 대해서 수정 동작이 가능한지 검사한다.
      * 가능하지 않으면 예외를 발생시킨다.
      *
      * @param commentId                 댓글 Id
      * @param userAuthenticationDetails 인증정보에 따른 사용자 정보
      * @param password                  댓글 비밀번호
      */
-    private void checkCommentPermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
-        // 비밀번호가 전달되었는데 일치하지 않으면 예외를 발생시킨다.
-        if (StringUtils.isNotBlank(password)) {
-            if (!blogService.matchCommentAuthorPassword(commentId, password)) {
+    private void checkCommentModifyPermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
+        var comment = blogService.getComment(commentId);
+
+        // 비회원 댓글인 경우 항상 비밀번호 일치 여부를 검사한다.
+        if (comment.getAuthor().isGuest()) {
+            if (StringUtils.isBlank(password) || !blogService.matchCommentAuthorPassword(commentId, password)) {
                 throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
             } else {
                 return;
@@ -258,5 +260,35 @@ public class BlogController {
         if (userAuthenticationDetails == null || !userAuthenticationDetails.getId().equals(authorId)) {
             throw new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED);
         }
+    }
+
+    /**
+     * 전달된 인증정보 또는 비밀번호에 따라 해당 댓글에 대해서 삭제 동작이 가능한지 검사한다.
+     * 가능하지 않으면 예외를 발생시킨다.
+     *
+     * @param commentId                 댓글 Id
+     * @param userAuthenticationDetails 인증정보에 따른 사용자 정보
+     * @param password                  댓글 비밀번호
+     */
+    private void checkCommentDeletePermission(UUID commentId, UserAuthenticationDetails userAuthenticationDetails, String password) {
+        var comment = blogService.getComment(commentId);
+
+        // 댓글의 글쓴이가 나거나 내 게시글이라면 통과시킨다.
+        var authorId = blogService.getCommentAuthorId(commentId);
+        var postAuthorId = blogService.getPostAuthorId(comment.getPost().getId());
+        if (userAuthenticationDetails != null && (userAuthenticationDetails.getId().equals(authorId) || userAuthenticationDetails.getId().equals(postAuthorId))) {
+            return;
+        }
+
+        // 비회원 댓글인 경우 항상 비밀번호 일치 여부를 검사한다.
+        if (comment.getAuthor().isGuest()) {
+            if (StringUtils.isBlank(password) || !blogService.matchCommentAuthorPassword(commentId, password)) {
+                throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+            } else {
+                return;
+            }
+        }
+
+        throw new RestApiException(ErrorCodes.Forbidden.FORBIDDEN);
     }
 }
