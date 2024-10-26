@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: optional:file:/config/application-secret.yml
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: 'jdbc:mysql://{datasource-url}?serverTimezone=Asia/Seoul'
@@ -18,10 +16,6 @@ spring:
     hibernate:
       ddl-auto: update
   mail:
-    host: '{mail-host}'
-    username: '{mail-username}'
-    password: '{mail-password}'
-    port: {mail-port}
     properties:
       mail:
         smtp:
