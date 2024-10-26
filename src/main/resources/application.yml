@@ -1,7 +1,8 @@
 spring:
   profiles:
     active: local
-    include: secret
+  config:
+    import: optional:file:/config/application-secret.yml
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
