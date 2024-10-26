@@ -71,3 +71,4 @@ logging:
         type:
           descriptor:
             sql: trace
+allowedOrigins: 'http://localhost:8081'

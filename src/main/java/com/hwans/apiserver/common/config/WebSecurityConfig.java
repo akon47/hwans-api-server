@@ -9,6 +9,7 @@ import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2Authentic
 import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.hwans.apiserver.service.authentication.oauth2.repository.HttpCookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,7 +23,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
@@ -42,6 +45,9 @@ public class WebSecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+
+    @Value("${allowedOrigins}")
+    private String[] allowedOrigins;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -86,6 +92,7 @@ public class WebSecurityConfig {
                     .authorizeRequests()
                     .antMatchers(SWAGGER_PERMIT_URL_ARRAY).permitAll()
                     .antMatchers("/stomp/**").permitAll()
+                    .antMatchers("/ws/**").permitAll()
                     .antMatchers(
                             HttpMethod.GET,
                             Constants.API_PREFIX + "/v1/blog/*/posts/*/likes").authenticated()
@@ -140,6 +147,8 @@ public class WebSecurityConfig {
     private CorsConfiguration corsConfiguration() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedMethods(Collections.singletonList(CorsConfiguration.ALL));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+        configuration.setAllowCredentials(true);
         return configuration.applyPermitDefaultValues();
     }
 }

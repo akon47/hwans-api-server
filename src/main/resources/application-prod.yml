@@ -55,3 +55,4 @@ jwt:
   base64-access-secret: '{jwt-base64-access-secret}'
   base64-refresh-secret: '{jwt-base64-refresh-secret}'
   base64-register-secret: '{jwt-base64-register-secret}'
+allowedOrigins: 'https://hwanstory.kr'
