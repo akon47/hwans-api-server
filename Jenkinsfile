@@ -71,17 +71,11 @@ pipeline {
                 script {
                     prodProperties = readFile file: SPRING_PROD_PROPERTIES_PATH
                     prodProperties = prodProperties.replaceAll(/\{datasource-url\}/, SPRING_DATASOURCE_URL)
-                    prodProperties = prodProperties.replaceAll(/\{datasource-username\}/, SPRING_DATASOURCE_USERNAME)
-                    prodProperties = prodProperties.replaceAll(/\{datasource-password\}/, SPRING_DATASOURCE_PASSWORD)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-access-secret\}/, SPRING_JWT_ACCESS_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-refresh-secret\}/, SPRING_JWT_REFRESH_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{jwt-base64-register-secret\}/, SPRING_JWT_REGISTER_SECRET_KEY)
                     prodProperties = prodProperties.replaceAll(/\{redis-host\}/, SPRING_REDIS_HOST)
                     prodProperties = prodProperties.replaceAll(/\{redis-port\}/, SPRING_REDIS_PORT)
-                    prodProperties = prodProperties.replaceAll(/\{mail-host\}/, SPRING_MAIL_HOST)
-                    prodProperties = prodProperties.replaceAll(/\{mail-username\}/, SPRING_MAIL_USERNAME)
-                    prodProperties = prodProperties.replaceAll(/\{mail-password\}/, SPRING_MAIL_PASSWORD)
-                    prodProperties = prodProperties.replaceAll(/\{mail-port\}/, SPRING_MAIL_PORT)
 
                     prodProperties = prodProperties.replaceAll(/\{oauth2-google-client-id\}/, SPRING_OAUTH2_GOOGLE_CLIENT_ID)
                     prodProperties = prodProperties.replaceAll(/\{oauth2-google-secret\}/, SPRING_OAUTH2_GOOGLE_SECRET)
