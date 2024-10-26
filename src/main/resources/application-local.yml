@@ -24,10 +24,6 @@ spring:
         show_sql: true
         use_sql_comments: true
   mail:
-    host:
-    username:
-    password:
-    port:
     properties:
       mail:
         smtp:

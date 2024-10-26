@@ -1,5 +1,6 @@
 spring:
   profiles:
+    include: secret
     active: local
   mvc:
     pathmatch:

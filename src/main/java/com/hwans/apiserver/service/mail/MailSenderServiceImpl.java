@@ -55,7 +55,7 @@ public class MailSenderServiceImpl implements MailSenderService {
         var mimeMessage = javaMailSender.createMimeMessage();
         try {
             var mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
-            mimeMessageHelper.setFrom("noreply@kimhwan.kr");
+//            mimeMessageHelper.setFrom("noreply@kimhwan.kr");
             mimeMessageHelper.setTo(mailMessageDto.getTo());
             mimeMessageHelper.setSubject(mailMessageDto.getSubject());
             mimeMessageHelper.setText(mailMessageDto.getContent(), mailMessageDto.getIsHtmlContent());
