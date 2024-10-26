@@ -16,6 +16,10 @@ spring:
     hibernate:
       ddl-auto: update
   mail:
+    host: '{mail-host}'
+    username: '{mail-username}'
+    password: '{mail-password}'
+    port: {mail-port}
     properties:
       mail:
         smtp:
