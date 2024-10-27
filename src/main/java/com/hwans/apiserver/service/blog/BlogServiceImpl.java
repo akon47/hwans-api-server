@@ -9,6 +9,7 @@ import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
+import com.hwans.apiserver.event.blog.CreateCommentEvent;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
@@ -23,6 +24,7 @@ import com.hwans.apiserver.repository.blog.tag.TagRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -57,6 +59,7 @@ public class BlogServiceImpl implements BlogService {
     private final SeriesMapper seriesMapper;
     private final RedisTemplate<String, Integer> redisTemplate;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 레디스에 조회수 저장을 위한 키값
@@ -357,6 +360,7 @@ public class BlogServiceImpl implements BlogService {
         comment.setAuthor(authorAccount);
         comment.setPost(foundPost);
         var savedComment = commentRepository.save(comment);
+        eventPublisher.publishEvent(new CreateCommentEvent(this, savedComment));
         return commentMapper.toDto(savedComment);
     }
 
@@ -375,6 +379,7 @@ public class BlogServiceImpl implements BlogService {
         comment.setAuthor(guestAccount);
         comment.setPost(foundPost);
         var savedComment = commentRepository.save(comment);
+        eventPublisher.publishEvent(new CreateCommentEvent(this, savedComment));
         return commentMapper.toDto(savedComment);
     }
 
@@ -393,6 +398,7 @@ public class BlogServiceImpl implements BlogService {
         comment.setPost(foundComment.getPost());
         comment.setParent(foundComment);
         var savedComment = commentRepository.save(comment);
+        eventPublisher.publishEvent(new CreateCommentEvent(this, savedComment));
         return commentMapper.toDto(savedComment);
     }
 
@@ -412,6 +418,7 @@ public class BlogServiceImpl implements BlogService {
         comment.setPost(foundComment.getPost());
         comment.setParent(foundComment);
         var savedComment = commentRepository.save(comment);
+        eventPublisher.publishEvent(new CreateCommentEvent(this, savedComment));
         return commentMapper.toDto(savedComment);
     }
 
