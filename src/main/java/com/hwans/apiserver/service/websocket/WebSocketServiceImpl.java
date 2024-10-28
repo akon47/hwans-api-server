@@ -1,23 +1,24 @@
-package com.hwans.apiserver.service.blog;
+package com.hwans.apiserver.service.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hwans.apiserver.dto.blog.MessageDto;
-import com.hwans.apiserver.dto.blog.MessageType;
+import com.hwans.apiserver.dto.websocket.MessageDto;
+import com.hwans.apiserver.dto.websocket.MessageType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+@Service
 @RequiredArgsConstructor
 @Slf4j
-public class BlogWebSocketHandler extends TextWebSocketHandler {
+public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSocketService {
     private Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     @Override
@@ -53,5 +54,10 @@ public class BlogWebSocketHandler extends TextWebSocketHandler {
                 log.trace("NotifySessionCountChanged failed trace: {}", e);
             }
         });
+    }
+
+    @Override
+    public WebSocketHandler getWebSocketHandler() {
+        return this;
     }
 }

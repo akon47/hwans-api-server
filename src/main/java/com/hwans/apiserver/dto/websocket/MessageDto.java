@@ -1,4 +1,4 @@
-package com.hwans.apiserver.dto.blog;
+package com.hwans.apiserver.dto.websocket;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

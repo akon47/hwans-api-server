@@ -10,6 +10,7 @@ import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
 import com.hwans.apiserver.entity.blog.Tag;
 import com.hwans.apiserver.event.blog.CreateCommentEvent;
+import com.hwans.apiserver.event.blog.CreatePostEvent;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
@@ -161,6 +162,7 @@ public class BlogServiceImpl implements BlogService {
         }
 
         var savedPost = postRepository.save(post);
+        eventPublisher.publishEvent(new CreatePostEvent(this, savedPost));
         return postMapper.EntityToPostDto(savedPost);
     }
 
