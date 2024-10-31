@@ -27,7 +27,7 @@ public interface BlogService {
      * @param size 조회를 원하는 최대 size
      * @return 조회된 게시글 목록 (페이징)
      */
-    SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size);
+    SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size, String sortBy);
 
     /**
      * 게시글을 생성(작성)합니다.

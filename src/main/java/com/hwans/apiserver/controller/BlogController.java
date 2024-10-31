@@ -17,9 +17,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +29,7 @@ import java.util.UUID;
 /**
  * 블로그 Controller
  */
+@Validated
 @RestController
 @Api(tags = "블로그")
 @RequestMapping(value = Constants.API_PREFIX)
@@ -39,8 +42,9 @@ public class BlogController {
     @GetMapping(value = "/v1/blog/posts")
     public SliceDto<SimplePostDto> getAllPosts(@ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
                                                @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size,
-                                               @ApiParam(value = "검색어") @RequestParam(required = false) String search) {
-        return blogService.getAllPosts(search, cursorId, size);
+                                               @ApiParam(value = "검색어") @RequestParam(required = false) String search,
+                                               @ApiParam(value = "정렬") @RequestParam(required = false) @Pattern(regexp = "^createdAt|hits$") String sortBy) {
+        return blogService.getAllPosts(search, cursorId, size, sortBy);
     }
 
     @ApiOperation(value = "게시글 작성", notes = "게시글을 작성한다.", tags = "블로그")

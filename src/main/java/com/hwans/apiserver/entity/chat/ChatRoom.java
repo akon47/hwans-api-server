@@ -35,4 +35,6 @@ public class ChatRoom extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_account_id", nullable = false)
     private Account ownerAccount;
+    @Column(nullable = false)
+    private boolean deleted;
 }

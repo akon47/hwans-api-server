@@ -12,6 +12,9 @@ INSERT INTO tb_account_role (id,created_at,updated_at,account_id,role_name) VALU
 
 INSERT INTO tb_post (id,created_at,updated_at,account_id,title,content,summary,open_type,post_url,deleted) VALUES (0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'제목','내용','요약','PUBLIC','post_url',false);
 INSERT INTO tb_post (id,created_at,updated_at,account_id,title,content,summary,open_type,post_url,deleted) VALUES (1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'제목-2','내용-2','요약-2','PUBLIC','post_url_2',false);
+INSERT INTO tb_post (id,created_at,updated_at,account_id,title,content,summary,open_type,post_url,deleted) VALUES (2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'제목-3','내용-3','요약-3','PUBLIC','post_url_3',false);
+INSERT INTO tb_post (id,created_at,updated_at,account_id,title,content,summary,open_type,post_url,deleted) VALUES (3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'제목-4','내용-4','요약-4','PUBLIC','post_url_4',false);
+INSERT INTO tb_post (id,created_at,updated_at,account_id,title,content,summary,open_type,post_url,deleted) VALUES (4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'제목-5','내용-5','요약-5','PUBLIC','post_url_5',false);
 
 INSERT INTO tb_series (id,created_at,updated_at,account_id,title,series_url) VALUES (0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'시리즈제목','series_url');
 

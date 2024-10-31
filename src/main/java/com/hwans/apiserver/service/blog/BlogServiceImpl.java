@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -91,22 +92,24 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size) {
+    public SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size, String sortBy) {
         List<Post> foundPosts;
+
+        var sort = Sort.by(Sort.Direction.DESC, Optional.ofNullable(sortBy).orElse("createdAt"), "id");
         if (cursorId.isPresent()) {
             var foundCursorPost = postRepository
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             if (search == null) {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1));
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1, sort));
             } else {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1));
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1, sort));
             }
         } else {
             if (search == null) {
-                foundPosts = postRepository.findAllByOrderByIdDesc(PageRequest.of(0, size + 1));
+                foundPosts = postRepository.findAllByOrderByIdDesc(PageRequest.of(0, size + 1, sort));
             } else {
-                foundPosts = postRepository.findAllByOrderByIdDesc(search, PageRequest.of(0, size + 1));
+                foundPosts = postRepository.findAllByOrderByIdDesc(search, PageRequest.of(0, size + 1, sort));
             }
         }
         var last = foundPosts.size() <= size;
