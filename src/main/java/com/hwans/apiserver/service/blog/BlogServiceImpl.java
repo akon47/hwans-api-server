@@ -101,9 +101,9 @@ public class BlogServiceImpl implements BlogService {
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             if (search == null) {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), PageRequest.of(0, size + 1, sort));
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1, sort));
             } else {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), search, PageRequest.of(0, size + 1, sort));
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1, sort));
             }
         } else {
             if (search == null) {
