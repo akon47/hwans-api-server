@@ -265,6 +265,12 @@ public interface BlogService {
     List<SimplePostDto> getBlogSeriesPosts(String blogId, String seriesUrl, boolean findPublicPostOnly);
 
     /**
+     * 해당 게시글의 조회수를 증가시킵니다.
+     * @param postId 게시글 Id
+     */
+    void increasePostHits(UUID postId);
+
+    /**
      * 현재 캐시되어 있는 게시글 조회수를 DB에 반영합니다.
      */
     void updatePostHitsFromCache();

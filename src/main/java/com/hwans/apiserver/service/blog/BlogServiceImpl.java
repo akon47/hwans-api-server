@@ -101,9 +101,9 @@ public class BlogServiceImpl implements BlogService {
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             if (search == null) {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1, sort));
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), PageRequest.of(0, size + 1, sort));
             } else {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1, sort));
+                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), search, PageRequest.of(0, size + 1, sort));
             }
         } else {
             if (search == null) {
@@ -278,7 +278,6 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        foundPost.setHits(increaseHits(foundPost).intValue());
         return postMapper.EntityToPostDto(foundPost);
     }
 
@@ -545,6 +544,14 @@ public class BlogServiceImpl implements BlogService {
                 .stream()
                 .map(postMapper::EntityToSimplePostDto)
                 .toList();
+    }
+
+    @Override
+    public void increasePostHits(UUID postId) {
+        var foundPost = postRepository
+                .findById(postId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        foundPost.setHits(increaseHits(foundPost).intValue());
     }
 
     @Override

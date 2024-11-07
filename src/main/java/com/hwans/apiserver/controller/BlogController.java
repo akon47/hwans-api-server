@@ -98,6 +98,8 @@ public class BlogController {
         if (findPublicPostOnly && post.getOpenType() != OpenType.PUBLIC) {
             throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST);
         }
+        blogService.increasePostHits(post.getId());
+
         return post;
     }
 
