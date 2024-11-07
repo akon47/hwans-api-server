@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.With;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -59,6 +60,7 @@ public class PostDto implements Serializable {
     @ApiModelProperty(value = "좋아요 수")
     int likeCount;
     @ApiModelProperty(value = "조회수")
+    @With
     int hits;
     @ApiModelProperty(value = "시리즈 Url")
     String seriesUrl;

@@ -27,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -95,21 +95,38 @@ public class BlogServiceImpl implements BlogService {
     public SliceDto<SimplePostDto> getAllPosts(String search, Optional<UUID> cursorId, int size, String sortBy) {
         List<Post> foundPosts;
 
-        var sort = Sort.by(Sort.Direction.DESC, Optional.ofNullable(sortBy).orElse("createdAt"), "id");
+        // 조회수 순 정렬 조회인지 여부, 아니라면 생성순이다.
+        var isSortByHits = Objects.equals(sortBy, "hits");
         if (cursorId.isPresent()) {
             var foundCursorPost = postRepository
                     .findById(cursorId.get())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             if (search == null) {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1, sort));
+                if(isSortByHits) {
+                    foundPosts = postRepository.findByCursorLessThanOrderByHitsDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), foundCursorPost.getHits(), PageRequest.of(0, size + 1));
+                } else {
+                    foundPosts = postRepository.findByCursorLessThanOrderByCreatedAtDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), PageRequest.of(0, size + 1));
+                }
             } else {
-                foundPosts = postRepository.findByIdLessThanOrderByIdDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1, sort));
+                if(isSortByHits) {
+                    foundPosts = postRepository.findByCursorLessThanOrderByHitsDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), foundCursorPost.getHits(), search, PageRequest.of(0, size + 1));
+                } else {
+                    foundPosts = postRepository.findByCursorLessThanOrderByCreatedAtDesc(foundCursorPost.getId(), foundCursorPost.getCreatedAt(), search, PageRequest.of(0, size + 1));
+                }
             }
         } else {
             if (search == null) {
-                foundPosts = postRepository.findAllByOrderByIdDesc(PageRequest.of(0, size + 1, sort));
+                if(isSortByHits) {
+                    foundPosts = postRepository.findAllByOrderByHitsDesc(PageRequest.of(0, size + 1));
+                } else {
+                    foundPosts = postRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, size + 1));
+                }
             } else {
-                foundPosts = postRepository.findAllByOrderByIdDesc(search, PageRequest.of(0, size + 1, sort));
+                if(isSortByHits) {
+                    foundPosts = postRepository.findAllByOrderByHitsDesc(search, PageRequest.of(0, size + 1));
+                } else {
+                    foundPosts = postRepository.findAllByOrderByCreatedAtDesc(search, PageRequest.of(0, size + 1));
+                }
             }
         }
         var last = foundPosts.size() <= size;
@@ -278,7 +295,12 @@ public class BlogServiceImpl implements BlogService {
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
-        return postMapper.EntityToPostDto(foundPost);
+        var cachedHits = getPostHitsFromCache(foundPost);
+        if(cachedHits != null) {
+            return postMapper.EntityToPostDto(foundPost).withHits(cachedHits.intValue());
+        } else {
+            return postMapper.EntityToPostDto(foundPost);
+        }
     }
 
     /**
@@ -565,6 +587,16 @@ public class BlogServiceImpl implements BlogService {
                 postRepository.updateHits(UUID.fromString(postId), Integer.valueOf(hits));
             }
         });
+    }
+
+    private Long getPostHitsFromCache(Post post) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        final String hashKey = post.getId().toString();
+        if (!hashOperations.hasKey(POST_HITS_KEY, hashKey)) {
+            return null;
+        }
+
+        return hashOperations.increment(POST_HITS_KEY, hashKey, 0L);
     }
 
     /**

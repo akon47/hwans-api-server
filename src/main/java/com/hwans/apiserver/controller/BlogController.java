@@ -100,7 +100,7 @@ public class BlogController {
         }
         blogService.increasePostHits(post.getId());
 
-        return post;
+        return post.withHits(post.getHits() + 1);
     }
 
     @ApiOperation(value = "블로그 정보 조회", notes = "블로그 정보를 조회한다.", tags = "블로그")
