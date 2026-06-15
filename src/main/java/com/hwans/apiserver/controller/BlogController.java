@@ -11,6 +11,7 @@ import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetailsOr
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.blog.BlogService;
 import com.hwans.apiserver.service.notification.NotificationService;
+import com.hwans.apiserver.service.websocket.WebSocketService;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,6 +38,7 @@ import java.util.UUID;
 public class BlogController {
     private final BlogService blogService;
     private final NotificationService notificationService;
+    private final WebSocketService webSocketService;
 
     @ApiOperation(value = "전체 블로그 게시글 조회", notes = "전체 블로그 게시글을 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/posts")
@@ -45,6 +47,32 @@ public class BlogController {
                                                @ApiParam(value = "검색어") @RequestParam(required = false) String search,
                                                @ApiParam(value = "정렬") @RequestParam(required = false) @Pattern(regexp = "^createdAt|hits$") String sortBy) {
         return blogService.getAllPosts(search, cursorId, size, sortBy);
+    }
+
+    @ApiOperation(value = "현재 보고 있는 게시글 조회", notes = "현재 한 명 이상이 보고 있는 공개 게시글을 시청자 수가 많은 순으로 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/posts/viewing")
+    public List<SimplePostDto> getViewingPosts() {
+        var viewerCounts = webSocketService.getActiveViewerCounts();
+        if (viewerCounts.isEmpty()) {
+            return List.of();
+        }
+        var postIds = viewerCounts.keySet().stream()
+                .map(this::parsePostId)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        return blogService.getPostsByIds(postIds).stream()
+                .sorted(java.util.Comparator
+                        .comparingInt((SimplePostDto post) -> viewerCounts.getOrDefault(post.getId().toString(), 0))
+                        .reversed())
+                .toList();
+    }
+
+    private UUID parsePostId(String postId) {
+        try {
+            return UUID.fromString(postId);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @ApiOperation(value = "게시글 작성", notes = "게시글을 작성한다.", tags = "블로그")

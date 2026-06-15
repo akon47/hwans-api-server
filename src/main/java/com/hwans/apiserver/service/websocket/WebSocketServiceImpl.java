@@ -18,6 +18,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -201,6 +202,19 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         } catch (Exception e) {
             log.trace("websocket send failed trace: ", e);
         }
+    }
+
+    @Override
+    public Map<String, Integer> getActiveViewerCounts() {
+        var result = new HashMap<String, Integer>();
+        synchronized (presenceLock) {
+            postViewers.forEach((postId, viewers) -> {
+                if (!viewers.isEmpty()) {
+                    result.put(postId, viewers.size());
+                }
+            });
+        }
+        return result;
     }
 
     @Override

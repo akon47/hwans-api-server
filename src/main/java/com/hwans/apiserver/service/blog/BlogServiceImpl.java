@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -543,6 +544,18 @@ public class BlogServiceImpl implements BlogService {
                         .reversed()
                         .thenComparing(Post::getCreatedAt, Comparator.reverseOrder()))
                 .limit(size)
+                .map(postMapper::EntityToSimplePostDto)
+                .toList();
+    }
+
+    @Override
+    public List<SimplePostDto> getPostsByIds(Collection<UUID> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return List.of();
+        }
+        return postRepository
+                .findPublicPostsByIds(postIds)
+                .stream()
                 .map(postMapper::EntityToSimplePostDto)
                 .toList();
     }

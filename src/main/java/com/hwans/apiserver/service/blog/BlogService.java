@@ -285,6 +285,14 @@ public interface BlogService {
     List<SimplePostDto> getRecentPublicPosts(String blogId, int size);
 
     /**
+     * 게시글 Id 목록에 해당하는 공개 게시글을 조회합니다.
+     *
+     * @param postIds 조회할 게시글 Id 목록
+     * @return 공개 상태인 게시글 목록 (순서 보장 없음)
+     */
+    List<SimplePostDto> getPostsByIds(java.util.Collection<UUID> postIds);
+
+    /**
      * 해당 게시글의 조회수를 증가시킵니다.
      * @param postId 게시글 Id
      */
