@@ -56,15 +56,7 @@ public class NotificationServiceImpl implements NotificationService {
             foundPosts = notificationRepository
                     .findAllByOrderByIdDesc(accountId, findUnreadNotificationOnly, PageRequest.of(0, size + 1));
         }
-        var last = foundPosts.size() <= size;
-        return SliceDto.<NotificationDto>builder()
-                .data(foundPosts.stream().limit(size).map(notificationMapper::EntityToNotificationDto).toList())
-                .size((int) foundPosts.stream().limit(size).count())
-                .empty(foundPosts.isEmpty())
-                .first(cursorId.isEmpty())
-                .last(last)
-                .cursorId(last ? null : foundPosts.stream().limit(size).skip(size - 1).findFirst().map(Notification::getId).orElse(null))
-                .build();
+        return SliceDto.of(foundPosts, size, cursorId.isEmpty(), notificationMapper::EntityToNotificationDto, Notification::getId);
     }
 
     /**

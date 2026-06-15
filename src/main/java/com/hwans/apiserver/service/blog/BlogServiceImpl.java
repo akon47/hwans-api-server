@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -129,23 +130,13 @@ public class BlogServiceImpl implements BlogService {
                 }
             }
         }
-        var last = foundPosts.size() <= size;
-        return SliceDto.<SimplePostDto>builder()
-                .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
-                .size((int) foundPosts.stream().limit(size).count())
-                .empty(foundPosts.isEmpty())
-                .first(cursorId.isEmpty())
-                .last(last)
-                .cursorId(last ? null : foundPosts.stream().limit(size).skip(size - 1).findFirst().map(Post::getId).orElse(null))
-                .build();
+        return SliceDto.of(foundPosts, size, cursorId.isEmpty(), postMapper::EntityToSimplePostDto, Post::getId);
     }
 
     @Override
     @Transactional
     public PostDto createPost(UUID authorAccountId, PostRequestDto postRequestDto) {
-        var foundAccount = accountRepository
-                .findByIdAndDeletedIsFalse(authorAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var foundAccount = getActiveAccount(authorAccountId);
         if (foundAccount.isGuest()) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
         }
@@ -157,13 +148,7 @@ public class BlogServiceImpl implements BlogService {
         var post = postMapper.PostRequestDtoToEntity(postRequestDto);
         post.setAuthor(foundAccount);
         post.updatePostUrlIfNecessary();
-        post.setTags(postRequestDto
-                .getTags().stream()
-                .map(TagDto::getName)
-                .map(tagName -> tagRepository
-                        .findByName(tagName)
-                        .orElseGet(() -> tagRepository.save(new Tag(tagName))))
-                .collect(Collectors.toSet()));
+        post.setTags(resolveTags(postRequestDto));
 
         if (postRequestDto.getSeriesUrl() == null) {
             post.setSeries(null);
@@ -206,13 +191,7 @@ public class BlogServiceImpl implements BlogService {
         foundPost.setContent(postRequestDto.getContent());
         foundPost.setOpenType(postRequestDto.getOpenType());
         foundPost.updatePostUrlIfNecessary();
-        foundPost.setTags(postRequestDto
-                .getTags().stream()
-                .map(TagDto::getName)
-                .map(tagName -> tagRepository
-                        .findByName(tagName)
-                        .orElseGet(() -> tagRepository.save(new Tag(tagName))))
-                .collect(Collectors.toSet()));
+        foundPost.setTags(resolveTags(postRequestDto));
 
         if (postRequestDto.getSeriesUrl() == null) {
             foundPost.setSeries(null);
@@ -255,15 +234,7 @@ public class BlogServiceImpl implements BlogService {
             foundPosts = postRepository
                     .findAllByOrderByIdDesc(blogId, tag, findPublicPostOnly, PageRequest.of(0, size + 1));
         }
-        var last = foundPosts.size() <= size;
-        return SliceDto.<SimplePostDto>builder()
-                .data(foundPosts.stream().limit(size).map(postMapper::EntityToSimplePostDto).toList())
-                .size((int) foundPosts.stream().limit(size).count())
-                .empty(foundPosts.isEmpty())
-                .first(cursorId.isEmpty())
-                .last(last)
-                .cursorId(last ? null : foundPosts.stream().limit(size).skip(size - 1).findFirst().map(Post::getId).orElse(null))
-                .build();
+        return SliceDto.of(foundPosts, size, cursorId.isEmpty(), postMapper::EntityToSimplePostDto, Post::getId);
     }
 
     @Override
@@ -279,15 +250,7 @@ public class BlogServiceImpl implements BlogService {
             foundLikes = likeRepository
                     .findAllByOrderByIdDesc(blogId, PageRequest.of(0, size + 1));
         }
-        var last = foundLikes.size() <= size;
-        return SliceDto.<SimplePostDto>builder()
-                .data(foundLikes.stream().limit(size).map(x -> postMapper.EntityToSimplePostDto(x.getPost())).toList())
-                .size((int) foundLikes.stream().limit(size).count())
-                .empty(foundLikes.isEmpty())
-                .first(cursorId.isEmpty())
-                .last(last)
-                .cursorId(last ? null : foundLikes.stream().limit(size).skip(size - 1).findFirst().map(Like::getId).orElse(null))
-                .build();
+        return SliceDto.of(foundLikes, size, cursorId.isEmpty(), x -> postMapper.EntityToSimplePostDto(x.getPost()), Like::getId);
     }
 
     @Override
@@ -335,9 +298,7 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public void likePost(UUID actorAccountId, String blogId, String postUrl) {
-        var account = accountRepository
-                .findByIdAndDeletedIsFalse(actorAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var account = getActiveAccount(actorAccountId);
 
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
@@ -349,9 +310,7 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public void unlikePost(UUID actorAccountId, String blogId, String postUrl) {
-        var account = accountRepository
-                .findByIdAndDeletedIsFalse(actorAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var account = getActiveAccount(actorAccountId);
 
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
@@ -376,9 +335,7 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public CommentDto createComment(UUID authorAccountId, String blogId, String postUrl, CommentRequestDto commentRequestDto) {
-        var authorAccount = accountRepository
-                .findByIdAndDeletedIsFalse(authorAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var authorAccount = getActiveAccount(authorAccountId);
         var foundPost = postRepository
                 .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
@@ -412,9 +369,7 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public CommentDto createComment(UUID authorAccountId, UUID commentId, CommentRequestDto commentRequestDto) {
-        var authorAccount = accountRepository
-                .findByIdAndDeletedIsFalse(authorAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var authorAccount = getActiveAccount(authorAccountId);
         var foundComment = commentRepository
                 .findByIdAndDeletedIsFalse(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
@@ -495,9 +450,7 @@ public class BlogServiceImpl implements BlogService {
     @Override
     @Transactional
     public SeriesDto createSeries(UUID authorAccountId, SeriesRequestDto seriesRequestDto) {
-        var foundAccount = accountRepository
-                .findByIdAndDeletedIsFalse(authorAccountId)
-                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+        var foundAccount = getActiveAccount(authorAccountId);
         if (foundAccount.isGuest()) {
             throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
         }
@@ -614,6 +567,34 @@ public class BlogServiceImpl implements BlogService {
             });
         }
         return hashOperations.increment(POST_HITS_KEY, hashKey, 1L);
+    }
+
+    /**
+     * 삭제되지 않은 활성 계정을 조회합니다.
+     *
+     * @param accountId 조회할 계정 Id
+     * @return 활성 계정 엔티티
+     */
+    private Account getActiveAccount(UUID accountId) {
+        return accountRepository
+                .findByIdAndDeletedIsFalse(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NO_CURRENT_ACCOUNT_INFO));
+    }
+
+    /**
+     * 게시글 요청의 태그 이름들을 Tag 엔티티 집합으로 변환합니다. 존재하지 않는 태그는 새로 저장합니다.
+     *
+     * @param postRequestDto 게시글 요청 Dto
+     * @return Tag 엔티티 집합
+     */
+    private Set<Tag> resolveTags(PostRequestDto postRequestDto) {
+        return postRequestDto
+                .getTags().stream()
+                .map(TagDto::getName)
+                .map(tagName -> tagRepository
+                        .findByName(tagName)
+                        .orElseGet(() -> tagRepository.save(new Tag(tagName))))
+                .collect(Collectors.toSet());
     }
 
     /**

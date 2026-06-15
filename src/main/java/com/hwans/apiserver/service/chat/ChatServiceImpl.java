@@ -105,14 +105,6 @@ public class ChatServiceImpl implements ChatService {
             foundMessages = chatMessageRepository.findAllByOrderByIdDesc(chatRoomId, PageRequest.of(0, size + 1));
         }
 
-        var last = foundMessages.size() <= size;
-        return SliceDto.<ChatMessageDto>builder()
-                .data(foundMessages.stream().limit(size).map(chatMessageMapper::entityToDto).toList())
-                .size((int) foundMessages.stream().limit(size).count())
-                .empty(foundMessages.isEmpty())
-                .first(cursorId.isEmpty())
-                .last(last)
-                .cursorId(last ? null : foundMessages.stream().limit(size).skip(size - 1).findFirst().map(ChatMessage::getId).orElse(null))
-                .build();
+        return SliceDto.of(foundMessages, size, cursorId.isEmpty(), chatMessageMapper::entityToDto, ChatMessage::getId);
     }
 }
