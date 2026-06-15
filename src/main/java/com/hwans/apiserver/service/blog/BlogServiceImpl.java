@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -519,6 +520,45 @@ public class BlogServiceImpl implements BlogService {
                 .stream()
                 .map(postMapper::EntityToSimplePostDto)
                 .toList();
+    }
+
+    @Override
+    public List<SimplePostDto> getRelatedPosts(String blogId, String postUrl, int size) {
+        if (size <= 0) {
+            return List.of();
+        }
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        var tagNames = foundPost.getTags().stream().map(Tag::getName).collect(Collectors.toSet());
+        if (tagNames.isEmpty()) {
+            return List.of();
+        }
+        // 후보를 넉넉히 조회한 뒤 겹치는 태그 수가 많은 순(동률이면 최신순)으로 정렬하여 상위 size개를 반환한다.
+        return postRepository
+                .findRelatedPosts(foundPost.getId(), tagNames, PageRequest.of(0, Math.max(size * 5, 20)))
+                .stream()
+                .sorted(Comparator
+                        .comparingLong((Post p) -> p.getTags().stream().filter(t -> tagNames.contains(t.getName())).count())
+                        .reversed()
+                        .thenComparing(Post::getCreatedAt, Comparator.reverseOrder()))
+                .limit(size)
+                .map(postMapper::EntityToSimplePostDto)
+                .toList();
+    }
+
+    @Override
+    public List<SimplePostDto> getRecentPublicPosts(String blogId, int size) {
+        if (size <= 0) {
+            return List.of();
+        }
+        List<Post> foundPosts;
+        if (blogId == null) {
+            foundPosts = postRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, size));
+        } else {
+            foundPosts = postRepository.findAllByBlogId(blogId, true).stream().limit(size).toList();
+        }
+        return foundPosts.stream().map(postMapper::EntityToSimplePostDto).toList();
     }
 
     @Override

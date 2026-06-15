@@ -93,6 +93,7 @@ public class WebSecurityConfig {
                     .antMatchers(SWAGGER_PERMIT_URL_ARRAY).permitAll()
                     .antMatchers("/stomp/**").permitAll()
                     .antMatchers("/ws/**").permitAll()
+                    .antMatchers(HttpMethod.GET, "/rss", "/rss/**").permitAll()
                     .antMatchers(
                             HttpMethod.GET,
                             Constants.API_PREFIX + "/v1/blog/*/posts/*/likes").authenticated()

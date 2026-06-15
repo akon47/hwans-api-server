@@ -103,6 +103,14 @@ public class BlogController {
         return post.withHits(post.getHits() + 1);
     }
 
+    @ApiOperation(value = "관련 게시글 조회", notes = "해당 게시글과 태그가 겹치는 공개 게시글을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/related")
+    public List<SimplePostDto> getRelatedPosts(@ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                               @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
+                                               @ApiParam(value = "조회할 최대 개수") @RequestParam(required = false, defaultValue = "5") int size) {
+        return blogService.getRelatedPosts(blogId, postUrl, size);
+    }
+
     @ApiOperation(value = "블로그 정보 조회", notes = "블로그 정보를 조회한다.", tags = "블로그")
     @GetMapping(value = "/v1/blog/{blogId}")
     public BlogDetailsDto getBlogDetails(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,

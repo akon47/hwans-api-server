@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,6 +58,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select post from Post as post where post.deleted = false and (:findPublicPostOnly is false or post.openType = 'PUBLIC') and post.account.blogId = :blogId and (post.postSeries.series.seriesUrl = :seriesUrl) order by post.postSeries.createdAt")
     List<Post> findByBlogIdAndSeriesUrl(@Param("blogId") String blogId, @Param("seriesUrl") String seriesUrl, @Param("findPublicPostOnly") boolean findPublicPostOnly);
+
+    @Query("select distinct post from Post as post left outer join post.postTags as postTag left outer join postTag.tag as tag where post.deleted = false and post.openType = 'PUBLIC' and post.id <> :postId and tag.name in :tagNames order by post.createdAt desc, post.id desc")
+    List<Post> findRelatedPosts(@Param("postId") UUID postId, @Param("tagNames") Collection<String> tagNames, Pageable page);
 
     @Modifying
     @Query("update Post x set x.hits = :hits where x.id = :id")

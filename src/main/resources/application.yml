@@ -92,3 +92,9 @@ server:
   forward-headers-strategy: native
 attachments:
   path: /var/attachments/
+blog:
+  # RSS 피드의 item link 및 guid 생성에 사용할 블로그 웹 주소
+  web-base-url: https://hwanstory.kr
+  rss:
+    title: Hwan'Story
+    description: 직접 만든 블로그 서비스.

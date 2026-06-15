@@ -265,6 +265,26 @@ public interface BlogService {
     List<SimplePostDto> getBlogSeriesPosts(String blogId, String seriesUrl, boolean findPublicPostOnly);
 
     /**
+     * 해당 게시글과 태그가 겹치는 공개 게시글(관련 게시글)을 조회합니다.
+     * 겹치는 태그 수가 많은 순, 같으면 최신 작성 순으로 정렬됩니다.
+     *
+     * @param blogId  기준 게시글의 blogId
+     * @param postUrl 기준 게시글의 postUrl
+     * @param size    조회를 원하는 최대 개수
+     * @return 관련 게시글 목록
+     */
+    List<SimplePostDto> getRelatedPosts(String blogId, String postUrl, int size);
+
+    /**
+     * RSS 피드 생성을 위해 최근 공개 게시글을 조회합니다.
+     *
+     * @param blogId 특정 블로그만 조회할 경우 해당 blogId, 전체 조회 시 null
+     * @param size   조회를 원하는 최대 개수
+     * @return 최근 공개 게시글 목록
+     */
+    List<SimplePostDto> getRecentPublicPosts(String blogId, int size);
+
+    /**
      * 해당 게시글의 조회수를 증가시킵니다.
      * @param postId 게시글 Id
      */
