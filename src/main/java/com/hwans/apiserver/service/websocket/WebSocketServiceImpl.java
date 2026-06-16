@@ -30,6 +30,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import javax.annotation.PreDestroy;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +55,22 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     private final Object userLock = new Object();
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    // 모든 아웃바운드 전송을 단일 스레드로 직렬화한다.
+    // SockJS 세션 라이프사이클 콜백(afterConnectionEstablished/Closed 등)은 해당 세션의 내부 락을
+    // 보유한 상태로 호출되므로, 그 안에서 직접 sendMessage(=다른 세션의 락 획득)를 호출하면
+    // 동시 접속 시 세션 간 락 순서가 역전되어 데드락이 발생한다. 전송을 별도 스레드로 분리하면
+    // 콜백 스레드는 어떤 세션 락도 잡지 않고, 전송 스레드는 항상 한 번에 한 세션 락만 잡는다.
+    private final ExecutorService sendExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        var thread = new Thread(runnable, "websocket-send");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    @PreDestroy
+    public void shutdownSendExecutor() {
+        sendExecutor.shutdownNow();
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -177,7 +197,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 .build();
         var serialized = serialize(message);
         if (serialized != null) {
-            sessions.values().forEach(session -> trySend(session, serialized));
+            sessions.values().forEach(session -> enqueueSend(session, serialized));
         }
     }
 
@@ -188,7 +208,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         var message = MessageDto.builder().type(MessageType.POST_VIEWER_COUNTS).payload(counts).build();
         var serialized = serialize(message);
         if (serialized != null) {
-            trySend(session, serialized);
+            enqueueSend(session, serialized);
         }
     }
 
@@ -196,7 +216,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         var message = MessageDto.builder().type(MessageType.SESSION_COUNT_CHANGED).payload(sessions.size()).build();
         var serialized = serialize(message);
         if (serialized != null) {
-            sessions.values().forEach(session -> trySend(session, serialized));
+            sessions.values().forEach(session -> enqueueSend(session, serialized));
         }
     }
 
@@ -257,6 +277,16 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         }
     }
 
+    // 실제 전송을 전용 단일 스레드로 위임한다(데드락 방지). trySend는 이 스레드에서만 호출되므로
+    // 어떤 호출 스레드도 세션 락을 잡지 않는다.
+    private void enqueueSend(WebSocketSession session, String text) {
+        try {
+            sendExecutor.execute(() -> trySend(session, text));
+        } catch (RejectedExecutionException e) {
+            // 종료 중이라 큐에 넣지 못한 경우 무시한다.
+        }
+    }
+
     private void trySend(WebSocketSession session, String text) {
         try {
             if (session.isOpen()) {
@@ -289,7 +319,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         var message = MessageDto.builder().type(MessageType.NOTIFICATION).payload(notification).build();
         var serialized = serialize(message);
         if (serialized != null) {
-            targets.forEach(session -> trySend(session, serialized));
+            targets.forEach(session -> enqueueSend(session, serialized));
         }
     }
 
