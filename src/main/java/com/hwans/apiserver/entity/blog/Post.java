@@ -42,6 +42,9 @@ public class Post extends BaseEntity {
     private boolean deleted;
     @Column
     private Integer hits;
+    // 예약 발행 시각 (openType == SCHEDULED 인 경우 이 시각에 PUBLIC 으로 전환된다)
+    @Column
+    private java.time.LocalDateTime scheduledAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
@@ -135,6 +138,18 @@ public class Post extends BaseEntity {
 
     public void setHits(Integer hits) {
         this.hits = hits;
+    }
+
+    public void setScheduledAt(java.time.LocalDateTime scheduledAt) {
+        this.scheduledAt = scheduledAt;
+    }
+
+    /**
+     * 예약 발행된 게시글을 공개 상태로 전환합니다.
+     */
+    public void publish() {
+        this.openType = OpenType.PUBLIC;
+        this.scheduledAt = null;
     }
 
     public String getSeriesUrl() {

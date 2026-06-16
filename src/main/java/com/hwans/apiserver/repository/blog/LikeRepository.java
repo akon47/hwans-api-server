@@ -22,4 +22,8 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
 
     @Query("select x from Like as x where x.post.deleted = false and x.account.blogId = :blogId and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
     List<Like> findByIdLessThanOrderByIdDesc(@Param("blogId") String blogId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
+
+    // 작성자 통계용: 해당 블로그 게시글이 받은 총 좋아요 수
+    @Query("select count(x) from Like as x where x.post.deleted = false and x.post.account.blogId = :blogId")
+    long countByBlogId(@Param("blogId") String blogId);
 }

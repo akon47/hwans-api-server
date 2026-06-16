@@ -58,4 +58,6 @@ public class SimplePostDto implements Serializable {
     int hits;
     @ApiModelProperty(value = "시리즈 Url")
     String seriesUrl;
+    @ApiModelProperty(value = "예약 발행 시각")
+    LocalDateTime scheduledAt;
 }

@@ -40,4 +40,6 @@ public class CommentDto implements Serializable {
     @ApiModelProperty(value = "작성 시간", required = true)
     @NotBlank
     LocalDateTime createdAt;
+    @ApiModelProperty(value = "좋아요 수")
+    int likeCount;
 }

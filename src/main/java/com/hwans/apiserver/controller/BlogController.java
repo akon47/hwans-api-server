@@ -233,6 +233,94 @@ public class BlogController {
         return exists ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
+    @ApiOperation(value = "게시글 북마크 하기", notes = "게시글을 북마크(나중에 읽기)에 추가한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/bookmarks")
+    public void bookmarkPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                             @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                             @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
+        blogService.bookmarkPost(userAuthenticationDetails.getId(), blogId, postUrl);
+    }
+
+    @ApiOperation(value = "게시글 북마크 취소하기", notes = "게시글 북마크를 취소한다.", tags = "블로그")
+    @DeleteMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/bookmarks")
+    public void unbookmarkPost(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                               @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                               @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
+        blogService.unbookmarkPost(userAuthenticationDetails.getId(), blogId, postUrl);
+    }
+
+    @ApiOperation(value = "게시글을 북마크 했는지 여부", notes = "게시글을 북마크 했는지 여부를 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/bookmarks")
+    public ResponseEntity isBookmarked(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                       @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                       @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
+        var exists = blogService.isBookmarked(userAuthenticationDetails.getId(), blogId, postUrl);
+        return exists ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @ApiOperation(value = "내가 북마크 한 게시글 목록 조회", notes = "현재 사용자가 북마크 한 게시글 목록을 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/me/bookmarks")
+    public SliceDto<SimplePostDto> getMyBookmarks(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                                  @ApiParam(value = "페이징 조회를 위한 CursorId") @RequestParam(required = false) Optional<UUID> cursorId,
+                                                  @ApiParam(value = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size) {
+        return blogService.getMyBookmarkedPosts(userAuthenticationDetails.getId(), cursorId, size);
+    }
+
+    @ApiOperation(value = "게시글에 이모지 반응 추가", notes = "게시글에 이모지 반응을 추가한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/reactions")
+    public void addReaction(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                            @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                            @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
+                            @ApiParam(value = "이모지", required = true) @RequestBody @Valid final ReactionRequestDto reactionRequestDto) {
+        blogService.addReaction(userAuthenticationDetails.getId(), blogId, postUrl, reactionRequestDto.getEmoji());
+    }
+
+    @ApiOperation(value = "게시글 이모지 반응 취소", notes = "게시글의 이모지 반응을 취소한다.", tags = "블로그")
+    @DeleteMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/reactions")
+    public void removeReaction(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                               @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                               @ApiParam(value = "게시글 Url") @PathVariable String postUrl,
+                               @ApiParam(value = "이모지", required = true) @RequestParam String emoji) {
+        blogService.removeReaction(userAuthenticationDetails.getId(), blogId, postUrl, emoji);
+    }
+
+    @ApiOperation(value = "게시글 이모지 반응 집계 조회", notes = "게시글의 이모지 반응 집계를 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/reactions")
+    public List<ReactionDto> getReactions(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                                          @ApiParam(value = "블로그 Id") @PathVariable String blogId,
+                                          @ApiParam(value = "게시글 Url") @PathVariable String postUrl) {
+        var accountId = userAuthenticationDetails == null ? null : userAuthenticationDetails.getId();
+        return blogService.getReactions(accountId, blogId, postUrl);
+    }
+
+    @ApiOperation(value = "댓글 좋아요 하기", notes = "댓글을 좋아요 한다.", tags = "블로그")
+    @PostMapping(value = "/v1/blog/comments/{commentId}/likes")
+    public void likeComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                            @ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
+        blogService.likeComment(userAuthenticationDetails.getId(), commentId);
+    }
+
+    @ApiOperation(value = "댓글 좋아요 취소하기", notes = "댓글 좋아요를 취소한다.", tags = "블로그")
+    @DeleteMapping(value = "/v1/blog/comments/{commentId}/likes")
+    public void unlikeComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                              @ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
+        blogService.unlikeComment(userAuthenticationDetails.getId(), commentId);
+    }
+
+    @ApiOperation(value = "댓글에 좋아요를 했는지 여부", notes = "댓글에 좋아요를 했는지 여부를 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/comments/{commentId}/likes")
+    public ResponseEntity isCommentLiked(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                         @ApiParam(value = "댓글 Id") @PathVariable UUID commentId) {
+        var exists = blogService.isCommentLiked(userAuthenticationDetails.getId(), commentId);
+        return exists ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @ApiOperation(value = "내 블로그 통계 조회", notes = "현재 사용자(블로그 작성자)의 통계 정보를 조회한다.", tags = "블로그")
+    @GetMapping(value = "/v1/blog/me/statistics")
+    public BlogStatisticsDto getMyStatistics(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails) {
+        return blogService.getMyBlogStatistics(userAuthenticationDetails.getId());
+    }
+
     @ApiOperation(value = "시리즈 생성", notes = "시리즈를 작성한다.", tags = "블로그")
     @PostMapping(value = "/v1/blog/series")
     public SeriesDto createSeries(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,

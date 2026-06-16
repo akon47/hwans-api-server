@@ -78,4 +78,21 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     // 관리자 통계용: 삭제되지 않은 전체 게시글 수
     long countByDeletedIsFalse();
+
+    // 예약 발행 대상: 발행 시각이 지난 SCHEDULED 게시글
+    @Query("select x from Post as x where x.deleted = false and x.openType = 'SCHEDULED' and x.scheduledAt is not null and x.scheduledAt <= :now")
+    List<Post> findScheduledPostsToPublish(@Param("now") LocalDateTime now);
+
+    // 작성자 통계용
+    @Query("select count(x) from Post as x where x.deleted = false and x.account.blogId = :blogId")
+    long countAllByBlogId(@Param("blogId") String blogId);
+
+    @Query("select count(x) from Post as x where x.deleted = false and x.openType = 'PUBLIC' and x.account.blogId = :blogId")
+    long countPublicByBlogId(@Param("blogId") String blogId);
+
+    @Query("select coalesce(sum(x.hits), 0) from Post as x where x.deleted = false and x.account.blogId = :blogId")
+    long sumHitsByBlogId(@Param("blogId") String blogId);
+
+    @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and x.account.blogId = :blogId order by x.hits desc, x.createdAt desc, x.id desc")
+    List<Post> findTopByBlogIdOrderByHitsDesc(@Param("blogId") String blogId, Pageable page);
 }

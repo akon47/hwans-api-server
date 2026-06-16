@@ -302,4 +302,68 @@ public interface BlogService {
      * 현재 캐시되어 있는 게시글 조회수를 DB에 반영합니다.
      */
     void updatePostHitsFromCache();
+
+    /**
+     * 발행 시각이 도달한 예약(SCHEDULED) 게시글을 공개(PUBLIC) 상태로 전환합니다.
+     *
+     * @return 발행된 게시글 수
+     */
+    int publishScheduledPosts();
+
+    /**
+     * 게시글을 북마크(나중에 읽기)에 추가합니다.
+     */
+    void bookmarkPost(UUID actorAccountId, String blogId, String postUrl);
+
+    /**
+     * 게시글 북마크를 취소합니다.
+     */
+    void unbookmarkPost(UUID actorAccountId, String blogId, String postUrl);
+
+    /**
+     * 현재 해당 게시글을 북마크 했는지 여부를 반환합니다.
+     */
+    boolean isBookmarked(UUID accountId, String blogId, String postUrl);
+
+    /**
+     * 현재 사용자가 북마크한 게시글 목록을 조회합니다.
+     */
+    SliceDto<SimplePostDto> getMyBookmarkedPosts(UUID accountId, Optional<UUID> cursorId, int size);
+
+    /**
+     * 게시글에 이모지 반응을 추가합니다.
+     */
+    void addReaction(UUID actorAccountId, String blogId, String postUrl, String emoji);
+
+    /**
+     * 게시글의 이모지 반응을 취소합니다.
+     */
+    void removeReaction(UUID actorAccountId, String blogId, String postUrl, String emoji);
+
+    /**
+     * 게시글의 이모지 반응 집계를 조회합니다.
+     *
+     * @param accountId 현재 사용자 계정 Id (비로그인 시 null)
+     */
+    List<ReactionDto> getReactions(UUID accountId, String blogId, String postUrl);
+
+    /**
+     * 댓글에 좋아요를 합니다.
+     */
+    void likeComment(UUID actorAccountId, UUID commentId);
+
+    /**
+     * 댓글 좋아요를 취소합니다.
+     */
+    void unlikeComment(UUID actorAccountId, UUID commentId);
+
+    /**
+     * 현재 해당 댓글에 좋아요를 했는지 여부를 반환합니다.
+     */
+    boolean isCommentLiked(UUID accountId, UUID commentId);
+
+    /**
+     * 현재 사용자(블로그 작성자)의 통계 정보를 조회합니다.
+     */
+    BlogStatisticsDto getMyBlogStatistics(UUID accountId);
 }

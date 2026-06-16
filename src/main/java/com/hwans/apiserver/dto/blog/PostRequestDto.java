@@ -46,4 +46,6 @@ public class PostRequestDto implements Serializable {
     @ApiModelProperty(value = "시리즈 Url", example = "series_url")
     @Length(max = 320)
     String seriesUrl;
+    @ApiModelProperty(value = "예약 발행 시각 (openType 이 SCHEDULED 인 경우 사용)")
+    java.time.LocalDateTime scheduledAt;
 }

@@ -6,8 +6,11 @@ import com.hwans.apiserver.dto.blog.*;
 import com.hwans.apiserver.dto.common.SliceDto;
 import com.hwans.apiserver.entity.account.Account;
 import com.hwans.apiserver.entity.account.role.RoleType;
+import com.hwans.apiserver.entity.blog.Bookmark;
+import com.hwans.apiserver.entity.blog.CommentLike;
 import com.hwans.apiserver.entity.blog.Like;
 import com.hwans.apiserver.entity.blog.Post;
+import com.hwans.apiserver.entity.blog.PostReaction;
 import com.hwans.apiserver.entity.blog.Tag;
 import com.hwans.apiserver.event.blog.CreateCommentEvent;
 import com.hwans.apiserver.event.blog.CreatePostEvent;
@@ -18,8 +21,11 @@ import com.hwans.apiserver.mapper.SeriesMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.account.FollowRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
+import com.hwans.apiserver.repository.blog.BookmarkRepository;
+import com.hwans.apiserver.repository.blog.CommentLikeRepository;
 import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.blog.LikeRepository;
+import com.hwans.apiserver.repository.blog.PostReactionRepository;
 import com.hwans.apiserver.repository.blog.PostRepository;
 import com.hwans.apiserver.repository.blog.SeriesRepository;
 import com.hwans.apiserver.repository.blog.tag.TagRepository;
@@ -34,6 +40,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -60,6 +67,9 @@ public class BlogServiceImpl implements BlogService {
     private final FollowRepository followRepository;
     private final AttachmentRepository attachmentRepository;
     private final SeriesRepository seriesRepository;
+    private final BookmarkRepository bookmarkRepository;
+    private final PostReactionRepository postReactionRepository;
+    private final CommentLikeRepository commentLikeRepository;
     private final AccountMapper accountMapper;
     private final PostMapper postMapper;
     private final CommentMapper commentMapper;
@@ -72,6 +82,24 @@ public class BlogServiceImpl implements BlogService {
      * 레디스에 조회수 저장을 위한 키값
      */
     private static final String POST_HITS_KEY = "post-hits";
+
+    /**
+     * 허용되는 이모지 반응과 DB 저장용 ASCII 키의 매핑.
+     * 순서는 표시 우선순위로 사용된다. (LinkedHashMap)
+     */
+    private static final java.util.Map<String, String> EMOJI_TO_KEY = new java.util.LinkedHashMap<>() {{
+        put("👍", "thumbsup");
+        put("❤️", "heart");
+        put("😄", "smile");
+        put("🎉", "tada");
+        put("🤔", "thinking");
+        put("👏", "clap");
+        put("🚀", "rocket");
+        put("👀", "eyes");
+    }};
+
+    private static final java.util.Map<String, String> KEY_TO_EMOJI = EMOJI_TO_KEY.entrySet().stream()
+            .collect(Collectors.toMap(java.util.Map.Entry::getValue, java.util.Map.Entry::getKey));
 
     @Override
     public BlogDetailsDto getBlogDetails(String blogId, boolean findPublicPostOnly) {
@@ -196,6 +224,7 @@ public class BlogServiceImpl implements BlogService {
         foundPost.setTitle(postRequestDto.getTitle());
         foundPost.setContent(postRequestDto.getContent());
         foundPost.setOpenType(postRequestDto.getOpenType());
+        foundPost.setScheduledAt(postRequestDto.getScheduledAt());
         foundPost.updatePostUrlIfNecessary();
         foundPost.setTags(resolveTags(postRequestDto));
 
@@ -597,6 +626,172 @@ public class BlogServiceImpl implements BlogService {
                 postRepository.updateHits(UUID.fromString(postId), Integer.valueOf(hits));
             }
         });
+    }
+
+    @Override
+    @Transactional
+    public int publishScheduledPosts() {
+        var now = LocalDateTime.now();
+        var duePosts = postRepository.findScheduledPostsToPublish(now);
+        duePosts.forEach(Post::publish);
+        if (!duePosts.isEmpty()) {
+            log.info("예약 게시글 {}건을 발행했습니다.", duePosts.size());
+        }
+        return duePosts.size();
+    }
+
+    @Override
+    @Transactional
+    public void bookmarkPost(UUID actorAccountId, String blogId, String postUrl) {
+        var account = getActiveAccount(actorAccountId);
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        if (bookmarkRepository.existsByAccountIdAndPostId(account.getId(), foundPost.getId())) {
+            return;
+        }
+        bookmarkRepository.save(Bookmark.builder().account(account).post(foundPost).build());
+    }
+
+    @Override
+    @Transactional
+    public void unbookmarkPost(UUID actorAccountId, String blogId, String postUrl) {
+        var account = getActiveAccount(actorAccountId);
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        bookmarkRepository
+                .findByAccountIdAndPostId(account.getId(), foundPost.getId())
+                .ifPresent(bookmarkRepository::delete);
+    }
+
+    @Override
+    public boolean isBookmarked(UUID accountId, String blogId, String postUrl) {
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        return bookmarkRepository.existsByAccountIdAndPostId(accountId, foundPost.getId());
+    }
+
+    @Override
+    public SliceDto<SimplePostDto> getMyBookmarkedPosts(UUID accountId, Optional<UUID> cursorId, int size) {
+        List<Bookmark> found;
+        if (cursorId.isPresent()) {
+            var cursor = bookmarkRepository
+                    .findById(cursorId.get())
+                    .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+            found = bookmarkRepository.findByIdLessThanOrderByIdDesc(accountId, cursor.getId(), cursor.getCreatedAt(), PageRequest.of(0, size + 1));
+        } else {
+            found = bookmarkRepository.findAllByOrderByIdDesc(accountId, PageRequest.of(0, size + 1));
+        }
+        return SliceDto.of(found, size, cursorId.isEmpty(), x -> postMapper.EntityToSimplePostDto(x.getPost()), Bookmark::getId);
+    }
+
+    @Override
+    @Transactional
+    public void addReaction(UUID actorAccountId, String blogId, String postUrl, String emoji) {
+        var reactionKey = EMOJI_TO_KEY.get(emoji);
+        if (reactionKey == null) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+        var account = getActiveAccount(actorAccountId);
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        if (postReactionRepository.findByAccountIdAndPostIdAndReactionKey(account.getId(), foundPost.getId(), reactionKey).isPresent()) {
+            return;
+        }
+        postReactionRepository.save(PostReaction.builder().account(account).post(foundPost).reactionKey(reactionKey).build());
+    }
+
+    @Override
+    @Transactional
+    public void removeReaction(UUID actorAccountId, String blogId, String postUrl, String emoji) {
+        var reactionKey = EMOJI_TO_KEY.get(emoji);
+        if (reactionKey == null) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+        var account = getActiveAccount(actorAccountId);
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        postReactionRepository
+                .findByAccountIdAndPostIdAndReactionKey(account.getId(), foundPost.getId(), reactionKey)
+                .ifPresent(postReactionRepository::delete);
+    }
+
+    @Override
+    public List<ReactionDto> getReactions(UUID accountId, String blogId, String postUrl) {
+        var foundPost = postRepository
+                .findByBlogIdAndPostUrlAndDeletedIsFalse(blogId, postUrl)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        var reactions = postReactionRepository.findByPostId(foundPost.getId());
+        var counts = new java.util.LinkedHashMap<String, Long>();
+        var myKeys = new java.util.HashSet<String>();
+        for (var reaction : reactions) {
+            counts.merge(reaction.getReactionKey(), 1L, Long::sum);
+            if (accountId != null && reaction.getAccount().getId().equals(accountId)) {
+                myKeys.add(reaction.getReactionKey());
+            }
+        }
+        return counts.entrySet().stream()
+                // 알 수 없는(더 이상 허용되지 않는) 키는 표시에서 제외한다.
+                .filter(e -> KEY_TO_EMOJI.containsKey(e.getKey()))
+                .map(e -> ReactionDto.builder()
+                        .emoji(KEY_TO_EMOJI.get(e.getKey()))
+                        .count(e.getValue())
+                        .reacted(myKeys.contains(e.getKey()))
+                        .build())
+                .sorted(Comparator.comparingLong(ReactionDto::getCount).reversed())
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void likeComment(UUID actorAccountId, UUID commentId) {
+        var account = getActiveAccount(actorAccountId);
+        var foundComment = commentRepository
+                .findByIdAndDeletedIsFalse(commentId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
+        if (commentLikeRepository.existsByAccountIdAndCommentId(account.getId(), foundComment.getId())) {
+            return;
+        }
+        commentLikeRepository.save(CommentLike.builder().account(account).comment(foundComment).build());
+    }
+
+    @Override
+    @Transactional
+    public void unlikeComment(UUID actorAccountId, UUID commentId) {
+        var account = getActiveAccount(actorAccountId);
+        commentLikeRepository
+                .findByAccountIdAndCommentId(account.getId(), commentId)
+                .ifPresent(commentLikeRepository::delete);
+    }
+
+    @Override
+    public boolean isCommentLiked(UUID accountId, UUID commentId) {
+        return commentLikeRepository.existsByAccountIdAndCommentId(accountId, commentId);
+    }
+
+    @Override
+    public BlogStatisticsDto getMyBlogStatistics(UUID accountId) {
+        var account = getActiveAccount(accountId);
+        if (account.isGuest()) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST);
+        }
+        var blogId = account.getBlogId();
+        var popularPosts = postRepository.findTopByBlogIdOrderByHitsDesc(blogId, PageRequest.of(0, 5))
+                .stream()
+                .map(postMapper::EntityToSimplePostDto)
+                .toList();
+        return BlogStatisticsDto.builder()
+                .totalPosts(postRepository.countAllByBlogId(blogId))
+                .publicPosts(postRepository.countPublicByBlogId(blogId))
+                .totalHits(postRepository.sumHitsByBlogId(blogId))
+                .totalLikes(likeRepository.countByBlogId(blogId))
+                .totalComments(commentRepository.countByBlogId(blogId))
+                .popularPosts(popularPosts)
+                .build();
     }
 
     private Long getPostHitsFromCache(Post post) {

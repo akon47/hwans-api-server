@@ -45,9 +45,15 @@ public class Comment extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
+    @OneToMany(mappedBy = "comment")
+    private final Set<CommentLike> likes = new HashSet<>();
 
     public int getChildrenCount() {
         return this.children.size();
+    }
+
+    public int getLikeCount() {
+        return this.likes.size();
     }
 
     public UUID getParentId() {
