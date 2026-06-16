@@ -16,4 +16,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
      * @return 존재하는 경우 댓글 엔티티
      */
     Optional<Comment> findByIdAndDeletedIsFalse(UUID id);
+
+    // 관리자 통계용: 삭제되지 않은 전체 댓글 수
+    long countByDeletedIsFalse();
 }

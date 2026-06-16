@@ -1,9 +1,14 @@
 package com.hwans.apiserver.repository.account;
 
 import com.hwans.apiserver.entity.account.Account;
+import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,4 +64,16 @@ public interface AccountRepository extends JpaRepository<Account, UUID>, Account
      * @return 존재하는 경우 계정 엔티티
      */
     Optional<Account> findByBlogId(String blogId);
+
+    // === 관리자용 조회 (손님 계정 제외, 정지된 계정 포함) ===
+
+    @Query("select a from Account as a where not exists (select ar from AccountRole as ar where ar.account = a and ar.role.name = 'ROLE_GUEST') and (:search is null or a.email like concat('%',:search,'%') or a.name like concat('%',:search,'%') or a.blogId like concat('%',:search,'%')) order by a.createdAt desc, a.id desc")
+    List<Account> findAllForAdmin(@Param("search") String search, Pageable page);
+
+    @Query("select a from Account as a where not exists (select ar from AccountRole as ar where ar.account = a and ar.role.name = 'ROLE_GUEST') and (:search is null or a.email like concat('%',:search,'%') or a.name like concat('%',:search,'%') or a.blogId like concat('%',:search,'%')) and ((a.createdAt < :createdAt and a.id < :id) or (a.createdAt < :createdAt)) order by a.createdAt desc, a.id desc")
+    List<Account> findAllForAdminByCursor(@Param("search") String search, @Param("id") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
+
+    // 손님이 아닌 활성 회원 수
+    @Query("select count(a) from Account as a where a.deleted = false and not exists (select ar from AccountRole as ar where ar.account = a and ar.role.name = 'ROLE_GUEST')")
+    long countActiveMembers();
 }

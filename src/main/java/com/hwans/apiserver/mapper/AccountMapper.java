@@ -2,6 +2,7 @@ package com.hwans.apiserver.mapper;
 
 import com.hwans.apiserver.dto.account.CreateAccountDto;
 import com.hwans.apiserver.dto.account.AccountDto;
+import com.hwans.apiserver.dto.account.SimpleAccountDto;
 import com.hwans.apiserver.entity.account.Account;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public abstract class AccountMapper {
     public abstract Account toEntity(CreateAccountDto userCreateDto);
 
     public abstract AccountDto toDto(Account account);
+
+    public abstract SimpleAccountDto toSimpleDto(Account account);
 
     @Named("encodePassword")
     String encoderPassword(String password) {

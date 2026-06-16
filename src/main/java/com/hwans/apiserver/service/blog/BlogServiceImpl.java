@@ -16,6 +16,7 @@ import com.hwans.apiserver.mapper.CommentMapper;
 import com.hwans.apiserver.mapper.PostMapper;
 import com.hwans.apiserver.mapper.SeriesMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
+import com.hwans.apiserver.repository.account.FollowRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.blog.LikeRepository;
@@ -56,6 +57,7 @@ public class BlogServiceImpl implements BlogService {
     private final CommentRepository commentRepository;
     private final TagRepository tagRepository;
     private final LikeRepository likeRepository;
+    private final FollowRepository followRepository;
     private final AttachmentRepository attachmentRepository;
     private final SeriesRepository seriesRepository;
     private final AccountMapper accountMapper;
@@ -90,6 +92,8 @@ public class BlogServiceImpl implements BlogService {
         return BlogDetailsDto.builder()
                 .owner(accountMapper.toDto(foundAccount))
                 .postCount(posts.size())
+                .followerCount(followRepository.countByFollowingId(foundAccount.getId()))
+                .followingCount(followRepository.countByFollowerId(foundAccount.getId()))
                 .tagCounts(tagCounts)
                 .build();
     }

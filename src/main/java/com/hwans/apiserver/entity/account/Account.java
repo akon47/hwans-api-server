@@ -115,6 +115,21 @@ public class Account extends BaseEntity {
         this.profileImage = attachment;
     }
 
+    /**
+     * 계정을 정지(비활성화)한다. 정지된 계정은 로그인 및 블로그 접근이 차단된다.
+     */
+    public void disable() {
+        this.deleted = true;
+        this.clearRefreshToken();
+    }
+
+    /**
+     * 정지된 계정을 복구한다.
+     */
+    public void restore() {
+        this.deleted = false;
+    }
+
     public void update(ModifyAccountDto modifyAccountDto) {
         this.name = modifyAccountDto.getName();
         this.biography = modifyAccountDto.getBiography();

@@ -61,4 +61,13 @@ public interface NotificationService {
      * @return 생성된 알림 데이터 모델
      */
     NotificationDto createCommentNotification(CommentDto comment);
+
+    /**
+     * 새 팔로워 알림을 생성합니다.
+     *
+     * @param followerAccountId  팔로우를 한 사용자 Id
+     * @param followingAccountId 팔로우를 당한(알림을 받을) 사용자 Id
+     * @return 생성된 알림 데이터 모델
+     */
+    NotificationDto createFollowNotification(UUID followerAccountId, UUID followingAccountId);
 }

@@ -13,7 +13,11 @@ public enum NotificationType {
     /**
      * 새로운 댓글 알림
      */
-    COMMENT(Values.COMMENT);
+    COMMENT(Values.COMMENT),
+    /**
+     * 새로운 팔로워 알림
+     */
+    FOLLOW(Values.FOLLOW);
 
     private final String name;
 
@@ -22,5 +26,9 @@ public enum NotificationType {
          * 새로운 댓글 알림
          */
         public static final String COMMENT = "NOTIFICATION_COMMENT";
+        /**
+         * 새로운 팔로워 알림
+         */
+        public static final String FOLLOW = "NOTIFICATION_FOLLOW";
     }
 }

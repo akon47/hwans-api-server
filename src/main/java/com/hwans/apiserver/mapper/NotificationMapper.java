@@ -1,8 +1,10 @@
 package com.hwans.apiserver.mapper;
 
 import com.hwans.apiserver.dto.notification.CommentNotificationDto;
+import com.hwans.apiserver.dto.notification.FollowNotificationDto;
 import com.hwans.apiserver.dto.notification.NotificationDto;
 import com.hwans.apiserver.entity.notification.CommentNotification;
+import com.hwans.apiserver.entity.notification.FollowNotification;
 import com.hwans.apiserver.entity.notification.Notification;
 import org.mapstruct.Mapper;
 import org.mapstruct.SubclassMapping;
@@ -13,5 +15,6 @@ import org.mapstruct.SubclassMapping;
 @Mapper(componentModel = "spring")
 public interface NotificationMapper {
     @SubclassMapping(target = CommentNotificationDto.class, source = CommentNotification.class)
+    @SubclassMapping(target = FollowNotificationDto.class, source = FollowNotification.class)
     NotificationDto EntityToNotificationDto(Notification notification);
 }

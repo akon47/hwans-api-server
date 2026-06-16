@@ -65,7 +65,17 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query("select post from Post as post where post.deleted = false and post.openType = 'PUBLIC' and post.id in :ids")
     List<Post> findPublicPostsByIds(@Param("ids") Collection<UUID> ids);
 
+    // 특정 사용자가 팔로우하는 사람들의 공개 게시글 목록 (최신순)
+    @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and x.account.id in (select f.following.id from Follow as f where f.follower.id = :followerId) order by x.createdAt desc, x.id desc")
+    List<Post> findFollowingPostsByOrderByCreatedAtDesc(@Param("followerId") UUID followerId, Pageable page);
+
+    @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and x.account.id in (select f.following.id from Follow as f where f.follower.id = :followerId) and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
+    List<Post> findFollowingPostsByCursorLessThanOrderByCreatedAtDesc(@Param("followerId") UUID followerId, @Param("id") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
+
     @Modifying
     @Query("update Post x set x.hits = :hits where x.id = :id")
     Integer updateHits(@Param("id") UUID id, @Param("hits") Integer hits);
+
+    // 관리자 통계용: 삭제되지 않은 전체 게시글 수
+    long countByDeletedIsFalse();
 }

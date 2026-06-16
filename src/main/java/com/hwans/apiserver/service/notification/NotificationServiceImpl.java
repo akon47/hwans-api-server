@@ -6,6 +6,7 @@ import com.hwans.apiserver.dto.blog.CommentDto;
 import com.hwans.apiserver.dto.common.SliceDto;
 import com.hwans.apiserver.dto.notification.NotificationDto;
 import com.hwans.apiserver.entity.notification.CommentNotification;
+import com.hwans.apiserver.entity.notification.FollowNotification;
 import com.hwans.apiserver.entity.notification.Notification;
 import com.hwans.apiserver.mapper.NotificationMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
@@ -152,6 +153,43 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 트랜잭션 커밋 이후에 실시간 알림을 전송하여, 롤백 시 유령 알림이 전달되는 것을 방지한다.
         pushNotificationAfterCommit(foundAccount.getEmail(), notificationDto);
+        return notificationDto;
+    }
+
+    /**
+     * 새 팔로워 알림을 생성합니다.
+     *
+     * @param followerAccountId  팔로우를 한 사용자 Id
+     * @param followingAccountId 팔로우를 당한(알림을 받을) 사용자 Id
+     * @return 생성된 알림 데이터 모델
+     */
+    @Override
+    @Transactional
+    public NotificationDto createFollowNotification(UUID followerAccountId, UUID followingAccountId) {
+        if (followerAccountId.equals(followingAccountId)) {
+            return null;
+        }
+
+        var receiverAccount = accountRepository
+                .findByIdAndDeletedIsFalse(followingAccountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        if (receiverAccount.isGuest()) {
+            return null;
+        }
+
+        var followerAccount = accountRepository
+                .findByIdAndDeletedIsFalse(followerAccountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+
+        var notification = FollowNotification.builder()
+                .account(receiverAccount)
+                .follower(followerAccount)
+                .build();
+
+        var savedNotification = notificationRepository.save(notification);
+        var notificationDto = notificationMapper.EntityToNotificationDto(savedNotification);
+
+        pushNotificationAfterCommit(receiverAccount.getEmail(), notificationDto);
         return notificationDto;
     }
 
