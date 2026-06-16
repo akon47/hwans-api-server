@@ -11,11 +11,14 @@ import com.hwans.apiserver.mapper.NotificationMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.blog.CommentRepository;
 import com.hwans.apiserver.repository.notification.NotificationRepository;
+import com.hwans.apiserver.service.websocket.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final AccountRepository accountRepository;
     private final CommentRepository commentRepository;
     private final NotificationMapper notificationMapper;
+    private final WebSocketService webSocketService;
 
     /**
      * 알림 목록을 조회한다.
@@ -144,6 +148,27 @@ public class NotificationServiceImpl implements NotificationService {
                 .build();
 
         var savedNotification = notificationRepository.save(notification);
-        return notificationMapper.EntityToNotificationDto(savedNotification);
+        var notificationDto = notificationMapper.EntityToNotificationDto(savedNotification);
+
+        // 트랜잭션 커밋 이후에 실시간 알림을 전송하여, 롤백 시 유령 알림이 전달되는 것을 방지한다.
+        pushNotificationAfterCommit(foundAccount.getEmail(), notificationDto);
+        return notificationDto;
+    }
+
+    /**
+     * 현재 트랜잭션이 성공적으로 커밋된 뒤 수신자의 웹소켓 세션으로 알림을 전송한다.
+     * 활성 트랜잭션이 없으면 즉시 전송한다.
+     */
+    private void pushNotificationAfterCommit(String accountEmail, NotificationDto notification) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    webSocketService.sendNotification(accountEmail, notification);
+                }
+            });
+        } else {
+            webSocketService.sendNotification(accountEmail, notification);
+        }
     }
 }
