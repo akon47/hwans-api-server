@@ -60,6 +60,16 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     // 세션 Id별 클라이언트 정보(IP/User-Agent/접속 시각). 핸드셰이크 때 캡처한 값을 보관한다.
     private final Map<String, ClientInfo> sessionClientInfo = new ConcurrentHashMap<>();
 
+    // 세션 Id별 마지막 생존 신호(인바운드 메시지 수신) 시각(epoch millis).
+    // 네트워크 전환(예: Wi-Fi -> LTE)이나 비정상 종료로 half-open 상태가 된 세션은
+    // close 프레임이 도달하지 않아 afterConnectionClosed가 호출되지 않는다.
+    // 리퍼(reapStaleSessions)가 이 값을 기준으로 죽은 세션을 수거한다.
+    private final Map<String, Long> sessionLastSeen = new ConcurrentHashMap<>();
+
+    // 마지막 생존 신호 이후 이 시간이 지나면 죽은 세션으로 보고 수거한다.
+    // 클라이언트는 25초 주기로 PING을 보내므로, 75초는 핑 약 3회 누락에 해당한다.
+    private static final long STALE_SESSION_TIMEOUT_MILLIS = 75_000L;
+
     /**
      * 핸드셰이크 시점에 캡처한 세션의 클라이언트 정보.
      */
@@ -94,17 +104,55 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     public void afterConnectionEstablished(WebSocketSession session) {
         sessions.put(session.getId(), session);
         sessionClientInfo.put(session.getId(), extractClientInfo(session));
+        sessionLastSeen.put(session.getId(), System.currentTimeMillis());
         notifySessionCountChanged();
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        var sessionId = session.getId();
+        cleanupSession(session.getId());
+    }
+
+    /**
+     * 세션과 관련된 모든 상태를 제거하고 전체 세션 수 변경을 브로드캐스트한다.
+     * 정상 종료(afterConnectionClosed)와 리퍼(reapStaleSessions) 양쪽에서 호출되며,
+     * 각 맵 제거/clearViewingPost/unregisterUser는 모두 멱등하므로 중복 호출되어도 안전하다.
+     */
+    private void cleanupSession(String sessionId) {
         sessions.remove(sessionId);
         sessionClientInfo.remove(sessionId);
+        sessionLastSeen.remove(sessionId);
         clearViewingPost(sessionId);
         unregisterUser(sessionId);
         notifySessionCountChanged();
+    }
+
+    /**
+     * 마지막 생존 신호가 타임아웃을 넘긴 세션을 닫고 수거한다. 스케줄러가 주기적으로 호출한다.
+     * half-open 상태로 남은 유령 세션(네트워크 전환/비정상 종료)을 정리하는 유일한 경로다.
+     */
+    @Override
+    public void reapStaleSessions() {
+        var deadline = System.currentTimeMillis() - STALE_SESSION_TIMEOUT_MILLIS;
+        var staleSessionIds = sessionLastSeen.entrySet().stream()
+                .filter(entry -> entry.getValue() < deadline)
+                .map(Map.Entry::getKey)
+                .toList();
+        for (var sessionId : staleSessionIds) {
+            var session = sessions.get(sessionId);
+            if (session != null) {
+                try {
+                    // half-open 소켓의 close는 FIN만 보내고 즉시 반환하므로 블로킹되지 않는다.
+                    session.close(CloseStatus.SESSION_NOT_RELIABLE);
+                } catch (Exception e) {
+                    log.trace("stale websocket session close failed trace: ", e);
+                }
+            }
+            cleanupSession(sessionId);
+        }
+        if (!staleSessionIds.isEmpty()) {
+            log.info("reaped {} stale websocket session(s)", staleSessionIds.size());
+        }
     }
 
     private ClientInfo extractClientInfo(WebSocketSession session) {
@@ -121,6 +169,8 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
+            // 어떤 메시지든 도착했다는 건 세션이 살아 있다는 뜻이므로 생존 시각을 갱신한다.
+            sessionLastSeen.put(session.getId(), System.currentTimeMillis());
             var received = objectMapper.readValue(message.getPayload(), MessageDto.class);
             if (received.getType() == null) {
                 return;
@@ -129,6 +179,9 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 case VIEW_POST -> updateViewingPost(session.getId(), asPostId(received.getPayload()));
                 case WATCH_POSTS -> sendPostViewerCounts(session, asPostIdList(received.getPayload()));
                 case AUTHENTICATE -> authenticate(session, received.getPayload());
+                case PING -> {
+                    // 생존 신호. lastSeen은 위에서 이미 갱신했으므로 추가 처리는 없다.
+                }
                 default -> {
                     // 그 외 타입은 서버 -> 클라이언트 전용이므로 무시한다.
                 }

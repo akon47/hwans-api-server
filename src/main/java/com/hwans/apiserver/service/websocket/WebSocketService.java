@@ -43,4 +43,11 @@ public interface WebSocketService {
      * @param notification 전송할 알림
      */
     void sendNotification(String accountEmail, NotificationDto notification);
+
+    /**
+     * 마지막 생존 신호(PING 등 인바운드 메시지)가 일정 시간 이상 없는 죽은 세션을 닫고 수거한다.
+     * 네트워크 전환(예: Wi-Fi -> LTE)이나 비정상 종료로 close 프레임이 도달하지 않아
+     * afterConnectionClosed가 호출되지 않는 half-open 세션을 정리하기 위한 것으로, 스케줄러가 주기적으로 호출한다.
+     */
+    void reapStaleSessions();
 }
