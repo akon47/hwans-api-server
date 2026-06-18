@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.hwans.apiserver.common.config.ClientInfoHandshakeInterceptor;
 import com.hwans.apiserver.common.security.jwt.JwtStatus;
 import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.notification.NotificationDto;
+import com.hwans.apiserver.dto.websocket.ActiveViewerSessionDto;
 import com.hwans.apiserver.dto.websocket.MessageDto;
 import com.hwans.apiserver.dto.websocket.MessageType;
 import com.hwans.apiserver.dto.websocket.PostViewerCountDto;
@@ -21,6 +23,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,6 +57,15 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     // 사용자-세션 매핑(userSessions / sessionUser) 변경의 원자성을 보장하기 위한 락
     private final Object userLock = new Object();
 
+    // 세션 Id별 클라이언트 정보(IP/User-Agent/접속 시각). 핸드셰이크 때 캡처한 값을 보관한다.
+    private final Map<String, ClientInfo> sessionClientInfo = new ConcurrentHashMap<>();
+
+    /**
+     * 핸드셰이크 시점에 캡처한 세션의 클라이언트 정보.
+     */
+    private record ClientInfo(String ip, String userAgent, LocalDateTime connectedAt) {
+    }
+
     private final JwtTokenProvider jwtTokenProvider;
 
     // 모든 아웃바운드 전송을 단일 스레드로 직렬화한다.
@@ -81,6 +93,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         sessions.put(session.getId(), session);
+        sessionClientInfo.put(session.getId(), extractClientInfo(session));
         notifySessionCountChanged();
     }
 
@@ -88,9 +101,21 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         var sessionId = session.getId();
         sessions.remove(sessionId);
+        sessionClientInfo.remove(sessionId);
         clearViewingPost(sessionId);
         unregisterUser(sessionId);
         notifySessionCountChanged();
+    }
+
+    private ClientInfo extractClientInfo(WebSocketSession session) {
+        var attributes = session.getAttributes();
+        var ip = asString(attributes.get(ClientInfoHandshakeInterceptor.CLIENT_IP), "unknown");
+        var userAgent = asString(attributes.get(ClientInfoHandshakeInterceptor.USER_AGENT), "unknown");
+        return new ClientInfo(ip, userAgent, LocalDateTime.now());
+    }
+
+    private String asString(Object value, String defaultValue) {
+        return (value instanceof String s && !s.isBlank()) ? s : defaultValue;
     }
 
     @Override
@@ -334,6 +359,31 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
             });
         }
         return result;
+    }
+
+    @Override
+    public List<ActiveViewerSessionDto> getActiveViewerPresences() {
+        // 시청 상태 스냅샷을 락 안에서 복사한 뒤, 락 밖에서 클라이언트/사용자 정보를 조합한다.
+        // (sessionClientInfo / sessionUser는 ConcurrentHashMap이므로 단일 get은 락 없이 안전하다 → 락 중첩 회피)
+        Map<String, String> viewingSnapshot;
+        synchronized (presenceLock) {
+            viewingSnapshot = new HashMap<>(sessionViewingPost);
+        }
+        var result = new ArrayList<ActiveViewerSessionDto>(viewingSnapshot.size());
+        viewingSnapshot.forEach((sessionId, postId) -> {
+            var info = sessionClientInfo.get(sessionId);
+            var ip = info != null ? info.ip() : "unknown";
+            var userAgent = info != null ? info.userAgent() : "unknown";
+            var connectedAt = info != null ? info.connectedAt() : null;
+            var email = sessionUser.get(sessionId);
+            result.add(new ActiveViewerSessionDto(ip, userAgent, connectedAt, postId, email));
+        });
+        return result;
+    }
+
+    @Override
+    public int getSessionCount() {
+        return sessions.size();
     }
 
     @Override

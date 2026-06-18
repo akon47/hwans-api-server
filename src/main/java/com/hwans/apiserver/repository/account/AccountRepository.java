@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +33,14 @@ public interface AccountRepository extends JpaRepository<Account, UUID>, Account
      * @return 찾은 경우 계정 엔티티
      */
     Optional<Account> findByIdAndDeletedIsFalse(UUID id);
+
+    /**
+     * 이메일 목록에 해당하는 삭제되지 않은 계정들을 한 번에 조회한다. (N+1 방지)
+     *
+     * @param emails 조회할 이메일 목록
+     * @return 찾은 계정 엔티티 목록
+     */
+    List<Account> findAllByEmailInAndDeletedIsFalse(Collection<String> emails);
 
     /**
      * 이메일로 계정이 존재하는지 여부를 반환한다.

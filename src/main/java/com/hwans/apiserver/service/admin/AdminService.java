@@ -1,6 +1,7 @@
 package com.hwans.apiserver.service.admin;
 
 import com.hwans.apiserver.dto.admin.AdminAccountDto;
+import com.hwans.apiserver.dto.admin.AdminActiveViewersDto;
 import com.hwans.apiserver.dto.admin.AdminStatisticsDto;
 import com.hwans.apiserver.dto.common.SliceDto;
 
@@ -41,4 +42,11 @@ public interface AdminService {
      * @return 통계 정보
      */
     AdminStatisticsDto getStatistics();
+
+    /**
+     * 현재 실시간으로 게시글을 보고 있는 접속자 목록(IP/회원/User-Agent/게시글)을 조회한다.
+     *
+     * @return 실시간 접속자 목록과 전체 접속 세션 수
+     */
+    AdminActiveViewersDto getActiveViewers();
 }

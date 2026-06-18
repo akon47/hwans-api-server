@@ -2,6 +2,7 @@ package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.admin.AdminAccountDto;
+import com.hwans.apiserver.dto.admin.AdminActiveViewersDto;
 import com.hwans.apiserver.dto.admin.AdminStatisticsDto;
 import com.hwans.apiserver.dto.common.SliceDto;
 import com.hwans.apiserver.service.admin.AdminService;
@@ -50,5 +51,11 @@ public class AdminController {
     @GetMapping(value = "/v1/admin/statistics")
     public AdminStatisticsDto getStatistics() {
         return adminService.getStatistics();
+    }
+
+    @ApiOperation(value = "실시간 접속자 조회", notes = "현재 게시글을 보고 있는 접속자(IP/회원/User-Agent/게시글) 목록을 조회한다.", tags = "어드민")
+    @GetMapping(value = "/v1/admin/active-viewers")
+    public AdminActiveViewersDto getActiveViewers() {
+        return adminService.getActiveViewers();
     }
 }
