@@ -1,13 +1,11 @@
+# Secrets (datasource url/username/password, redis, oauth2 client ids/secrets, jwt keys, mail login) are NOT in the image.
+# They come from /config/application-secret.yml on the server (profile 'secret', mounted from /home/kimhwan/blog-config).
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: 'jdbc:mysql://{datasource-url}?serverTimezone=Asia/Seoul'
   sql:
     init:
       mode: never
-  redis:
-    host: '{redis-host}'
-    port: {redis-port}
   jpa:
     database: mysql
     show-sql: false
@@ -20,33 +18,4 @@ spring:
           auth: true
           starttls:
             enable: true
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: '{oauth2-google-client-id}'
-            client-secret: '{oauth2-google-secret}'
-          github:
-            client-id: '{oauth2-github-client-id}'
-            client-secret: '{oauth2-github-secret}'
-          facebook:
-            client-id: '{oauth2-facebook-client-id}'
-            client-secret: '{oauth2-facebook-secret}'
-          naver:
-            client-id: '{oauth2-naver-client-id}'
-            client-secret: '{oauth2-naver-secret}'
-          kakao:
-            client-id: '{oauth2-kakao-client-id}'
-            client-secret: '{oauth2-kakao-secret}'
-          discord:
-            client-id: '{oauth2-discord-client-id}'
-            client-secret: '{oauth2-discord-secret}'
-          microsoft:
-            client-id: '{oauth2-microsoft-client-id}'
-            client-secret: '{oauth2-microsoft-secret}'
-jwt:
-  base64-access-secret: '{jwt-base64-access-secret}'
-  base64-refresh-secret: '{jwt-base64-refresh-secret}'
-  base64-register-secret: '{jwt-base64-register-secret}'
 allowedOrigins: 'https://hwanstory.kr'
