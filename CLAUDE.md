@@ -32,6 +32,7 @@ Hwan'Story 블로그 서비스의 백엔드 API 서버. (프론트엔드는 별�
 - 컨트롤러 엔드포인트 prefix는 `/api` (`Constants.API_PREFIX`). 보안 설정상 `GET /api/v1/blog/**` 는 인증 없이 허용된다.
   - 단, 사용자별 GET(예: `.../likes`, `.../bookmarks`, `/v1/blog/me/**`)은 `@CurrentAuthenticationDetails`(필수)를 쓰므로 `WebSecurityConfig`에서 `blog/**` permitAll보다 **먼저** `authenticated()` 매처를 명시해야 한다(순서 중요).
 - 커서 페이징 응답은 `SliceDto.of(found, size, first, mapper, idExtractor)` 정적 팩토리로 생성한다.
+- `@GeneratedValue` 가 붙은 id 는 엔티티를 만들 때 직접 채우지 않는다. Hibernate 6 는 id 가 있는 새 엔티티를 분리된(detached) 것으로 보고 `save()` 에서 merge 를 시도해 `StaleObjectStateException`(Row was updated or deleted…)을 던진다. 손님 댓글의 `Account.createGuestAccount` 가 id 를 미리 넣어 Boot 3.5 전환 뒤 손님 댓글이 500 을 내던 것을 2026-11-06 에 고쳤다.
 - 리포지토리 `@Query`의 명명 파라미터: `@Param("x")`가 있으면 그 이름이, 없으면 **Java 파라미터명**이 JPQL `:x`와 일치해야 한다(`-parameters` 컴파일). `@Param`은 반드시 `org.springframework.data.repository.query.Param` 이다 — 예전에 lettuce 의 `@Param`을 잘못 import 해서 애너테이션이 무시되고 Java 이름으로 바인딩되던 것을 2026-11-06 Boot 3 전환 때 바로잡았고, 그때 드러난 `@Param("uuid")` 오타 5곳도 고쳤다. 새 쿼리를 추가하면 `scratchpad/check_params.py` 같은 식으로 JPQL 이름과 바인딩 이름을 대조한다.
 - RSS 피드는 `/rss`, `/rss/{blogId}`, sitemap은 `/sitemap.xml` (모두 인증 불필요, `WebSecurityConfig`에 permitAll 등록). 링크 생성용 프론트 주소는 `blog.web-base-url` 설정값.
 - 게시글 공개유형 `OpenType`: `PUBLIC/PRIVATE/DRAFT/SCHEDULED`. 공개 목록 쿼리는 `openType='PUBLIC'`만 노출. 예약 발행은 `Post.scheduledAt` + `PublishScheduler`(매분)가 시각 도달 시 `publish()`로 PUBLIC 전환.

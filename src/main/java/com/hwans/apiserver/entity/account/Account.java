@@ -150,9 +150,9 @@ public class Account extends BaseEntity {
      * @return 계정
      */
     public static Account createGuestAccount(String name, String encodedPassword) {
+        // id 는 JPA 가 생성하도록 비워 둔다. (직접 채우면 Hibernate 6 가 분리된 엔티티로 보고 merge 를 시도해 실패한다)
         var uuid = UUID.randomUUID();
         var account = new Account();
-        account.id = uuid;
         account.name = name;
         account.password = encodedPassword;
         account.email = uuid.toString();
