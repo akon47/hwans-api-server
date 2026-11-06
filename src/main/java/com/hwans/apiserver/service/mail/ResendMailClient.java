@@ -25,7 +25,7 @@ public class ResendMailClient {
     private final RestClient restClient;
 
     public ResendMailClient(@Value("${mail.resend.api-key:}") String apiKey,
-                            @Value("${mail.resend.from:Hwan'Story <noreply@kimhwan.kr>}") String from) {
+                            @Value("${mail.resend.from:Hwan'Story <noreply@hwanstory.kr>}") String from) {
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.from = from;
         this.restClient = RestClient.builder().baseUrl(ENDPOINT).build();

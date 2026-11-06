@@ -94,8 +94,8 @@ server:
 mail:
   resend:
     api-key: ${RESEND_API_KEY:}
-    # 보내는 주소의 도메인은 Resend 에 인증돼 있어야 한다 (kimhwan.kr 은 Proxmox 알림용으로 이미 인증됨)
-    from: "Hwan'Story <noreply@kimhwan.kr>"
+    # 보내는 주소의 도메인은 Resend 에 인증돼 있어야 한다 (hwanstory.kr: Cloudflare 에 resend._domainkey TXT, send/rsend CNAME 등록됨)
+    from: "Hwan'Story <noreply@hwanstory.kr>"
 attachments:
   path: /var/attachments/
 blog:

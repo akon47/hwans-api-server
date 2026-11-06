@@ -21,7 +21,7 @@ Hwan'Story 블로그 서비스의 백엔드 API 서버. (프론트엔드는 별�
 ## 로컬 실행
 - 로컬 프로파일은 H2(인메모리) + 임베디드 Redis를 사용한다: `SPRING_PROFILES_ACTIVE=local`
 - 로컬 기동 시 `SPRING_MAIL_HOST` 환경변수가 있어야 `JavaMailSender` 빈 누락 오류 없이 시작된다.
-- **메일 발송은 Resend HTTP API**(`ResendMailClient`, `mail.resend.api-key`/`mail.resend.from`). 키는 운영 VM `/home/kimhwan/blog-config/application-secret.yml` 의 `mail.resend.api-key` 로 주고(환경변수 `RESEND_API_KEY` 도 됨), 비어 있으면 예전 `spring.mail` SMTP 로 보낸다(자체 메일 VM 103 은 제거 예정). 보내는 주소 도메인은 Resend 에 인증돼 있어야 한다 — 기본값은 Proxmox 알림에 이미 쓰는 `noreply@kimhwan.kr`, `hwanstory.kr` 로 바꾸려면 Resend 에 도메인을 추가해 DNS 를 인증한 뒤 `mail.resend.from` 을 바꾼다.
+- **메일 발송은 Resend HTTP API**(`ResendMailClient`, `mail.resend.api-key`/`mail.resend.from`). 키는 운영 VM `/home/kimhwan/blog-config/application-secret.yml` 의 `mail.resend.api-key` 로 주고(환경변수 `RESEND_API_KEY` 도 됨), 비어 있으면 예전 `spring.mail` SMTP 로 보낸다(자체 메일 VM 103 은 제거 예정). 보내는 주소는 `noreply@hwanstory.kr`(Resend 에 hwanstory.kr 도메인이 인증돼 있고 Cloudflare 에 `resend._domainkey` TXT·`send`/`rsend` CNAME 이 있다). 운영 API 키는 hwanstory.kr 발송 전용(sending-only, 도메인 제한)이라 다른 도메인으로 보내면 403 이 난다.
 - `data.sql`이 로컬에서 시드 데이터를 넣는다.
 
 ## 배포 (중요)
