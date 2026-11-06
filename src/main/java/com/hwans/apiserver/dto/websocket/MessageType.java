@@ -30,6 +30,8 @@ public enum MessageType {
     CURSOR_MOVE,
     // 클라이언트 -> 서버: 내 커서 옆에 띄울 짧은 말(payload: {message}; 빈 문자열이면 지움)
     CURSOR_CHAT,
+    // 클라이언트 -> 서버: 마우스가 창을 벗어나거나 탭이 숨겨져 내 커서를 당장 지워 달라는 요청(payload 없음)
+    CURSOR_LEAVE,
     // 서버 -> 클라이언트: 이 세션의 Id(payload: 문자열). 커서 묶음에서 자기 커서를 걸러내는 데 쓴다
     CURSOR_SELF,
     // 서버 -> 클라이언트: 같은 글을 읽는 사람들의 커서 묶음(payload: CursorBatchDto). 약 100ms 마다 한 번

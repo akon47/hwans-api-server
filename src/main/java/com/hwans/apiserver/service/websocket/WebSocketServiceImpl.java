@@ -212,6 +212,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 case AUTHENTICATE -> authenticate(session, received.getPayload());
                 case CURSOR_MOVE -> handleCursorMove(session, received.getPayload());
                 case CURSOR_CHAT -> handleCursorChat(session, received.getPayload());
+                case CURSOR_LEAVE -> handleCursorLeave(session);
                 case PING -> {
                     // 생존 신호. lastSeen은 위에서 이미 갱신했으므로 추가 처리는 없다.
                 }
@@ -447,8 +448,9 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         }
         cursorDisabledNotified.remove(sessionId);
 
-        var x = clamp(asDouble(map.get("x")), 0, 1);
-        var y = clamp(asDouble(map.get("y")), 0, 1);
+        // 본문 영역 기준 비율. 본문 밖(좌우 여백·위아래)도 따라오도록 조금 넘치는 값을 허용한다.
+        var x = clamp(asDouble(map.get("x")), -1.5, 2.5);
+        var y = clamp(asDouble(map.get("y")), -0.5, 1.5);
         var name = truncate(asString(map.get("name"), "익명").strip(), CURSOR_NAME_MAX);
         var color = sanitizeColor(asString(map.get("color"), "#3b5bdb"));
         var cursors = postCursors.computeIfAbsent(postId, key -> new ConcurrentHashMap<>());
@@ -494,6 +496,16 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         cursors.put(sessionId, new CursorStateDto(existing.id(), existing.x(), existing.y(), existing.name(), existing.color(),
                 message.isEmpty() ? null : message, message.isEmpty() ? 0L : now, now));
         dirtyCursorPosts.add(postId);
+    }
+
+    /**
+     * 마우스가 창 밖으로 나갔거나 탭이 숨겨졌을 때: 커서만 지운다 (글은 계속 보는 중이므로 시청자 수는 그대로).
+     */
+    private void handleCursorLeave(WebSocketSession session) {
+        var postId = sessionViewingPost.get(session.getId());
+        if (postId != null) {
+            dropCursor(postId, session.getId());
+        }
     }
 
     /**
