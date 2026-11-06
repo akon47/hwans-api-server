@@ -15,5 +15,5 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> 
     List<ChatMessage> findAllByOrderByIdDesc(@Param("chatRoomId") UUID chatRoomId, Pageable page);
 
     @Query("select x from ChatMessage as x where x.deleted = false and x.chatRoom.id = :chatRoomId and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
-    List<ChatMessage> findByIdLessThanOrderByIdDesc(@Param("chatRoomId") UUID chatRoomId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
+    List<ChatMessage> findByIdLessThanOrderByIdDesc(@Param("chatRoomId") UUID chatRoomId, @Param("id") UUID id, @Param("createdAt") LocalDateTime createdAt, Pageable page);
 }

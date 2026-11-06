@@ -22,13 +22,13 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
      */
     @Modifying
     @Query("update Notification x set x.deleted = True where x.account.id = :accountId and x.deleted != True")
-    int setDeletedAllByAccountId(@Param("uuid") UUID accountId);
+    int setDeletedAllByAccountId(@Param("accountId") UUID accountId);
 
     Optional<Notification> findByAccountIdAndId(UUID accountId, UUID id);
 
     @Query("select x from Notification as x where x.account.id = :accountId and x.deleted = false and (:findUnreadNotificationOnly is false or x.readAt is not null) order by x.createdAt desc, x.id desc")
-    List<Notification> findAllByOrderByIdDesc(@Param("uuid") UUID accountId, boolean findUnreadNotificationOnly, Pageable page);
+    List<Notification> findAllByOrderByIdDesc(@Param("accountId") UUID accountId, boolean findUnreadNotificationOnly, Pageable page);
 
     @Query("select x from Notification as x where x.account.id = :accountId and x.deleted = false and (:findUnreadNotificationOnly is false or x.readAt is not null) and ((x.createdAt < :createdAt and x.id < :id) or (x.createdAt < :createdAt)) order by x.createdAt desc, x.id desc")
-    List<Notification> findByIdLessThanOrderByIdDesc(@Param("uuid") UUID accountId, @Param("uuid") UUID id, @Param("createdAt") LocalDateTime createdAt, boolean findUnreadNotificationOnly, Pageable page);
+    List<Notification> findByIdLessThanOrderByIdDesc(@Param("accountId") UUID accountId, @Param("id") UUID id, @Param("createdAt") LocalDateTime createdAt, boolean findUnreadNotificationOnly, Pageable page);
 }
