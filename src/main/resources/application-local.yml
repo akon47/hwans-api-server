@@ -67,4 +67,7 @@ logging:
         type:
           descriptor:
             sql: trace
+blog:
+  web-base-url: http://localhost:8081
+  api-base-url: http://localhost:8080
 allowedOrigins: 'http://localhost:8081'

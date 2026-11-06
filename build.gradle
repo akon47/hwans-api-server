@@ -43,6 +43,14 @@ dependencies {
 	// Tika
 	implementation group: 'org.apache.tika', name: 'tika-core', version: '1.24'
 
+	// Markdown → HTML + HTML 정화 (검색엔진 크롤러용 서버 렌더 페이지 /prerender)
+	implementation 'org.commonmark:commonmark:0.24.0'
+	implementation 'org.commonmark:commonmark-ext-gfm-tables:0.24.0'
+	implementation 'org.commonmark:commonmark-ext-gfm-strikethrough:0.24.0'
+	implementation 'org.commonmark:commonmark-ext-autolink:0.24.0'
+	implementation 'org.commonmark:commonmark-ext-task-list-items:0.24.0'
+	implementation 'org.jsoup:jsoup:1.17.2'
+
 	// Embedded Redis for Local Development
 	implementation ('it.ozimov:embedded-redis:0.7.3') { exclude group: "org.slf4j", module: "slf4j-simple" }
 

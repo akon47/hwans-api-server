@@ -3,6 +3,7 @@ package com.hwans.apiserver.common.security.jwt;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
+import com.hwans.apiserver.service.token.AccessTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,7 +31,10 @@ public class JwtFilter extends GenericFilterBean {
         var jwt = tokenProvider.extractTokenFromHeader(bearerToken);
         var requestURI = httpServletRequest.getRequestURI();
 
-        if (StringUtils.hasText(jwt)) {
+        if (StringUtils.hasText(jwt) && jwt.startsWith(AccessTokenService.PREFIX)) {
+            // 개인 액세스 토큰(hsp_…)은 AccessTokenAuthenticationFilter 가 처리한다.
+            log.trace("personal access token presented, skipping JWT filter, uri: {}", requestURI);
+        } else if (StringUtils.hasText(jwt)) {
             var jwtStatus = tokenProvider.validateAccessToken(jwt);
             if (jwtStatus == JwtStatus.ACCESS) {
                 var authentication = tokenProvider.getAuthentication(jwt);

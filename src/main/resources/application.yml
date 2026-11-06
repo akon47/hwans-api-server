@@ -93,8 +93,15 @@ server:
 attachments:
   path: /var/attachments/
 blog:
-  # RSS 피드의 item link 및 guid 생성에 사용할 블로그 웹 주소
+  # RSS 피드의 item link 및 guid 생성, 기기 로그인 승인 주소(/device)에 사용할 블로그 웹 주소
   web-base-url: https://hwanstory.kr
+  # 에이전트 가이드(/agents.md)와 도우미 스크립트에 채워 넣을 이 API 서버의 공개 주소
+  api-base-url: https://api.hwanstory.kr
+  access-token:
+    # 기기 로그인으로 발급되는 토큰의 기본 만료 일수 (승인할 때 바꿀 수 있음, 0 = 무기한)
+    default-days: 30
+    # 기기 로그인 코드의 유효 시간 (분)
+    device-code-minutes: 10
   rss:
     title: Hwan'Story
     description: 직접 만든 블로그 서비스.

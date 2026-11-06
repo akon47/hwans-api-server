@@ -13,6 +13,8 @@ import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
+import com.hwans.apiserver.repository.token.AccessTokenRepository;
+import com.hwans.apiserver.repository.token.DeviceAuthorizationRepository;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -35,6 +37,8 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final AttachmentRepository attachmentRepository;
+    private final AccessTokenRepository accessTokenRepository;
+    private final DeviceAuthorizationRepository deviceAuthorizationRepository;
     private final AccountMapper accountMapper;
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtTokenProvider jwtTokenProvider;
@@ -130,6 +134,9 @@ public class AccountServiceImpl implements AccountService {
                 .findByIdAndDeletedIsFalse(accountId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         attachmentRepository.deleteAllByAccountId(accountId);
+        // 계정이 발급한 개인 액세스 토큰과 승인한 기기 로그인 요청도 함께 지운다.
+        accessTokenRepository.deleteAllByAccount_Id(accountId);
+        deviceAuthorizationRepository.deleteAllByAccount_Id(accountId);
         accountRepository.delete(foundAccount);
     }
 

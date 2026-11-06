@@ -1,0 +1,21 @@
+# Hwan'Story
+
+> Personal blog service at {{SITE_URL}} (API at {{API_URL}}). Accounts own blogs; blogs have markdown posts (public / private / draft / scheduled), series, tags, comments and reactions.
+
+AI agents: read the full guide before doing anything. It covers sign-in without pasting secrets (device flow), who you are acting as, reading all of the owner's posts (including drafts), writing and editing posts as markdown, reviewing existing posts (summary / title / tags / broken links), series, image upload, and the rules (new posts are drafts unless told otherwise; never print tokens; revoke the token when done). The guide is written in Korean; commands are copy-paste ready for this server.
+
+## Docs
+
+- [Agent guide]({{API_URL}}/agents.md): the complete how-to and API reference (markdown)
+- [Rendered guide]({{SITE_URL}}/agents): the same guide as a web page
+- [OpenAPI]({{API_URL}}/v3/api-docs): full API specification (Swagger UI at {{API_URL}}/swagger-ui/index.html)
+
+## Tools
+
+- [Device-flow sign-in helper, bash]({{API_URL}}/cli/login.sh): `bash login.sh start "client name" posts`, then `bash login.sh wait`; stores the token in ~/.config/hwanstory/auth-header without printing it
+- [Device-flow sign-in helper, PowerShell]({{API_URL}}/cli/login.ps1)
+
+## Public feeds
+
+- [RSS]({{API_URL}}/rss): latest public posts across all blogs ({{API_URL}}/rss/{blogId} per blog)
+- [Sitemap]({{API_URL}}/sitemap.xml)

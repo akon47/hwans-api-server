@@ -1,13 +1,16 @@
 package com.hwans.apiserver.common.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.common.security.jwt.JwtAccessDeniedHandler;
 import com.hwans.apiserver.common.security.jwt.JwtAuthenticationEntryPoint;
 import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
+import com.hwans.apiserver.common.security.token.AccessTokenAuthenticationFilter;
 import com.hwans.apiserver.service.authentication.oauth2.CustomOAuth2UserService;
 import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2AuthenticationFailureHandler;
 import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.hwans.apiserver.service.authentication.oauth2.repository.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.hwans.apiserver.service.token.AccessTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,11 +43,22 @@ public class WebSecurityConfig {
             "/swagger-resources/**",
     };
 
+    // 인증 없이 허용할 AI 에이전트용 문서·도우미 스크립트, 검색엔진 크롤러용 서버 렌더 페이지 Urls
+    private static final String[] AGENT_DOCS_PERMIT_URL_ARRAY = {
+            "/agents.md",
+            "/llms.txt",
+            "/cli/**",
+            "/prerender",
+            "/prerender/**",
+    };
+
     private final JwtTokenProvider tokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final AccessTokenService accessTokenService;
+    private final ObjectMapper objectMapper;
 
     @Value("${allowedOrigins}")
     private String[] allowedOrigins;
@@ -94,6 +108,7 @@ public class WebSecurityConfig {
                     .antMatchers("/stomp/**").permitAll()
                     .antMatchers("/ws/**").permitAll()
                     .antMatchers(HttpMethod.GET, "/rss", "/rss/**", "/sitemap.xml").permitAll()
+                    .antMatchers(HttpMethod.GET, AGENT_DOCS_PERMIT_URL_ARRAY).permitAll()
                     .antMatchers(
                             HttpMethod.GET,
                             Constants.API_PREFIX + "/v1/blog/*/posts/*/likes",
@@ -119,6 +134,9 @@ public class WebSecurityConfig {
                             Constants.API_PREFIX + "/v1/accounts/reset-password-email",
                             Constants.API_PREFIX + "/v1/authentication/token",
                             Constants.API_PREFIX + "/v1/authentication/refresh-token",
+                            // 기기 로그인: 에이전트가 코드를 요청하고 토큰을 폴링하는 엔드포인트 (승인/거부는 로그인 필요)
+                            Constants.API_PREFIX + "/v1/authentication/device/code",
+                            Constants.API_PREFIX + "/v1/authentication/device/token",
                             Constants.API_PREFIX + "/v1/blog/*/posts/*/comments/guest",
                             Constants.API_PREFIX + "/v1/blog/comments/*/guest").permitAll()
                     .antMatchers(Constants.API_PREFIX + "/v1/admin/**").hasRole("ADMIN")
@@ -126,7 +144,8 @@ public class WebSecurityConfig {
                     .anyRequest().authenticated()
                     //.and().headers().frameOptions().disable() // Local H2 콘솔 테스트 환경
                 .and()
-                    .apply(new JwtSecurityConfig(tokenProvider, redisTemplate))
+                    .apply(new JwtSecurityConfig(tokenProvider, redisTemplate,
+                            new AccessTokenAuthenticationFilter(accessTokenService, objectMapper)))
                 .and()
                     .oauth2Login()
                     .authorizationEndpoint()

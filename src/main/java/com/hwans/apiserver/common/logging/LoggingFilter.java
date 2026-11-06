@@ -1,6 +1,7 @@
 package com.hwans.apiserver.common.logging;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.hwans.apiserver.common.Constants;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,26 @@ import java.util.stream.Collectors;
 public class LoggingFilter extends OncePerRequestFilter {
     private static final String RequestType = "REQUEST";
     private static final String ResponseType = "RESPONSE";
+    private static final String MASKED = "***";
+
+    /**
+     * 값을 로그에 남기지 않을 헤더 (자격증명)
+     */
+    private static final Set<String> SECRET_HEADERS = Set.of(
+            Constants.AUTHORIZATION_HEADER.toLowerCase(),
+            Constants.REFRESH_TOKEN_HEADER.toLowerCase(),
+            "cookie",
+            "set-cookie"
+    );
+
+    /**
+     * 요청·응답 본문을 로그에 남기지 않을 URI 접두어 (비밀번호, 발급된 토큰, 기기 로그인 코드가 오가는 곳)
+     */
+    private static final List<String> SECRET_URI_PREFIXES = List.of(
+            Constants.API_PREFIX + "/v1/authentication/",
+            Constants.API_PREFIX + "/v1/tokens",
+            Constants.API_PREFIX + "/v1/accounts/password"
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -57,10 +78,11 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private static void logRequest(ContentCachingRequestWrapper request) {
         var headers = Collections.list(request.getHeaderNames()).stream()
-                .distinct().collect(Collectors.toMap(name -> name, name -> Collections.list(request.getHeaders(name)).stream().toList()));
+                .distinct().collect(Collectors.toMap(name -> name, name -> maskHeader(name, Collections.list(request.getHeaders(name)))));
 
+        var secretBody = isSecretUri(request);
         var parameters = Collections.list(request.getParameterNames()).stream()
-                .collect(Collectors.toMap(name -> name, request::getParameter));
+                .collect(Collectors.toMap(name -> name, name -> secretBody ? MASKED : request.getParameter(name)));
 
         var marker = Markers.append("io", HttpData
                 .builder()
@@ -69,7 +91,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .method(request.getMethod().toUpperCase())
                 .contentType(request.getContentType())
                 .contentLength(request.getContentLength())
-                .payload(getPayloadString(request.getContentType(), request.getContentAsByteArray()))
+                .payload(secretBody ? null : getPayloadString(request.getContentType(), request.getContentAsByteArray()))
                 .headers(headers)
                 .parameters(parameters)
                 .build());
@@ -79,7 +101,7 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private static void logResponse(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
         var headers = response.getHeaderNames().stream()
-                .distinct().collect(Collectors.toMap(name -> name, name -> response.getHeaders(name).stream().toList()));
+                .distinct().collect(Collectors.toMap(name -> name, name -> maskHeader(name, response.getHeaders(name))));
 
         var marker = Markers.append("io", HttpData
                 .builder()
@@ -89,11 +111,29 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .contentType(response.getContentType())
                 .contentLength(response.getContentSize())
                 .httpStatus(response.getStatus())
-                .payload(getPayloadString(response.getContentType(), response.getContentAsByteArray()))
+                .payload(isSecretUri(request) ? null : getPayloadString(response.getContentType(), response.getContentAsByteArray()))
                 .headers(headers)
                 .build());
 
         log.info(marker, null);
+    }
+
+    /**
+     * 자격증명 헤더는 값 대신 마스킹한 값을 남긴다.
+     */
+    private static List<String> maskHeader(String name, Collection<String> values) {
+        if (SECRET_HEADERS.contains(name.toLowerCase())) {
+            return values.stream().map(value -> MASKED).toList();
+        }
+        return new ArrayList<>(values);
+    }
+
+    /**
+     * 비밀번호·토큰이 본문에 오가는 요청인지 여부
+     */
+    private static boolean isSecretUri(HttpServletRequest request) {
+        var uri = request.getRequestURI();
+        return SECRET_URI_PREFIXES.stream().anyMatch(uri::startsWith);
     }
 
     private static String getRemoteAddr(HttpServletRequest request) {

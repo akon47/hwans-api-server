@@ -43,7 +43,9 @@ public class ErrorCodes {
     public enum Unauthorized implements ErrorCode {
         UNAUTHORIZED("유효한 자격증명이 존재하지 않습니다."),
         INVALID_REFRESH_TOKEN("유효한 RefreshToken이 아닙니다."),
-        TOKEN_EXPIRED("토큰이 만료되었습니다.");
+        TOKEN_EXPIRED("토큰이 만료되었습니다."),
+        INVALID_ACCESS_TOKEN("유효하지 않거나 만료·폐기된 액세스 토큰입니다. 다시 로그인(기기 로그인)하세요."),
+        ;
 
         private final String defaultMessage;
 
@@ -69,6 +71,8 @@ public class ErrorCodes {
     @RequiredArgsConstructor
     public enum Forbidden implements ErrorCode {
         FORBIDDEN("접근 권한이 없습니다."),
+        ACCESS_TOKEN_SCOPE_REQUIRED("이 작업에 필요한 토큰 권한(scope)이 없습니다."),
+        ACCESS_TOKEN_NOT_ALLOWED("액세스 토큰으로는 할 수 없는 작업입니다. 웹에서 직접 하세요."),
         ;
 
         private final String defaultMessage;
@@ -102,6 +106,8 @@ public class ErrorCodes {
         NOT_FOUND_BLOG("블로그를 찾을 수 없습니다."),
         NOT_FOUND_EMAIL("이메일을 찾을 수 없습니다."),
         NOT_FOUND_NOTIFICATION("알림을 찾을 수 없습니다."),
+        NOT_FOUND_ACCESS_TOKEN("액세스 토큰을 찾을 수 없습니다."),
+        NOT_FOUND_DEVICE_CODE("기기 로그인 코드가 없거나 만료되었습니다."),
         ;
 
         private final String defaultMessage;
@@ -147,6 +153,32 @@ public class ErrorCodes {
         @Override
         public HttpStatus getStatus() {
             return HttpStatus.CONFLICT;
+        }
+
+        @Override
+        public String getDefaultMessage() {
+            return this.defaultMessage;
+        }
+    }
+
+    /**
+     * Too Many Requests (429)
+     */
+    @RequiredArgsConstructor
+    public enum TooManyRequests implements ErrorCode {
+        TOO_MANY_REQUESTS("요청이 너무 많습니다. 잠시 후 다시 시도하세요."),
+        ;
+
+        private final String defaultMessage;
+
+        @Override
+        public String getName() {
+            return this.name().toLowerCase();
+        }
+
+        @Override
+        public HttpStatus getStatus() {
+            return HttpStatus.TOO_MANY_REQUESTS;
         }
 
         @Override
