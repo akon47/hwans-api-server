@@ -41,7 +41,7 @@ public class PrerenderService {
     private static final int HOME_SIZE = 30;
     private static final int BLOG_SIZE = 50;
     private static final int RELATED_SIZE = 5;
-    private static final Pattern BLOG_PATH = Pattern.compile("^/(@[A-Za-z0-9_-]+)(?:/(posts|likes|followers|followings)(?:/([A-Za-z0-9_-]+))?)?$");
+    private static final Pattern BLOG_PATH = Pattern.compile("^/(@[A-Za-z0-9_-]+)(?:/(posts|cards|series|likes|followers|followings)(?:/([A-Za-z0-9_-]+))?)?$");
     private static final Set<String> PRIVATE_ROUTES = Set.of(
             "/setting", "/bookmarks", "/signup", "/signin", "/write", "/feed", "/viewing", "/admin", "/admin/live",
             "/social-authentication-redirect", "/reset-password", "/privacy-policy", "/not-found", "/tokens", "/device");
@@ -107,6 +107,14 @@ public class PrerenderService {
                 }
                 if ("posts".equals(section)) {
                     return rest == null ? blogPosts(blogId, tag) : post(blogId, rest);
+                }
+                if ("cards".equals(section) && rest == null) {
+                    // 카드형 글 목록(임베드용)은 글 목록과 같은 내용이므로 같은 페이지를 준다 (canonical 은 /posts)
+                    return blogPosts(blogId, tag);
+                }
+                if ("series".equals(section)) {
+                    // 시리즈 목록·상세는 SPA 전용 (글 자체는 /posts/{url} 로 색인된다)
+                    return noindexStub(blogId.substring(1) + " · 시리즈", "/" + blogId);
                 }
                 if (rest == null) {
                     // 좋아요·팔로워·팔로잉 목록은 색인 가치가 없다 → noindex, 블로그로 안내

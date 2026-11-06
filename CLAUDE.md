@@ -21,6 +21,7 @@ Hwan'Story 블로그 서비스의 백엔드 API 서버. (프론트엔드는 별�
 ## 로컬 실행
 - 로컬 프로파일은 H2(인메모리) + 임베디드 Redis를 사용한다: `SPRING_PROFILES_ACTIVE=local`
 - 로컬 기동 시 `SPRING_MAIL_HOST` 환경변수가 있어야 `JavaMailSender` 빈 누락 오류 없이 시작된다.
+- **메일 발송은 Resend HTTP API**(`ResendMailClient`, `mail.resend.api-key`/`mail.resend.from`). 키는 운영 VM `/home/kimhwan/blog-config/application-secret.yml` 의 `mail.resend.api-key` 로 주고(환경변수 `RESEND_API_KEY` 도 됨), 비어 있으면 예전 `spring.mail` SMTP 로 보낸다(자체 메일 VM 103 은 제거 예정). 보내는 주소 도메인은 Resend 에 인증돼 있어야 한다 — 기본값은 Proxmox 알림에 이미 쓰는 `noreply@kimhwan.kr`, `hwanstory.kr` 로 바꾸려면 Resend 에 도메인을 추가해 DNS 를 인증한 뒤 `mail.resend.from` 을 바꾼다.
 - `data.sql`이 로컬에서 시드 데이터를 넣는다.
 
 ## 배포 (중요)
@@ -45,4 +46,7 @@ Hwan'Story 블로그 서비스의 백엔드 API 서버. (프론트엔드는 별�
   - `LoggingFilter`는 `Authorization`/`X-Auth-Refresh-Token`/쿠키 헤더를 마스킹하고 `/v1/authentication/**`, `/v1/tokens*`, `/v1/accounts/password`의 요청·응답 본문을 남기지 않는다(토큰·비밀번호 유출 방지).
   - 계정 삭제 시 토큰·기기 로그인 요청도 함께 지운다(`AccountServiceImpl.deleteAccount`, FK는 `@OnDelete(CASCADE)`).
 - **검색엔진용 서버 렌더(dynamic rendering)**: `GET /prerender/<SPA 경로>`(인증 불필요, `PrerenderController`/`PrerenderService`)가 홈·`/top`·`/agents`·`/@blog`·`/@blog/posts[?tag=]`·`/@blog/posts/{postUrl}`에 대해 본문(markdown→HTML: commonmark + jsoup 정화 `MarkdownRenderer`)·canonical·OG·JSON-LD가 든 HTML을 만든다. 비공개 글·없는 경로는 **진짜 404**. 프론트 nginx가 크롤러 UA의 페이지 요청만 여기로 프록시한다(사람은 SPA). `/sitemap.xml`·`/rss`도 프론트가 이 서버로 프록시하므로 VM의 별도 SEO 생성 스크립트는 필요 없다.
+- **관리자 API**(`AdminController`, ROLE_ADMIN): 대시보드 `GET /v1/admin/dashboard`(요약·최근 30일 일별 집계·최근 활동; 일별 집계는 createdAt 목록을 가져와 Java 에서 날짜별로 센다), `GET /v1/admin/system`(버전은 `springBoot { buildInfo() }` 의 BuildProperties, 힙·가동 시간·DB/Redis ping·첨부 디스크 여유·예약 글·대기 기기 로그인·살아있는 토큰 수), 글 `GET /v1/admin/posts?search&openType&page&size`(페이지 번호 기반 `PageDto`)·`PUT …/{id}/open-type`·`DELETE …/{id}`, 댓글 `GET /v1/admin/comments`·`DELETE`, 토큰 `GET /v1/admin/tokens`·`DELETE …/{id}`, 권한 `PUT /v1/admin/accounts/{id}/roles {admin}`(자기 자신 회수 불가; `Account.removeRole` 은 컬렉션만 빼므로 `AccountRoleRepository` 로 행을 지운다).
+- **함께 읽는 사람 커서**(`WebSocketServiceImpl`): 클라이언트 `CURSOR_MOVE {x,y,name,color}`(세션당 40ms 미만은 버림)·`CURSOR_CHAT {message}`(150ms) 를 글 Id 별 맵에 두고 `CursorFlushScheduler`(100ms)가 `flushCursors()` 로 그 글을 보는 세션들에게 `CURSOR_BATCH {postId, cursors(최대 40, 최근 이동 순), left, disabled}` 를 한 번에 보낸다. 읽는 사람이 120명을 넘는 글은 커서를 받지 않고 보낸 사람에게만 `disabled` 를 한 번 알린다(방송 안 함). 90초 안 움직인 커서는 제거. 첫 커서 때 `CURSOR_SELF` 로 세션 Id 를 알려 준다. 아무것도 저장하지 않는다.
+- `/@blog/cards` 는 프리렌더에서 글 목록과 같은 페이지(canonical 은 /posts), `/@blog/series[/x]` 는 noindex 스텁.
 - 웹소켓 세션 자체는 클라이언트 IP/User-Agent를 보관하지 않으므로 `ClientInfoHandshakeInterceptor`가 핸드셰이크에서 `X-Forwarded-For`(없으면 `X-Real-IP`/원격주소)와 User-Agent를 세션 attributes에 저장한다(`server.forward-headers-strategy: native` 덕에 프록시 뒤에서도 실제 IP). 어드민 실시간 접속자(`GET /v1/admin/active-viewers`, hasRole ADMIN)는 `WebSocketService.getActiveViewerPresences()`로 현재 시청 세션을 받아 `blogService.getPostsByIds`(공개 글만) + 회원 이름과 조인해 반환한다. IP는 민감정보라 공개 `/ws`가 아닌 admin REST로만 노출.

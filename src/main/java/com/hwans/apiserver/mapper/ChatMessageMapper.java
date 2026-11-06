@@ -9,5 +9,6 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public abstract class ChatMessageMapper {
+    @org.mapstruct.Mapping(source = "author", target = "owner")
     public abstract ChatMessageDto entityToDto(ChatMessage chatMessage);
 }

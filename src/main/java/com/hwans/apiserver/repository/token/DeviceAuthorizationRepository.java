@@ -22,4 +22,6 @@ public interface DeviceAuthorizationRepository extends JpaRepository<DeviceAutho
     long deleteAllByExpiresAtBefore(LocalDateTime before);
 
     void deleteAllByAccount_Id(UUID accountId);
+
+    long countByStatus(DeviceAuthorization.Status status);
 }

@@ -1,5 +1,8 @@
 package com.hwans.apiserver.repository.blog;
 
+import org.springframework.data.domain.Page;
+
+import com.hwans.apiserver.entity.blog.OpenType;
 import com.hwans.apiserver.entity.blog.Post;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
@@ -95,4 +98,18 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select x from Post as x where x.deleted = false and x.openType = 'PUBLIC' and x.account.blogId = :blogId order by x.hits desc, x.createdAt desc, x.id desc")
     List<Post> findTopByBlogIdOrderByHitsDesc(@Param("blogId") String blogId, Pageable page);
+
+    // === 관리자용 ===
+
+    @Query(value = "select x from Post as x where x.deleted = false and (:openType is null or x.openType = :openType) and (:search is null or x.title like concat('%',:search,'%') or x.account.blogId like concat('%',:search,'%') or x.account.name like concat('%',:search,'%'))",
+            countQuery = "select count(x) from Post as x where x.deleted = false and (:openType is null or x.openType = :openType) and (:search is null or x.title like concat('%',:search,'%') or x.account.blogId like concat('%',:search,'%') or x.account.name like concat('%',:search,'%'))")
+    Page<Post> findAllForAdmin(@Param("search") String search, @Param("openType") OpenType openType, Pageable page);
+
+    @Query("select x.createdAt from Post as x where x.deleted = false and x.createdAt >= :since")
+    List<LocalDateTime> findCreatedAtSince(@Param("since") LocalDateTime since);
+
+    @Query("select coalesce(sum(x.hits), 0) from Post as x where x.deleted = false")
+    long sumHitsForAdmin();
+
+    long countByDeletedIsFalseAndOpenType(OpenType openType);
 }

@@ -24,6 +24,7 @@ import java.util.UUID;
 @Slf4j
 public class MailSenderServiceImpl implements MailSenderService {
     private final JavaMailSender javaMailSender;
+    private final ResendMailClient resendMailClient;
     private final CommentRepository commentRepository;
 
     /**
@@ -56,7 +57,6 @@ public class MailSenderServiceImpl implements MailSenderService {
      */
     @Override
     public void sendCreateCommentNotify(String email, UUID commentId) {
-        var a = commentRepository.findById(commentId);
         commentRepository.findById(commentId).ifPresent(comment -> {
             sendMail(createNewCommentNotifyMessage(email, comment));
         });
@@ -69,6 +69,11 @@ public class MailSenderServiceImpl implements MailSenderService {
      * @param mailMessageDto 메일을 전송하기 위한 데이터 모델
      */
     private void sendMail(MailMessageDto mailMessageDto) {
+        // Resend API 키가 설정돼 있으면 HTTP API 로 보낸다 (자체 메일 서버 없이). 없으면 예전처럼 SMTP.
+        if (resendMailClient.isEnabled()) {
+            resendMailClient.send(mailMessageDto.getTo(), mailMessageDto.getSubject(), mailMessageDto.getContent(), Boolean.TRUE.equals(mailMessageDto.getIsHtmlContent()));
+            return;
+        }
         var mimeMessage = javaMailSender.createMimeMessage();
         try {
             var mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");

@@ -11,6 +11,8 @@ import com.hwans.apiserver.common.security.jwt.JwtStatus;
 import com.hwans.apiserver.common.security.jwt.JwtTokenProvider;
 import com.hwans.apiserver.dto.notification.NotificationDto;
 import com.hwans.apiserver.dto.websocket.ActiveViewerSessionDto;
+import com.hwans.apiserver.dto.websocket.CursorBatchDto;
+import com.hwans.apiserver.dto.websocket.CursorStateDto;
 import com.hwans.apiserver.dto.websocket.MessageDto;
 import com.hwans.apiserver.dto.websocket.MessageType;
 import com.hwans.apiserver.dto.websocket.PostViewerCountDto;
@@ -26,6 +28,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -69,6 +72,30 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     // 마지막 생존 신호 이후 이 시간이 지나면 죽은 세션으로 보고 수거한다.
     // 클라이언트는 25초 주기로 PING을 보내므로, 75초는 핑 약 3회 누락에 해당한다.
     private static final long STALE_SESSION_TIMEOUT_MILLIS = 75_000L;
+
+    // ───────────── 함께 읽는 사람 커서 ─────────────
+    // 글 Id -> (세션 Id -> 커서 상태). 움직일 때마다 바로 중계하지 않고 flushCursors 가 약 100ms 마다 묶어 보낸다.
+    private final Map<String, Map<String, CursorStateDto>> postCursors = new ConcurrentHashMap<>();
+    // 다음 flush 때 보낼 글 Id
+    private final Set<String> dirtyCursorPosts = ConcurrentHashMap.newKeySet();
+    // 글 Id -> 다음 flush 때 "떠났다"고 알릴 세션 Id
+    private final Map<String, Set<String>> leftCursors = new ConcurrentHashMap<>();
+    // 세션별 마지막 커서 이동/말 수신 시각 (너무 잦은 전송은 버린다)
+    private final Map<String, Long> cursorLastMoveAt = new ConcurrentHashMap<>();
+    private final Map<String, Long> cursorLastChatAt = new ConcurrentHashMap<>();
+    // 자기 세션 Id(CURSOR_SELF)를 이미 알려준 세션, 커서 공유가 꺼졌다고 이미 알려준 세션
+    private final Set<String> cursorSelfSent = ConcurrentHashMap.newKeySet();
+    private final Set<String> cursorDisabledNotified = ConcurrentHashMap.newKeySet();
+    // 같은 글을 읽는 사람이 이보다 많으면 그 글의 커서 공유를 끈다 (전송량 = 읽는 사람 수 × 커서 수 × 10/초)
+    private static final int MAX_CURSOR_VIEWERS = 120;
+    // 한 묶음에 담는 커서 최대 개수 (최근에 움직인 순)
+    private static final int MAX_CURSORS_PER_BATCH = 40;
+    private static final long CURSOR_MOVE_MIN_INTERVAL_MILLIS = 40L;
+    private static final long CURSOR_CHAT_MIN_INTERVAL_MILLIS = 150L;
+    // 이 시간 동안 안 움직인 커서는 떠난 것으로 본다
+    private static final long CURSOR_STALE_MILLIS = 90_000L;
+    private static final int CURSOR_NAME_MAX = 24;
+    private static final int CURSOR_MESSAGE_MAX = 120;
 
     /**
      * 핸드셰이크 시점에 캡처한 세션의 클라이언트 정보.
@@ -124,6 +151,10 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         sessionLastSeen.remove(sessionId);
         clearViewingPost(sessionId);
         unregisterUser(sessionId);
+        cursorLastMoveAt.remove(sessionId);
+        cursorLastChatAt.remove(sessionId);
+        cursorSelfSent.remove(sessionId);
+        cursorDisabledNotified.remove(sessionId);
         notifySessionCountChanged();
     }
 
@@ -179,6 +210,8 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 case VIEW_POST -> updateViewingPost(session.getId(), asPostId(received.getPayload()));
                 case WATCH_POSTS -> sendPostViewerCounts(session, asPostIdList(received.getPayload()));
                 case AUTHENTICATE -> authenticate(session, received.getPayload());
+                case CURSOR_MOVE -> handleCursorMove(session, received.getPayload());
+                case CURSOR_CHAT -> handleCursorChat(session, received.getPayload());
                 case PING -> {
                     // 생존 신호. lastSeen은 위에서 이미 갱신했으므로 추가 처리는 없다.
                 }
@@ -261,6 +294,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 postViewers.remove(postId);
             }
         }
+        dropCursor(postId, sessionId);
     }
 
     private int viewerCountOf(String postId) {
@@ -376,6 +410,184 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         } catch (Exception e) {
             log.trace("websocket send failed trace: ", e);
         }
+    }
+
+    // ───────────── 함께 읽는 사람 커서 ─────────────
+
+    /**
+     * 클라이언트가 보낸 커서 위치를 보관한다. 실제 전송은 flushCursors 가 한다.
+     * 손님도 똑같이 참여한다 (이름·색은 클라이언트가 정해 보낸다).
+     */
+    private void handleCursorMove(WebSocketSession session, Object payload) {
+        if (!(payload instanceof Map<?, ?> map)) {
+            return;
+        }
+        var sessionId = session.getId();
+        var now = System.currentTimeMillis();
+        var last = cursorLastMoveAt.get(sessionId);
+        if (last != null && now - last < CURSOR_MOVE_MIN_INTERVAL_MILLIS) {
+            return;
+        }
+        cursorLastMoveAt.put(sessionId, now);
+
+        var postId = sessionViewingPost.get(sessionId);
+        if (postId == null) {
+            return;
+        }
+        if (viewerCountOf(postId) > MAX_CURSOR_VIEWERS) {
+            // 읽는 사람이 너무 많으면 커서는 받지 않고, 보낸 사람에게만 한 번 알린다 (방송하지 않는다).
+            if (cursorDisabledNotified.add(sessionId)) {
+                var serialized = serialize(MessageDto.builder().type(MessageType.CURSOR_BATCH)
+                        .payload(new CursorBatchDto(postId, List.of(), List.of(), true)).build());
+                if (serialized != null) {
+                    enqueueSend(session, serialized);
+                }
+            }
+            return;
+        }
+        cursorDisabledNotified.remove(sessionId);
+
+        var x = clamp(asDouble(map.get("x")), 0, 1);
+        var y = clamp(asDouble(map.get("y")), 0, 1);
+        var name = truncate(asString(map.get("name"), "익명").strip(), CURSOR_NAME_MAX);
+        var color = sanitizeColor(asString(map.get("color"), "#3b5bdb"));
+        var cursors = postCursors.computeIfAbsent(postId, key -> new ConcurrentHashMap<>());
+        var existing = cursors.get(sessionId);
+        var message = existing != null ? existing.message() : null;
+        var messageAt = existing != null ? existing.messageAt() : 0L;
+        cursors.put(sessionId, new CursorStateDto(sessionId, x, y, name.isEmpty() ? "익명" : name, color, message, messageAt, now));
+        dirtyCursorPosts.add(postId);
+
+        if (cursorSelfSent.add(sessionId)) {
+            var serialized = serialize(MessageDto.builder().type(MessageType.CURSOR_SELF).payload(sessionId).build());
+            if (serialized != null) {
+                enqueueSend(session, serialized);
+            }
+        }
+    }
+
+    /**
+     * 커서 옆에 띄울 짧은 말을 보관한다. 빈 문자열이면 지운다.
+     */
+    private void handleCursorChat(WebSocketSession session, Object payload) {
+        if (!(payload instanceof Map<?, ?> map)) {
+            return;
+        }
+        var sessionId = session.getId();
+        var now = System.currentTimeMillis();
+        var last = cursorLastChatAt.get(sessionId);
+        if (last != null && now - last < CURSOR_CHAT_MIN_INTERVAL_MILLIS) {
+            return;
+        }
+        cursorLastChatAt.put(sessionId, now);
+
+        var postId = sessionViewingPost.get(sessionId);
+        if (postId == null) {
+            return;
+        }
+        var cursors = postCursors.get(postId);
+        var existing = cursors != null ? cursors.get(sessionId) : null;
+        if (existing == null) {
+            return;
+        }
+        var message = truncate(asString(map.get("message"), "").strip(), CURSOR_MESSAGE_MAX);
+        cursors.put(sessionId, new CursorStateDto(existing.id(), existing.x(), existing.y(), existing.name(), existing.color(),
+                message.isEmpty() ? null : message, message.isEmpty() ? 0L : now, now));
+        dirtyCursorPosts.add(postId);
+    }
+
+    /**
+     * 세션이 글을 떠났을 때 커서를 지우고, 다음 flush 에서 "떠났다"고 알리도록 표시한다.
+     */
+    private void dropCursor(String postId, String sessionId) {
+        var cursors = postCursors.get(postId);
+        if (cursors == null || cursors.remove(sessionId) == null) {
+            return;
+        }
+        if (cursors.isEmpty()) {
+            postCursors.remove(postId);
+        }
+        leftCursors.computeIfAbsent(postId, key -> ConcurrentHashMap.newKeySet()).add(sessionId);
+        dirtyCursorPosts.add(postId);
+    }
+
+    @Override
+    public void flushCursors() {
+        if (dirtyCursorPosts.isEmpty()) {
+            return;
+        }
+        var now = System.currentTimeMillis();
+        for (var postId : new ArrayList<>(dirtyCursorPosts)) {
+            dirtyCursorPosts.remove(postId);
+
+            Set<String> viewerIds;
+            synchronized (presenceLock) {
+                var viewers = postViewers.get(postId);
+                viewerIds = viewers == null ? Set.of() : new HashSet<>(viewers);
+            }
+            var left = leftCursors.remove(postId);
+            var leftIds = left == null ? new ArrayList<String>() : new ArrayList<>(left);
+            var disabled = viewerIds.size() > MAX_CURSOR_VIEWERS;
+
+            List<CursorStateDto> cursors = List.of();
+            var cursorMap = postCursors.get(postId);
+            if (cursorMap != null) {
+                // 오래 안 움직인 커서는 떠난 것으로 본다.
+                var stale = cursorMap.values().stream().filter(c -> now - c.updatedAt() > CURSOR_STALE_MILLIS).map(CursorStateDto::id).toList();
+                stale.forEach(id -> {
+                    cursorMap.remove(id);
+                    leftIds.add(id);
+                });
+                if (cursorMap.isEmpty()) {
+                    postCursors.remove(postId);
+                } else if (!disabled) {
+                    cursors = cursorMap.values().stream()
+                            .sorted(Comparator.comparingLong(CursorStateDto::updatedAt).reversed())
+                            .limit(MAX_CURSORS_PER_BATCH)
+                            .toList();
+                }
+            }
+            if (viewerIds.isEmpty() || (cursors.isEmpty() && leftIds.isEmpty())) {
+                continue;
+            }
+            var batch = new CursorBatchDto(postId, cursors, leftIds, disabled);
+            var serialized = serialize(MessageDto.builder().type(MessageType.CURSOR_BATCH).payload(batch).build());
+            if (serialized == null) {
+                continue;
+            }
+            for (var viewerId : viewerIds) {
+                var target = sessions.get(viewerId);
+                if (target != null) {
+                    enqueueSend(target, serialized);
+                }
+            }
+        }
+    }
+
+    private double asDouble(Object value) {
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        try {
+            return value == null ? 0 : Double.parseDouble(value.toString());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private double clamp(double value, double min, double max) {
+        if (Double.isNaN(value)) {
+            return min;
+        }
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private String truncate(String value, int max) {
+        return value.length() <= max ? value : value.substring(0, max);
+    }
+
+    private String sanitizeColor(String value) {
+        return value != null && value.matches("#[0-9a-fA-F]{6}") ? value.toLowerCase() : "#3b5bdb";
     }
 
     @Override

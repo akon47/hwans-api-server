@@ -89,6 +89,13 @@ server:
   tomcat:
     use-relative-redirects: true
   forward-headers-strategy: native
+
+# 메일 발송: Resend HTTP API (https://resend.com). api-key 는 운영 VM 의 application-secret.yml 에 두고, 비어 있으면 spring.mail(SMTP) 로 보낸다.
+mail:
+  resend:
+    api-key: ${RESEND_API_KEY:}
+    # 보내는 주소의 도메인은 Resend 에 인증돼 있어야 한다 (kimhwan.kr 은 Proxmox 알림용으로 이미 인증됨)
+    from: "Hwan'Story <noreply@kimhwan.kr>"
 attachments:
   path: /var/attachments/
 blog:

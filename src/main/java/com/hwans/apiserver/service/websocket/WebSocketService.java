@@ -50,4 +50,9 @@ public interface WebSocketService {
      * afterConnectionClosed가 호출되지 않는 half-open 세션을 정리하기 위한 것으로, 스케줄러가 주기적으로 호출한다.
      */
     void reapStaleSessions();
+
+    /**
+     * 쌓인 커서 변경을 같은 글을 읽는 세션들에게 묶어 보낸다. 스케줄러가 약 100ms 마다 호출한다.
+     */
+    void flushCursors();
 }

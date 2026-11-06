@@ -18,6 +18,11 @@ repositories {
 	mavenCentral()
 }
 
+// 관리자 시스템 화면에 버전·빌드 시각을 보여주기 위한 build-info.properties
+springBoot {
+    buildInfo()
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'

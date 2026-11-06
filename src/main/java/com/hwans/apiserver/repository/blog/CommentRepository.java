@@ -23,4 +23,13 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     // 작성자 통계용: 해당 블로그 게시글에 달린 총 댓글 수
     @org.springframework.data.jpa.repository.Query("select count(x) from Comment as x where x.deleted = false and x.post.deleted = false and x.post.account.blogId = :blogId")
     long countByBlogId(@org.springframework.data.repository.query.Param("blogId") String blogId);
+
+    // === 관리자용 ===
+
+    @org.springframework.data.jpa.repository.Query(value = "select x from Comment as x where x.deleted = false and (:search is null or x.content like concat('%',:search,'%') or x.account.name like concat('%',:search,'%') or x.post.title like concat('%',:search,'%'))",
+            countQuery = "select count(x) from Comment as x where x.deleted = false and (:search is null or x.content like concat('%',:search,'%') or x.account.name like concat('%',:search,'%') or x.post.title like concat('%',:search,'%'))")
+    org.springframework.data.domain.Page<Comment> findAllForAdmin(@org.springframework.data.repository.query.Param("search") String search, org.springframework.data.domain.Pageable page);
+
+    @org.springframework.data.jpa.repository.Query("select x.createdAt from Comment as x where x.deleted = false and x.createdAt >= :since")
+    java.util.List<java.time.LocalDateTime> findCreatedAtSince(@org.springframework.data.repository.query.Param("since") java.time.LocalDateTime since);
 }

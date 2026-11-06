@@ -20,4 +20,9 @@ public interface AccessTokenRepository extends JpaRepository<AccessToken, UUID> 
     Optional<AccessToken> findByIdAndAccount_Id(UUID id, UUID accountId);
 
     void deleteAllByAccount_Id(UUID accountId);
+
+    // 관리자용: 전체 토큰 (최근 발급 순)
+    List<AccessToken> findAllByOrderByCreatedAtDesc(org.springframework.data.domain.Pageable page);
+
+    long countByRevokedAtIsNull();
 }

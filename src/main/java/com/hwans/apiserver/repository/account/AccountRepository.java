@@ -85,4 +85,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID>, Account
     // 손님이 아닌 활성 회원 수
     @Query("select count(a) from Account as a where a.deleted = false and not exists (select ar from AccountRole as ar where ar.account = a and ar.role.name = 'ROLE_GUEST')")
     long countActiveMembers();
+
+    // 관리자 대시보드용: 기간 내 가입한 회원(손님 제외)의 가입 시각 목록
+    @Query("select a.createdAt from Account as a where a.createdAt >= :since and not exists (select ar from AccountRole as ar where ar.account = a and ar.role.name = 'ROLE_GUEST')")
+    List<LocalDateTime> findMemberCreatedAtSince(@Param("since") LocalDateTime since);
 }

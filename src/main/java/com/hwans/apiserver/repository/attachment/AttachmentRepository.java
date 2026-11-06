@@ -10,4 +10,8 @@ import java.util.UUID;
  */
 public interface AttachmentRepository extends JpaRepository<Attachment, UUID> {
     void deleteAllByAccountId(UUID accountId);
+
+    // 관리자용: 첨부파일 총 용량
+    @org.springframework.data.jpa.repository.Query("select coalesce(sum(x.fileSize), 0) from Attachment as x")
+    long sumFileSize();
 }

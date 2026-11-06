@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface AccountRoleRepository extends JpaRepository<AccountRole, UUID> {
 
+    java.util.Optional<AccountRole> findByAccount_IdAndRole_Name(UUID accountId, String roleName);
 }

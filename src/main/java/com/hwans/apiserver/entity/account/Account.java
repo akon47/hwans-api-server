@@ -70,9 +70,14 @@ public class Account extends BaseEntity {
     }
 
     public void addRole(Role role) {
-        if (accountRoles.stream().anyMatch(x -> x.getRole().getName().equals(role)) == false) {
+        if (accountRoles.stream().noneMatch(x -> x.getRole().getName().equals(role.getName()))) {
             accountRoles.add(AccountRole.builder().account(this).role(role).build());
         }
+    }
+
+    // 컬렉션에서만 뺀다. DB 행 삭제는 호출하는 쪽이 AccountRoleRepository 로 한다. (cascade 에 orphanRemoval 이 없다)
+    public void removeRole(RoleType roleType) {
+        accountRoles.removeIf(x -> x.getRole().getName().equals(roleType.getName()));
     }
 
     public void clearRefreshToken() {
