@@ -90,8 +90,9 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     private static final int MAX_CURSOR_VIEWERS = 120;
     // 한 묶음에 담는 커서 최대 개수 (최근에 움직인 순)
     private static final int MAX_CURSORS_PER_BATCH = 40;
-    private static final long CURSOR_MOVE_MIN_INTERVAL_MILLIS = 40L;
-    private static final long CURSOR_CHAT_MIN_INTERVAL_MILLIS = 150L;
+    // 클라이언트는 이동 50ms·말 120ms 간격으로 보내되 마지막 값은 반드시 뒤따라 보낸다. 서버 쪽 간격은 스팸 방지용으로만 둔다.
+    private static final long CURSOR_MOVE_MIN_INTERVAL_MILLIS = 25L;
+    private static final long CURSOR_CHAT_MIN_INTERVAL_MILLIS = 30L;
     // 이 시간 동안 안 움직인 커서는 떠난 것으로 본다
     private static final long CURSOR_STALE_MILLIS = 90_000L;
     private static final int CURSOR_NAME_MAX = 24;
