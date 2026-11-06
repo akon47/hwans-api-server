@@ -7,7 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Hidden;
 
 import java.time.Duration;
 
@@ -20,7 +20,7 @@ import java.time.Duration;
  * </ul>
  */
 @RestController
-@ApiIgnore
+@Hidden
 @RequiredArgsConstructor
 public class AgentDocsController {
     private static final MediaType MARKDOWN = MediaType.valueOf("text/markdown;charset=UTF-8");

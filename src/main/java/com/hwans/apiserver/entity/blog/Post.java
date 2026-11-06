@@ -7,7 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Where;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 import java.util.stream.Collectors;
 

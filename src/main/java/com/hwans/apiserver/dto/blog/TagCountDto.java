@@ -1,13 +1,12 @@
 package com.hwans.apiserver.dto.blog;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 /**
@@ -15,14 +14,14 @@ import java.io.Serializable;
  */
 @Getter
 @Builder
-@ApiModel(description = "태그 개수 Dto")
+@Schema(description = "태그 개수 Dto")
 @NoArgsConstructor
 @AllArgsConstructor
 public class TagCountDto implements Serializable {
-    @ApiModelProperty(value = "태그 이름", required = true, example = "C#")
+    @Schema(description = "태그 이름", requiredMode = Schema.RequiredMode.REQUIRED, example = "C#")
     @NotBlank
     String name;
-    @ApiModelProperty(value = "해당 태그를 가지고 있는 게시글 수", required = true)
+    @Schema(description = "해당 태그를 가지고 있는 게시글 수", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     int count;
 }

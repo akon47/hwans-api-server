@@ -4,8 +4,10 @@ import com.hwans.apiserver.common.Constants;
 import com.hwans.apiserver.dto.authentication.TokenDto;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
-import io.jsonwebtoken.*;
-
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +20,15 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.security.Key;
-import java.util.*;
+import javax.crypto.SecretKey;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * JWT 토큰 관련 기능을 제공하는 Provider
+ * JWT 토큰 관련 기능을 제공하는 Provider (JJWT 0.12+ API)
  */
 @Component
 @Slf4j
@@ -33,29 +38,23 @@ public class JwtTokenProvider implements InitializingBean {
     private final String refreshTokenSecretKeyBase64Secret;
     private final String registerTokenSecretKeyBase64Secret;
 
-    private Key accessTokenSecretKey;
-    private Key refreshTokenSecretKey;
-    private Key registerTokenSecretKey;
+    private SecretKey accessTokenSecretKey;
+    private SecretKey refreshTokenSecretKey;
+    private SecretKey registerTokenSecretKey;
 
     public JwtTokenProvider(@Value("${jwt.base64-access-secret}") String accessTokenSecretKeyBase64Secret,
                             @Value("${jwt.base64-refresh-secret}") String refreshTokenSecretKeyBase64Secret,
                             @Value("${jwt.base64-register-secret}") String registerTokenSecretKeyBase64Secret) {
         this.accessTokenSecretKeyBase64Secret = accessTokenSecretKeyBase64Secret;
-        log.debug("accessTokenSecretKeyBase64Secret -> " + accessTokenSecretKeyBase64Secret);
         this.refreshTokenSecretKeyBase64Secret = refreshTokenSecretKeyBase64Secret;
-        log.debug("refreshTokenSecretKeyBase64Secret -> " + refreshTokenSecretKeyBase64Secret);
         this.registerTokenSecretKeyBase64Secret = registerTokenSecretKeyBase64Secret;
-        log.debug("registerTokenSecretKeyBase64Secret -> " + registerTokenSecretKeyBase64Secret);
     }
 
     @Override
     public void afterPropertiesSet() {
-        byte[] accessSecretKeyBytes = Decoders.BASE64.decode(accessTokenSecretKeyBase64Secret);
-        this.accessTokenSecretKey = Keys.hmacShaKeyFor(accessSecretKeyBytes);
-        byte[] refreshSecretKeyBytes = Decoders.BASE64.decode(refreshTokenSecretKeyBase64Secret);
-        this.refreshTokenSecretKey = Keys.hmacShaKeyFor(refreshSecretKeyBytes);
-        byte[] registerSecretKeyBytes = Decoders.BASE64.decode(registerTokenSecretKeyBase64Secret);
-        this.registerTokenSecretKey = Keys.hmacShaKeyFor(registerSecretKeyBytes);
+        this.accessTokenSecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessTokenSecretKeyBase64Secret));
+        this.refreshTokenSecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshTokenSecretKeyBase64Secret));
+        this.registerTokenSecretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(registerTokenSecretKeyBase64Secret));
     }
 
     public TokenDto createToken(Authentication authentication) {
@@ -75,17 +74,17 @@ public class JwtTokenProvider implements InitializingBean {
         long now = (new Date()).getTime();
         Date accessTokenExpiresIn = new Date(now + Constants.ACCESS_TOKEN_EXPIRES_TIME);
         String accessToken = Jwts.builder()
-                .setSubject(accountEmail)
+                .subject(accountEmail)
                 .claim(AUTHORITIES_KEY, authorities)
-                .signWith(accessTokenSecretKey, SignatureAlgorithm.HS256)
-                .setExpiration(accessTokenExpiresIn)
+                .expiration(accessTokenExpiresIn)
+                .signWith(accessTokenSecretKey)
                 .compact();
 
         Date refreshTokenExpiresIn = new Date(now + Constants.REFRESH_TOKEN_EXPIRES_TIME);
         String refreshToken = Jwts.builder()
-                .setSubject(accountEmail)
-                .signWith(refreshTokenSecretKey, SignatureAlgorithm.HS256)
-                .setExpiration(refreshTokenExpiresIn)
+                .subject(accountEmail)
+                .expiration(refreshTokenExpiresIn)
+                .signWith(refreshTokenSecretKey)
                 .compact();
 
         return TokenDto.builder()
@@ -97,11 +96,7 @@ public class JwtTokenProvider implements InitializingBean {
     }
 
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(accessTokenSecretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = parse(accessTokenSecretKey, token);
 
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
@@ -116,25 +111,23 @@ public class JwtTokenProvider implements InitializingBean {
     public String createRegisterToken(String email) {
         long now = (new Date()).getTime();
         Date registerTokenExpiresIn = new Date(now + Constants.REGISTER_TOKEN_EXPIRES_TIME);
-        String registerToken = Jwts.builder()
-                .setSubject(email)
+        return Jwts.builder()
+                .subject(email)
                 .claim(AUTHORITIES_KEY, RoleType.SOCIAL.getName())
-                .signWith(registerTokenSecretKey, SignatureAlgorithm.HS256)
-                .setExpiration(registerTokenExpiresIn)
+                .expiration(registerTokenExpiresIn)
+                .signWith(registerTokenSecretKey)
                 .compact();
-        return registerToken;
     }
 
     public String createPasswordResetToken(String email) {
         long now = (new Date()).getTime();
         Date passwordResetTokenExpiresIn = new Date(now + Constants.PASSWORD_RESET_TOKEN_EXPIRES_TIME);
-        String passwordResetToken = Jwts.builder()
-                .setSubject(email)
+        return Jwts.builder()
+                .subject(email)
                 .claim(AUTHORITIES_KEY, RoleType.GUEST.getName())
-                .signWith(registerTokenSecretKey, SignatureAlgorithm.HS256)
-                .setExpiration(passwordResetTokenExpiresIn)
+                .expiration(passwordResetTokenExpiresIn)
+                .signWith(registerTokenSecretKey)
                 .compact();
-        return passwordResetToken;
     }
 
     public JwtStatus validateAccessToken(String token) {
@@ -145,23 +138,18 @@ public class JwtTokenProvider implements InitializingBean {
         return validateToken(token, refreshTokenSecretKey);
     }
 
-    private JwtStatus validateToken(String token, Key secretKey) {
+    private JwtStatus validateToken(String token, SecretKey secretKey) {
         try {
-            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+            parse(secretKey, token);
             return JwtStatus.ACCESS;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.info("Invalid JWT signature.");
-            log.trace("Invalid JWT signature trace: {}", e);
         } catch (ExpiredJwtException e) {
             log.info("Expired JWT token.");
-            log.trace("Expired JWT token trace: {}", e);
+            log.trace("Expired JWT token trace: {}", e.getMessage());
             return JwtStatus.EXPIRED;
-        } catch (UnsupportedJwtException e) {
-            log.info("Unsupported JWT token.");
-            log.trace("Unsupported JWT token trace: {}", e);
-        } catch (IllegalArgumentException e) {
-            log.info("JWT token compact of handler are invalid.");
-            log.trace("JWT token compact of handler are invalid trace: {}", e);
+        } catch (JwtException | IllegalArgumentException e) {
+            // 서명 불일치, 형식 오류, 지원하지 않는 토큰, 빈 토큰
+            log.info("Invalid JWT token: {}", e.getClass().getSimpleName());
+            log.trace("Invalid JWT token trace: {}", e.getMessage());
         }
         return JwtStatus.DENIED;
     }
@@ -185,20 +173,19 @@ public class JwtTokenProvider implements InitializingBean {
         return getAccountEmailFromToken(registerTokenSecretKey, resetPasswordToken);
     }
 
+    /**
+     * 재발급: 리프레시 토큰이 유효하고, 액세스 토큰이 (만료되었더라도) 같은 주체의 것일 때 그 이메일을 돌려준다.
+     */
     public Optional<String> getAccountEmailForReissueToken(String accessToken, String refreshToken) {
         try {
-            var refreshClaims = Jwts
-                    .parserBuilder()
-                    .setSigningKey(refreshTokenSecretKey)
-                    .build()
-                    .parseClaimsJws(refreshToken);
+            var refreshSubject = parse(refreshTokenSecretKey, refreshToken).getSubject();
             try {
-                return Optional.ofNullable(Jwts.parserBuilder()
-                        .requireSubject(refreshClaims.getBody().getSubject())
-                        .setSigningKey(accessTokenSecretKey)
+                return Optional.ofNullable(Jwts.parser()
+                        .requireSubject(refreshSubject)
+                        .verifyWith(accessTokenSecretKey)
                         .build()
-                        .parseClaimsJws(accessToken)
-                        .getBody()
+                        .parseSignedClaims(accessToken)
+                        .getPayload()
                         .getSubject());
             } catch (ExpiredJwtException e) {
                 return Optional.ofNullable(e.getClaims().getSubject());
@@ -208,20 +195,22 @@ public class JwtTokenProvider implements InitializingBean {
         }
     }
 
-    private Optional<String> getAccountEmailFromToken(Key signingKey, String token) {
+    private Optional<String> getAccountEmailFromToken(SecretKey signingKey, String token) {
         try {
-            return Optional.ofNullable(
-                    Jwts
-                            .parserBuilder()
-                            .setSigningKey(signingKey)
-                            .build()
-                            .parseClaimsJws(token)
-                            .getBody()
-                            .getSubject());
-
-        } catch (ExpiredJwtException | SecurityException | MalformedJwtException | UnsupportedJwtException |
-                 IllegalArgumentException e) {
+            return Optional.ofNullable(parse(signingKey, token).getSubject());
+        } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * 서명을 검증하고 클레임을 돌려준다. 만료·서명 오류 등은 JwtException 으로 던진다.
+     */
+    private static Claims parse(SecretKey key, String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

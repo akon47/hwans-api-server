@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @DiscriminatorValue(value = NotificationType.Values.COMMENT)

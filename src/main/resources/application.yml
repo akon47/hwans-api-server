@@ -2,11 +2,10 @@ spring:
   profiles:
     active: local
     include: secret
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
   jpa:
     defer-datasource-initialization: true
+    # 기본값(true)을 명시해 기동 경고를 없앤다. 컨트롤러에서 지연 로딩을 쓰는 곳이 있어 그대로 둔다.
+    open-in-view: true
     properties:
       hibernate:
         auto_quote_keyword: true
@@ -38,7 +37,7 @@ spring:
               - email
               - profile_image
             redirect-uri: '{baseUrl}/api/v1/authentication/oauth2/code/{registrationId}'
-            client-authentication-method: post
+            client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             client-name: Naver
           kakao:
@@ -47,7 +46,7 @@ spring:
               - profile_image
               - account_email
             redirect-uri: '{baseUrl}/api/v1/authentication/oauth2/code/{registrationId}'
-            client-authentication-method: post
+            client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             client-name: Kakao
           discord:
@@ -55,14 +54,14 @@ spring:
               - identify
               - email
             redirect-uri: '{baseUrl}/api/v1/authentication/oauth2/code/{registrationId}'
-            client-authentication-method: post
+            client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             client-name: Discord
           microsoft:
             scope:
               - https://graph.microsoft.com/User.Read
             redirect-uri: '{baseUrl}/api/v1/authentication/oauth2/code/{registrationId}'
-            client-authentication-method: post
+            client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             client-name: Microsoft
         provider:

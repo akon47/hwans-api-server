@@ -3,17 +3,20 @@
 Hwan'Story 블로그 서비스의 백엔드 API 서버. (프론트엔드는 별도 저장소 `hwanstory`)
 
 ## 기술 스택
-- Spring Boot 2.7.1 / Java 17 / Gradle 7.4.1
-- JPA(Hibernate) + MySQL(운영) / H2(로컬), Redis, Spring Security + JWT + OAuth2, WebSocket(STOMP)
-- MapStruct(매퍼), Lombok, Springfox Swagger
+- Spring Boot 3.5.x / Java 21 / Gradle 8.14 (2026-11-06 에 2.7.1 / Java 17 / Gradle 7.4.1 에서 올림)
+- JPA(Hibernate 6) + MySQL(운영) / H2(로컬), Redis, Spring Security 6 + JWT(JJWT 0.13) + OAuth2, WebSocket(SockJS)
+- MapStruct(매퍼), Lombok, springdoc-openapi(Swagger UI `/swagger-ui/index.html`, 명세 `/v3/api-docs`)
+- 패키지는 `jakarta.*`(javax 아님). 문서 애너테이션은 `io.swagger.v3.oas.annotations.*`(`@Tag`, `@Operation`, `@Parameter`, `@Schema`, `@Hidden`).
 
 ## 커밋 규칙
 - 커밋 작성자는 반드시 `Kim, Hwan <akon47@naver.com>` 로 한다.
   (기본 git 설정과 다를 수 있으니 `git commit --author="Kim, Hwan <akon47@naver.com>"` 또는 repo-local `git config user.name/user.email` 로 지정)
 
 ## 빌드
-- **JDK 17이 필요하다.** Gradle 7.4.1은 더 높은 JDK(예: 21)에서 실행되지 않는다.
+- JDK 는 **Gradle 툴체인(21)** 으로 고정된다(`build.gradle`). 로컬·Jenkins 에 21 이 없으면 `settings.gradle` 의 foojay 플러그인이 내려받으므로, Gradle 을 돌리는 JDK 는 17 이상이면 된다(Jenkins 는 `JAVA 17` 툴로 Gradle 을 돌린다).
 - 빌드: `./gradlew clean build -x test` (Jenkins CI와 동일하게 테스트는 건너뛴다)
+- Docker 기반 이미지는 `eclipse-temurin:21-jre`(`openjdk:*` 공식 이미지는 Docker Hub 에서 사라졌다).
+- 운영 VM 의 `application-secret.yml` 은 아직 Boot 2 시절 키(`spring.redis.*`)를 쓸 수 있어 `spring-boot-properties-migrator` 를 runtime 에 넣어 두었다. 기동 로그의 migrator 경고를 보고 그 파일을 새 키로 고친 뒤 의존성을 빼면 된다.
 
 ## 로컬 실행
 - 로컬 프로파일은 H2(인메모리) + 임베디드 Redis를 사용한다: `SPRING_PROFILES_ACTIVE=local`

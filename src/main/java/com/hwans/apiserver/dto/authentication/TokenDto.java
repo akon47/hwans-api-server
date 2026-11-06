@@ -1,11 +1,10 @@
 package com.hwans.apiserver.dto.authentication;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 /**
@@ -13,16 +12,16 @@ import java.io.Serializable;
  */
 @Getter
 @Builder
-@ApiModel(description = "계정 인증 토큰 Dto")
+@Schema(description = "계정 인증 토큰 Dto")
 public class TokenDto implements Serializable {
-    @ApiModelProperty(value = "인증 토큰 값", required = true)
+    @Schema(description = "인증 토큰 값", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     String accessToken;
-    @ApiModelProperty(value = "인증 토큰 만료 시간", required = true)
+    @Schema(description = "인증 토큰 만료 시간", requiredMode = Schema.RequiredMode.REQUIRED)
     Long accessTokenExpiresIn;
-    @ApiModelProperty(value = "갱신 토큰 값", required = true)
+    @Schema(description = "갱신 토큰 값", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     String refreshToken;
-    @ApiModelProperty(value = "갱신 토큰 만료 시간", required = true)
+    @Schema(description = "갱신 토큰 만료 시간", requiredMode = Schema.RequiredMode.REQUIRED)
     Long refreshTokenExpiresIn;
 }

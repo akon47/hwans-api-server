@@ -1,7 +1,8 @@
 spring:
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:~/test
+    # 인메모리 H2. (파일 DB ~/test 는 H2 버전이 바뀌면 "Unsupported database file version" 으로 열리지 않아 인메모리로 바꿈, 2026-11-06)
+    url: jdbc:h2:mem:hwanstory;DB_CLOSE_DELAY=-1
     username: sa
     password:
   sql:
@@ -11,11 +12,11 @@ spring:
     console:
       path: /h2-console
       enabled: true
-  redis:
-    host: localhost
-    port: 6379
+  data:
+    redis:
+      host: localhost
+      port: 6379
   jpa:
-    database: h2
     hibernate:
       ddl-auto: create-drop
     properties:

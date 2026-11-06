@@ -1,1 +1,5 @@
+plugins {
+	// JDK 21 툴체인이 로컬에 없으면 자동으로 내려받는다 (Jenkins 가 JDK 17 로 Gradle 을 돌려도 21 로 컴파일된다).
+	id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
 rootProject.name = 'api-server'

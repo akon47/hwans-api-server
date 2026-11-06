@@ -1,21 +1,20 @@
 package com.hwans.apiserver.dto.notification;
 
 import com.hwans.apiserver.dto.blog.CommentDto;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 댓글 알림 Dto
  */
 @Getter
 @SuperBuilder
-@ApiModel(parent = NotificationDto.class)
+@Schema(description = "댓글 알림 Dto")
 public class CommentNotificationDto extends NotificationDto {
-    @ApiModelProperty(value = "알림을 발생시킨 댓글", required = true)
+    @Schema(description = "알림을 발생시킨 댓글", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     CommentDto comment;
 }

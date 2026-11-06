@@ -2,9 +2,9 @@ package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.dto.blog.SimplePostDto;
 import com.hwans.apiserver.service.blog.BlogService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -23,7 +23,7 @@ import java.util.Optional;
  * RSS 2.0 피드 Controller
  */
 @RestController
-@Api(tags = "RSS")
+@Tag(name = "RSS")
 @RequiredArgsConstructor
 public class RssController {
     private final BlogService blogService;
@@ -48,16 +48,16 @@ public class RssController {
             DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
     private static final MediaType RSS_MEDIA_TYPE = MediaType.valueOf("application/rss+xml; charset=UTF-8");
 
-    @ApiOperation(value = "전체 RSS 피드", notes = "전체 공개 게시글의 RSS 2.0 피드를 반환한다.", tags = "RSS")
+    @Operation(summary = "전체 RSS 피드", description = "전체 공개 게시글의 RSS 2.0 피드를 반환한다.")
     @GetMapping(value = "/rss", produces = "application/rss+xml")
     public ResponseEntity<String> getGlobalFeed() {
         var posts = blogService.getRecentPublicPosts(null, FEED_SIZE);
         return rssResponse(feedTitle, webBaseUrl, feedDescription, webBaseUrl + "/rss", posts);
     }
 
-    @ApiOperation(value = "특정 블로그 RSS 피드", notes = "특정 블로그 공개 게시글의 RSS 2.0 피드를 반환한다.", tags = "RSS")
+    @Operation(summary = "특정 블로그 RSS 피드", description = "특정 블로그 공개 게시글의 RSS 2.0 피드를 반환한다.")
     @GetMapping(value = "/rss/{blogId}", produces = "application/rss+xml")
-    public ResponseEntity<String> getBlogFeed(@ApiParam(value = "블로그 Id") @PathVariable String blogId) {
+    public ResponseEntity<String> getBlogFeed(@Parameter(description = "블로그 Id") @PathVariable String blogId) {
         var posts = blogService.getRecentPublicPosts(blogId, FEED_SIZE);
         var channelLink = webBaseUrl + "/" + blogId;
         return rssResponse(feedTitle + " - " + blogId, channelLink, feedDescription, webBaseUrl + "/rss/" + blogId, posts);

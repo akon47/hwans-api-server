@@ -2,13 +2,12 @@ package com.hwans.apiserver.dto.notification;
 
 import com.hwans.apiserver.dto.account.SimpleAccountDto;
 import com.hwans.apiserver.entity.notification.NotificationType;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,21 +17,21 @@ import java.util.UUID;
  */
 @Getter
 @SuperBuilder
-@ApiModel(subTypes = {NotificationDto.class}, description = "모든 알림 모델에 대한 부모 모델")
+@Schema(description = "모든 알림 모델에 대한 부모 모델")
 public class NotificationDto implements Serializable {
-    @ApiModelProperty(value = "알림 Id", required = true)
+    @Schema(description = "알림 Id", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     UUID id;
-    @ApiModelProperty(value = "알림을 받은 사용자", required = true)
+    @Schema(description = "알림을 받은 사용자", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     SimpleAccountDto receiver;
-    @ApiModelProperty(value = "알림 유형", required = true)
+    @Schema(description = "알림 유형", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     NotificationType notificationType;
-    @ApiModelProperty(value = "알림이 발생한 시간", required = true)
+    @Schema(description = "알림이 발생한 시간", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     LocalDateTime createdAt;
-    @ApiModelProperty(value = "알림을 읽은 시간", required = false)
+    @Schema(description = "알림을 읽은 시간")
     @NotBlank
     LocalDateTime readAt;
 }

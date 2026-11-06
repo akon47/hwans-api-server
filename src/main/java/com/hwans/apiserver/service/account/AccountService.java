@@ -6,7 +6,7 @@ import com.hwans.apiserver.dto.account.ModifyAccountDto;
 import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.UUID;
 
 /**

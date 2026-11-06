@@ -17,30 +17,34 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.stereotype.Component;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
-@Component
 public class WebSecurityConfig {
-    // 인증 없이 허용할 Swagger 관련 Urls
+    private static final String API = Constants.API_PREFIX;
+
+    // 인증 없이 허용할 OpenAPI 문서(springdoc) Urls
     private static final String[] SWAGGER_PERMIT_URL_ARRAY = {
             "/",
             "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
             "/swagger-ui/**",
-            "/swagger-resources/**",
     };
 
     // 인증 없이 허용할 AI 에이전트용 문서·도우미 스크립트, 검색엔진 크롤러용 서버 렌더 페이지 Urls
@@ -91,76 +95,66 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // 서블릿이 여러 개(H2 콘솔 등)여도 모호하지 않게 PathPattern 매처를 명시적으로 쓴다.
+        var matcher = PathPatternRequestMatcher.withDefaults();
         http
-                    .httpBasic().disable()
-                    .csrf().disable()
-                    .cors().configurationSource(request -> corsConfiguration())
-                .and()
-                    .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                    .exceptionHandling()
-                    .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                    .accessDeniedHandler(jwtAccessDeniedHandler)
-                .and()
-                    .authorizeRequests()
-                    .antMatchers(SWAGGER_PERMIT_URL_ARRAY).permitAll()
-                    .antMatchers("/stomp/**").permitAll()
-                    .antMatchers("/ws/**").permitAll()
-                    .antMatchers(HttpMethod.GET, "/rss", "/rss/**", "/sitemap.xml").permitAll()
-                    .antMatchers(HttpMethod.GET, AGENT_DOCS_PERMIT_URL_ARRAY).permitAll()
-                    .antMatchers(
-                            HttpMethod.GET,
-                            Constants.API_PREFIX + "/v1/blog/*/posts/*/likes",
-                            Constants.API_PREFIX + "/v1/blog/*/posts/*/bookmarks",
-                            Constants.API_PREFIX + "/v1/blog/comments/*/likes",
-                            Constants.API_PREFIX + "/v1/blog/me/bookmarks",
-                            Constants.API_PREFIX + "/v1/blog/me/statistics").authenticated()
-                    .antMatchers(
-                            HttpMethod.GET,
-                            Constants.API_PREFIX + "/v1/blog/**",
-                            Constants.API_PREFIX + "/v1/attachments/**").permitAll()
-                    .antMatchers(
-                            HttpMethod.PUT,
-                            Constants.API_PREFIX + "/v1/accounts/password",
-                            Constants.API_PREFIX + "/v1/blog/comments/*").permitAll()
-                    .antMatchers(
-                            HttpMethod.DELETE,
-                            Constants.API_PREFIX + "/v1/blog/comments/*").permitAll()
-                    .antMatchers(
-                            HttpMethod.POST,
-                            Constants.API_PREFIX + "/v1/accounts",
-                            Constants.API_PREFIX + "/v1/accounts/verify-email",
-                            Constants.API_PREFIX + "/v1/accounts/reset-password-email",
-                            Constants.API_PREFIX + "/v1/authentication/token",
-                            Constants.API_PREFIX + "/v1/authentication/refresh-token",
-                            // 기기 로그인: 에이전트가 코드를 요청하고 토큰을 폴링하는 엔드포인트 (승인/거부는 로그인 필요)
-                            Constants.API_PREFIX + "/v1/authentication/device/code",
-                            Constants.API_PREFIX + "/v1/authentication/device/token",
-                            Constants.API_PREFIX + "/v1/blog/*/posts/*/comments/guest",
-                            Constants.API_PREFIX + "/v1/blog/comments/*/guest").permitAll()
-                    .antMatchers(Constants.API_PREFIX + "/v1/admin/**").hasRole("ADMIN")
-                    //.antMatchers("/h2-console/**").permitAll() // Local H2 콘솔 테스트 환경
-                    .anyRequest().authenticated()
-                    //.and().headers().frameOptions().disable() // Local H2 콘솔 테스트 환경
-                .and()
-                    .apply(new JwtSecurityConfig(tokenProvider, redisTemplate,
-                            new AccessTokenAuthenticationFilter(accessTokenService, objectMapper)))
-                .and()
-                    .oauth2Login()
-                    .authorizationEndpoint()
-                    .baseUri(Constants.API_PREFIX + "/v1/authentication/oauth2")
-                    .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository())
-                .and()
-                    .userInfoEndpoint()
-                    .userService(customOAuth2UserService)
-                .and()
-                    .redirectionEndpoint()
-                    .baseUri(Constants.API_PREFIX + "/v1/authentication/oauth2/code/*")
-                .and()
-                    .successHandler(oAuth2AuthenticationSuccessHandler())
-                    .failureHandler(oAuth2AuthenticationFailureHandler());
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(request -> corsConfiguration()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(matchers(matcher, null, SWAGGER_PERMIT_URL_ARRAY)).permitAll()
+                        .requestMatchers(matchers(matcher, null, "/stomp/**", "/ws/**")).permitAll()
+                        .requestMatchers(matchers(matcher, HttpMethod.GET, "/rss", "/rss/**", "/sitemap.xml")).permitAll()
+                        .requestMatchers(matchers(matcher, HttpMethod.GET, AGENT_DOCS_PERMIT_URL_ARRAY)).permitAll()
+                        // 사용자별 GET 은 blog/** permitAll 보다 먼저 authenticated 로 명시해야 한다 (순서 중요)
+                        .requestMatchers(matchers(matcher, HttpMethod.GET,
+                                API + "/v1/blog/*/posts/*/likes",
+                                API + "/v1/blog/*/posts/*/bookmarks",
+                                API + "/v1/blog/comments/*/likes",
+                                API + "/v1/blog/me/bookmarks",
+                                API + "/v1/blog/me/statistics")).authenticated()
+                        .requestMatchers(matchers(matcher, HttpMethod.GET,
+                                API + "/v1/blog/**",
+                                API + "/v1/attachments/**")).permitAll()
+                        .requestMatchers(matchers(matcher, HttpMethod.PUT,
+                                API + "/v1/accounts/password",
+                                API + "/v1/blog/comments/*")).permitAll()
+                        .requestMatchers(matchers(matcher, HttpMethod.DELETE,
+                                API + "/v1/blog/comments/*")).permitAll()
+                        .requestMatchers(matchers(matcher, HttpMethod.POST,
+                                API + "/v1/accounts",
+                                API + "/v1/accounts/verify-email",
+                                API + "/v1/accounts/reset-password-email",
+                                API + "/v1/authentication/token",
+                                API + "/v1/authentication/refresh-token",
+                                // 기기 로그인: 에이전트가 코드를 요청하고 토큰을 폴링하는 엔드포인트 (승인/거부는 로그인 필요)
+                                API + "/v1/authentication/device/code",
+                                API + "/v1/authentication/device/token",
+                                API + "/v1/blog/*/posts/*/comments/guest",
+                                API + "/v1/blog/comments/*/guest")).permitAll()
+                        .requestMatchers(matchers(matcher, null, API + "/v1/admin/**")).hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .with(new JwtSecurityConfig(tokenProvider, redisTemplate,
+                        new AccessTokenAuthenticationFilter(accessTokenService, objectMapper)), Customizer.withDefaults())
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .baseUri(API + "/v1/authentication/oauth2")
+                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository()))
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .redirectionEndpoint(redirection -> redirection.baseUri(API + "/v1/authentication/oauth2/code/*"))
+                        .successHandler(oAuth2AuthenticationSuccessHandler())
+                        .failureHandler(oAuth2AuthenticationFailureHandler()));
         return http.build();
+    }
+
+    private static RequestMatcher[] matchers(PathPatternRequestMatcher.Builder builder, HttpMethod method, String... patterns) {
+        return Arrays.stream(patterns)
+                .map(pattern -> builder.matcher(method, pattern))
+                .toArray(RequestMatcher[]::new);
     }
 
     /**

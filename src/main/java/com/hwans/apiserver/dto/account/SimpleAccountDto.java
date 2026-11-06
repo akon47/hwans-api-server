@@ -1,12 +1,11 @@
 package com.hwans.apiserver.dto.account;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
@@ -16,15 +15,15 @@ import java.util.UUID;
  */
 @Getter
 @Builder
-@ApiModel(description = "간단한 계정 정보 Dto")
+@Schema(description = "간단한 계정 정보 Dto")
 public class SimpleAccountDto implements Serializable {
-    @ApiModelProperty(value = "계정 사용자 이름", required = true, example = "김환")
+    @Schema(description = "계정 사용자 이름", requiredMode = Schema.RequiredMode.REQUIRED, example = "김환")
     @NotBlank
     String name;
-    @ApiModelProperty(value = "블로그 Id", example = "kim-hwan")
+    @Schema(description = "블로그 Id", example = "kim-hwan")
     String blogId;
-    @ApiModelProperty(value = "프로필 이미지 URL", example = "/attachments/file-id")
+    @Schema(description = "프로필 이미지 URL", example = "/attachments/file-id")
     String profileImageUrl;
-    @ApiModelProperty(value = "비회원인지 여부", required = true)
+    @Schema(description = "비회원인지 여부", requiredMode = Schema.RequiredMode.REQUIRED)
     boolean guest;
 }

@@ -1,13 +1,12 @@
 package com.hwans.apiserver.dto.blog;
 
 import com.hwans.apiserver.dto.account.AccountDto;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -18,28 +17,28 @@ import java.util.UUID;
  */
 @Getter
 @Builder
-@ApiModel(description = "댓글 Dto")
+@Schema(description = "댓글 Dto")
 public class CommentDto implements Serializable {
-    @ApiModelProperty(value = "댓글 Id", required = true)
+    @Schema(description = "댓글 Id", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     UUID id;
-    @ApiModelProperty(value = "내용", required = true, example = "댓글입니다.")
+    @Schema(description = "내용", requiredMode = Schema.RequiredMode.REQUIRED, example = "댓글입니다.")
     @NotBlank
     String content;
-    @ApiModelProperty(value = "부모 댓글 Id", required = true)
+    @Schema(description = "부모 댓글 Id", requiredMode = Schema.RequiredMode.REQUIRED)
     UUID parentId;
-    @ApiModelProperty(value = "대댓글")
+    @Schema(description = "대댓글")
     @NotBlank
     Set<SimpleCommentDto> children;
-    @ApiModelProperty(value = "댓글이 달려있는 게시글", required = true)
+    @Schema(description = "댓글이 달려있는 게시글", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     SimplePostDto post;
-    @ApiModelProperty(value = "댓글을 단 사용자", required = true)
+    @Schema(description = "댓글을 단 사용자", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     AccountDto author;
-    @ApiModelProperty(value = "작성 시간", required = true)
+    @Schema(description = "작성 시간", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank
     LocalDateTime createdAt;
-    @ApiModelProperty(value = "좋아요 수")
+    @Schema(description = "좋아요 수")
     int likeCount;
 }

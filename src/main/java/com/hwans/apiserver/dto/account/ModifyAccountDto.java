@@ -1,13 +1,12 @@
 package com.hwans.apiserver.dto.account;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 /**
@@ -15,22 +14,22 @@ import java.io.Serializable;
  */
 @Getter
 @Builder
-@ApiModel(description = "사용자 정보 수정 Dto")
+@Schema(description = "사용자 정보 수정 Dto")
 public class ModifyAccountDto implements Serializable {
-    @ApiModelProperty(value = "계정 사용자 이름", required = true, example = "김환")
+    @Schema(description = "계정 사용자 이름", requiredMode = Schema.RequiredMode.REQUIRED, example = "김환")
     @NotBlank
     @Length(max = 32)
     String name;
-    @ApiModelProperty(value = "간단한 자기소개", example = "안녕하세요, 반갑습니다.")
+    @Schema(description = "간단한 자기소개", example = "안녕하세요, 반갑습니다.")
     @Length(max = 255)
     String biography;
-    @ApiModelProperty(value = "회사", example = "google")
+    @Schema(description = "회사", example = "google")
     @Length(max = 64)
     String company;
-    @ApiModelProperty(value = "위치", example = "seoul")
+    @Schema(description = "위치", example = "seoul")
     @Length(max = 64)
     String location;
-    @ApiModelProperty(value = "홈페이지", example = "https://kimhwan.kr")
+    @Schema(description = "홈페이지", example = "https://kimhwan.kr")
     @Length(max = 255)
     String homepage;
 }

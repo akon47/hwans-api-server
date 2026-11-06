@@ -14,16 +14,16 @@ import com.hwans.apiserver.service.account.AccountService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
 import com.hwans.apiserver.service.token.AccessTokenService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +33,7 @@ import java.util.UUID;
  */
 @Validated
 @RestController
-@Api(tags = "액세스 토큰")
+@Tag(name = "액세스 토큰")
 @RequestMapping(value = Constants.API_PREFIX)
 @RequiredArgsConstructor
 public class AccessTokenController {
@@ -45,28 +45,28 @@ public class AccessTokenController {
     @Value("${blog.api-base-url:https://api.hwanstory.kr}")
     private String apiBaseUrl;
 
-    @ApiOperation(value = "내 액세스 토큰 목록 조회", notes = "현재 사용자가 발급한 개인 액세스 토큰 목록을 조회한다 (폐기·만료된 것 포함).", tags = "액세스 토큰")
+    @Operation(summary = "내 액세스 토큰 목록 조회", description = "현재 사용자가 발급한 개인 액세스 토큰 목록을 조회한다 (폐기·만료된 것 포함).")
     @GetMapping(value = "/v1/tokens")
     public List<AccessTokenDto> getTokens(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails) {
         return accessTokenService.getTokens(userAuthenticationDetails.getId());
     }
 
-    @ApiOperation(value = "액세스 토큰 발급", notes = "개인 액세스 토큰을 발급한다. 토큰 원문은 이 응답에서 한 번만 볼 수 있다.", tags = "액세스 토큰")
+    @Operation(summary = "액세스 토큰 발급", description = "개인 액세스 토큰을 발급한다. 토큰 원문은 이 응답에서 한 번만 볼 수 있다.")
     @PostMapping(value = "/v1/tokens")
     public IssuedAccessTokenDto createToken(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                                            @ApiParam(value = "발급 요청", required = true) @RequestBody @Valid final CreateAccessTokenDto createAccessTokenDto) {
+                                            @Parameter(description = "발급 요청", required = true) @RequestBody @Valid final CreateAccessTokenDto createAccessTokenDto) {
         return accessTokenService.create(userAuthenticationDetails.getId(), createAccessTokenDto.getName(),
                 AccessTokenScope.fromKeys(createAccessTokenDto.getScopes()), createAccessTokenDto.getTtlDays(), AccessTokenOrigin.CONSOLE);
     }
 
-    @ApiOperation(value = "액세스 토큰 폐기", notes = "개인 액세스 토큰을 폐기한다. 폐기 즉시 그 토큰을 쓰던 에이전트·스크립트는 401 을 받는다.", tags = "액세스 토큰")
+    @Operation(summary = "액세스 토큰 폐기", description = "개인 액세스 토큰을 폐기한다. 폐기 즉시 그 토큰을 쓰던 에이전트·스크립트는 401 을 받는다.")
     @DeleteMapping(value = "/v1/tokens/{id}")
     public void revokeToken(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
-                            @ApiParam(value = "토큰 레코드 Id") @PathVariable UUID id) {
+                            @Parameter(description = "토큰 레코드 Id") @PathVariable UUID id) {
         accessTokenService.revoke(userAuthenticationDetails.getId(), id);
     }
 
-    @ApiOperation(value = "현재 토큰 정보 조회", notes = "지금 요청에 쓰인 액세스 토큰과 그 주인 계정 정보를 조회한다 (토큰으로 인증한 경우에만).", tags = "액세스 토큰")
+    @Operation(summary = "현재 토큰 정보 조회", description = "지금 요청에 쓰인 액세스 토큰과 그 주인 계정 정보를 조회한다 (토큰으로 인증한 경우에만).")
     @GetMapping(value = "/v1/tokens/current")
     public CurrentAccessTokenDto getCurrentToken(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails) {
         var details = requireAccessTokenDetails();
@@ -78,7 +78,7 @@ public class AccessTokenController {
                 .build();
     }
 
-    @ApiOperation(value = "현재 토큰 폐기", notes = "지금 요청에 쓰인 액세스 토큰을 폐기한다 (에이전트가 작업을 마쳤을 때).", tags = "액세스 토큰")
+    @Operation(summary = "현재 토큰 폐기", description = "지금 요청에 쓰인 액세스 토큰을 폐기한다 (에이전트가 작업을 마쳤을 때).")
     @DeleteMapping(value = "/v1/tokens/current")
     public void revokeCurrentToken() {
         accessTokenService.revokeByTokenId(requireAccessTokenDetails().getTokenId());

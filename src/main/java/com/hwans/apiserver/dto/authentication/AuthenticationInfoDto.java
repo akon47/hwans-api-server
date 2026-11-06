@@ -1,11 +1,10 @@
 package com.hwans.apiserver.dto.authentication;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 /**
@@ -13,12 +12,12 @@ import java.io.Serializable;
  */
 @Getter
 @Builder
-@ApiModel(description = "계정 인증 정보 Dto")
+@Schema(description = "계정 인증 정보 Dto")
 public class AuthenticationInfoDto implements Serializable {
-    @ApiModelProperty(value = "사용자 계정 이메일", required = true, example = "akon47@naver.com")
+    @Schema(description = "사용자 계정 이메일", requiredMode = Schema.RequiredMode.REQUIRED, example = "akon47@naver.com")
     @NotBlank
     String email;
-    @ApiModelProperty(value = "사용자 계정 비밀번호", required = true, example = "12345")
+    @Schema(description = "사용자 계정 비밀번호", requiredMode = Schema.RequiredMode.REQUIRED, example = "12345")
     @NotBlank
     String password;
 }

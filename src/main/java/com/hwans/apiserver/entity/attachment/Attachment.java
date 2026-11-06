@@ -8,8 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.activation.MimetypesFileTypeMap;
-import javax.persistence.*;
+import jakarta.activation.MimetypesFileTypeMap;
+import jakarta.persistence.*;
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

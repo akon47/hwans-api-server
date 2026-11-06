@@ -1,11 +1,10 @@
 package com.hwans.apiserver.dto.account;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 /**
@@ -13,9 +12,9 @@ import java.io.Serializable;
  */
 @Getter
 @Builder
-@ApiModel(description = "역할 Dto")
+@Schema(description = "역할 Dto")
 public class RoleDto implements Serializable {
-    @ApiModelProperty(value = "역할 이름", required = true, example = "ROLE_USER")
+    @Schema(description = "역할 이름", requiredMode = Schema.RequiredMode.REQUIRED, example = "ROLE_USER")
     @NotBlank
     String name;
 }

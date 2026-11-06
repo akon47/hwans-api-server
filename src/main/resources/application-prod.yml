@@ -7,7 +7,6 @@ spring:
     init:
       mode: never
   jpa:
-    database: mysql
     show-sql: false
     hibernate:
       ddl-auto: update

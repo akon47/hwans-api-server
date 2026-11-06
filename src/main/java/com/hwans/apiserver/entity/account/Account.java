@@ -12,7 +12,7 @@ import com.hwans.apiserver.entity.blog.Post;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;

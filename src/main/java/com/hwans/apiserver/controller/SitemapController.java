@@ -2,8 +2,8 @@ package com.hwans.apiserver.controller;
 
 import com.hwans.apiserver.dto.blog.SimplePostDto;
 import com.hwans.apiserver.service.blog.BlogService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -19,7 +19,7 @@ import java.util.Optional;
  * sitemap.xml Controller (검색엔진 색인용)
  */
 @RestController
-@Api(tags = "Sitemap")
+@Tag(name = "Sitemap")
 @RequiredArgsConstructor
 public class SitemapController {
     private final BlogService blogService;
@@ -35,7 +35,7 @@ public class SitemapController {
     private static final DateTimeFormatter LASTMOD_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final MediaType XML_MEDIA_TYPE = MediaType.valueOf("application/xml; charset=UTF-8");
 
-    @ApiOperation(value = "sitemap.xml", notes = "전체 공개 게시글과 블로그 페이지의 sitemap 을 반환한다.", tags = "Sitemap")
+    @Operation(summary = "sitemap.xml", description = "전체 공개 게시글과 블로그 페이지의 sitemap 을 반환한다.")
     @GetMapping(value = "/sitemap.xml", produces = "application/xml")
     public ResponseEntity<String> getSitemap() {
         var posts = blogService.getRecentPublicPosts(null, SITEMAP_SIZE);

@@ -15,7 +15,7 @@ import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
 import com.hwans.apiserver.repository.token.AccessTokenRepository;
 import com.hwans.apiserver.repository.token.DeviceAuthorizationRepository;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -93,7 +93,7 @@ public class AccountServiceImpl implements AccountService {
         if (needVerifyCode) {
             final var emailVerifyCodeKey = getEmailVerifyCodeKey(createAccountDto.getEmail());
             String verifyCode = redisTemplate.opsForValue().get(emailVerifyCodeKey);
-            if (StringUtils.isBlank(verifyCode) || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
+            if (!StringUtils.hasText(verifyCode) || verifyCode.equals(createAccountDto.getEmailVerifyCode()) == false) {
                 throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
             }
         }
@@ -154,7 +154,7 @@ public class AccountServiceImpl implements AccountService {
 
         final var passwordResetTokenKey = getPasswordResetTokenKey(email);
         String passwordResetToken = redisTemplate.opsForValue().getAndDelete(passwordResetTokenKey);
-        if (StringUtils.isBlank(passwordResetToken) || passwordResetToken.equals(resetPasswordDto.getResetPasswordToken()) == false) {
+        if (!StringUtils.hasText(passwordResetToken) || passwordResetToken.equals(resetPasswordDto.getResetPasswordToken()) == false) {
             throw new RestApiException(ErrorCodes.BadRequest.INVALID_EMAIL_VERIFY_CODE);
         }
 

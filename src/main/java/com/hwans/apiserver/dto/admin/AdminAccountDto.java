@@ -1,7 +1,6 @@
 package com.hwans.apiserver.dto.admin;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,22 +14,22 @@ import java.util.UUID;
  */
 @Getter
 @Builder
-@ApiModel(description = "관리자용 계정 정보 Dto")
+@Schema(description = "관리자용 계정 정보 Dto")
 public class AdminAccountDto implements Serializable {
-    @ApiModelProperty(value = "계정 Id", required = true)
+    @Schema(description = "계정 Id", requiredMode = Schema.RequiredMode.REQUIRED)
     UUID id;
-    @ApiModelProperty(value = "이메일", required = true)
+    @Schema(description = "이메일", requiredMode = Schema.RequiredMode.REQUIRED)
     String email;
-    @ApiModelProperty(value = "이름", required = true)
+    @Schema(description = "이름", requiredMode = Schema.RequiredMode.REQUIRED)
     String name;
-    @ApiModelProperty(value = "블로그 Id", required = true)
+    @Schema(description = "블로그 Id", requiredMode = Schema.RequiredMode.REQUIRED)
     String blogId;
-    @ApiModelProperty(value = "프로필 이미지 URL")
+    @Schema(description = "프로필 이미지 URL")
     String profileImageUrl;
-    @ApiModelProperty(value = "정지(비활성화) 여부", required = true)
+    @Schema(description = "정지(비활성화) 여부", requiredMode = Schema.RequiredMode.REQUIRED)
     boolean deleted;
-    @ApiModelProperty(value = "보유 역할 목록", required = true)
+    @Schema(description = "보유 역할 목록", requiredMode = Schema.RequiredMode.REQUIRED)
     Set<String> roles;
-    @ApiModelProperty(value = "가입 시각", required = true)
+    @Schema(description = "가입 시각", requiredMode = Schema.RequiredMode.REQUIRED)
     LocalDateTime createdAt;
 }

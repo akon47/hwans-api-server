@@ -7,14 +7,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
- * 메모리 캐시를 위한 Redis 설정 클래스
+ * 메모리 캐시를 위한 Redis 설정 클래스 (RedisTemplate 만 쓰고 Redis 리포지토리는 쓰지 않는다)
  */
 @Configuration
-@EnableRedisRepositories
 @RequiredArgsConstructor
 public class RedisConfig {
     private final RedisProperties redisProperties;

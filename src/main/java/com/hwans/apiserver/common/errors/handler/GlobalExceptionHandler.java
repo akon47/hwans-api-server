@@ -7,7 +7,7 @@ import com.hwans.apiserver.dto.common.ErrorResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException e,
             HttpHeaders headers,
-            HttpStatus status,
+            HttpStatusCode status,
             WebRequest request) {
         log.warn("handleIllegalArgument", e);
         ErrorCode errorCode = ErrorCodes.BadRequest.INVALID_PARAMETER;

@@ -1,6 +1,6 @@
 package com.hwans.apiserver.common.security;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 프록시 뒤에 있을 경우를 고려하여 클라이언트 IP 를 찾는다.

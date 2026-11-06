@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Hidden;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -21,7 +21,7 @@ import java.time.Duration;
  * 예: {@code GET /prerender/@kim-hwan/posts/my-post} → 그 글의 본문·메타·JSON-LD 가 든 HTML (없으면 404).
  */
 @RestController
-@ApiIgnore
+@Hidden
 @RequiredArgsConstructor
 public class PrerenderController {
     private static final String PREFIX = "/prerender";

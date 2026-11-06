@@ -1,13 +1,12 @@
 package com.hwans.apiserver.dto.chat;
 
 import com.hwans.apiserver.dto.account.SimpleAccountDto;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -17,20 +16,20 @@ import java.util.UUID;
  */
 @Getter
 @Builder
-@ApiModel(description = "채팅방 Dto")
+@Schema(description = "채팅방 Dto")
 public class ChatRoomDto implements Serializable {
-    @ApiModelProperty(value = "채팅방 Id", required = true)
+    @Schema(description = "채팅방 Id", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     UUID id;
-    @ApiModelProperty(value = "채팅방 이름", required = true, example = "테스트 채팅방")
+    @Schema(description = "채팅방 이름", requiredMode = Schema.RequiredMode.REQUIRED, example = "테스트 채팅방")
     @NotBlank
     String title;
-    @ApiModelProperty(value = "채팅방 설명", required = true, example = "테스트 채팅방 입니다.")
+    @Schema(description = "채팅방 설명", requiredMode = Schema.RequiredMode.REQUIRED, example = "테스트 채팅방 입니다.")
     String description;
-    @ApiModelProperty(value = "채팅방 주인", required = true)
+    @Schema(description = "채팅방 주인", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     SimpleAccountDto owner;
-    @ApiModelProperty(value = "채팅방 개설 시간", required = true)
+    @Schema(description = "채팅방 개설 시간", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     LocalDateTime createdAt;
 }

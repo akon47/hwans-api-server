@@ -2,7 +2,6 @@ package com.hwans.apiserver.service.attachment;
 
 import com.hwans.apiserver.entity.attachment.Attachment;
 import lombok.Getter;
-import org.hibernate.type.LocalDateType;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 

@@ -2,14 +2,13 @@ package com.hwans.apiserver.dto.blog;
 
 import com.hwans.apiserver.entity.blog.OpenType;
 import com.hwans.apiserver.support.annotation.PostUrl;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
@@ -19,33 +18,33 @@ import java.util.UUID;
  */
 @Getter
 @Builder
-@ApiModel(description = "게시글 작성/수정 Dto")
+@Schema(description = "게시글 작성/수정 Dto")
 public class PostRequestDto implements Serializable {
-    @ApiModelProperty(value = "게시글 URL", required = true, example = "my-first-post")
+    @Schema(description = "게시글 URL", requiredMode = Schema.RequiredMode.REQUIRED, example = "my-first-post")
     @Length(max = 320)
     @PostUrl
     String postUrl;
-    @ApiModelProperty(value = "제목", required = true, example = "제목입니다.")
+    @Schema(description = "제목", requiredMode = Schema.RequiredMode.REQUIRED, example = "제목입니다.")
     @NotBlank
     @Length(max = 2000)
     String title;
-    @ApiModelProperty(value = "내용", required = true, example = "게시글 내용입니다.")
+    @Schema(description = "내용", requiredMode = Schema.RequiredMode.REQUIRED, example = "게시글 내용입니다.")
     @NotBlank
     String content;
-    @ApiModelProperty(value = "게시글 공개 유형", required = true, example = "PUBLIC")
+    @Schema(description = "게시글 공개 유형", requiredMode = Schema.RequiredMode.REQUIRED, example = "PUBLIC")
     @NotNull
     OpenType openType;
-    @ApiModelProperty(value = "요약 내용", example = "요약 내용입니다.")
+    @Schema(description = "요약 내용", example = "요약 내용입니다.")
     @NotBlank
     @Length(max = 255)
     String summary;
-    @ApiModelProperty(value = "썸네일 파일 Id")
+    @Schema(description = "썸네일 파일 Id")
     UUID thumbnailFileId;
-    @ApiModelProperty(value = "태그", required = true)
+    @Schema(description = "태그", requiredMode = Schema.RequiredMode.REQUIRED)
     Set<TagDto> tags;
-    @ApiModelProperty(value = "시리즈 Url", example = "series_url")
+    @Schema(description = "시리즈 Url", example = "series_url")
     @Length(max = 320)
     String seriesUrl;
-    @ApiModelProperty(value = "예약 발행 시각 (openType 이 SCHEDULED 인 경우 사용)")
+    @Schema(description = "예약 발행 시각 (openType 이 SCHEDULED 인 경우 사용)")
     java.time.LocalDateTime scheduledAt;
 }

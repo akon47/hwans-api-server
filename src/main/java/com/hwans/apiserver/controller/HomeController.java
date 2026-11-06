@@ -2,10 +2,10 @@ package com.hwans.apiserver.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import springfox.documentation.annotations.*;
+import io.swagger.v3.oas.annotations.Hidden;
 
 @Controller
-@ApiIgnore
+@Hidden
 public class HomeController {
 
     /**
