@@ -134,6 +134,26 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         sessionClientInfo.put(session.getId(), extractClientInfo(session));
         sessionLastSeen.put(session.getId(), System.currentTimeMillis());
         notifySessionCountChanged();
+        sendActiveViewerCounts(session);
+    }
+
+    /**
+     * 방금 연결된 세션에 지금 읽히고 있는 글들의 시청자 수를 한 번에 알려 준다.
+     * 변경 브로드캐스트는 연결 이후의 변화만 전달하므로, 이 스냅샷이 없으면 새로 들어온 사람은
+     * 누군가 글을 열거나 닫기 전까지 "지금 보는 중" 숫자를 알 수 없다.
+     */
+    private void sendActiveViewerCounts(WebSocketSession session) {
+        var counts = getActiveViewerCounts().entrySet().stream()
+                .map(entry -> new PostViewerCountDto(entry.getKey(), entry.getValue()))
+                .toList();
+        if (counts.isEmpty()) {
+            return;
+        }
+        var message = MessageDto.builder().type(MessageType.POST_VIEWER_COUNTS).payload(counts).build();
+        var serialized = serialize(message);
+        if (serialized != null) {
+            enqueueSend(session, serialized);
+        }
     }
 
     @Override
