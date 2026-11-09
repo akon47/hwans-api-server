@@ -55,4 +55,9 @@ public interface WebSocketService {
      * 쌓인 커서 변경을 같은 글을 읽는 세션들에게 묶어 보낸다. 스케줄러가 약 100ms 마다 호출한다.
      */
     void flushCursors();
+
+    /**
+     * 바뀐 읽는 위치를 같은 글을 읽는 세션들에게 묶어 보낸다. 스케줄러가 자주 호출해도 일정 간격으로만 실제로 보낸다.
+     */
+    void flushReadPositions();
 }

@@ -38,5 +38,9 @@ public enum MessageType {
     // 서버 -> 클라이언트: 같은 글을 읽는 사람들의 커서 묶음(payload: CursorBatchDto). 약 100ms 마다 한 번
     CURSOR_BATCH,
     // 서버 -> 클라이언트: 지금 보는 글을 함께 읽고 있는 사람들(payload: PostViewersDto). 누가 들어오거나 나갈 때마다
-    POST_VIEWERS
+    POST_VIEWERS,
+    // 클라이언트 -> 서버: 지금 보는 글에서 내가 읽고 있는 위치(payload: 본문 시작 0 ~ 끝 1 의 숫자)
+    READ_POSITION,
+    // 서버 -> 클라이언트: 같은 글을 읽는 사람들의 읽는 위치(payload: ReadPositionsDto). 바뀐 것이 있을 때 묶어서
+    READ_POSITIONS
 }

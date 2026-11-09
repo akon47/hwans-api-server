@@ -18,6 +18,7 @@ import com.hwans.apiserver.dto.websocket.MessageType;
 import com.hwans.apiserver.dto.websocket.PostViewerCountDto;
 import com.hwans.apiserver.dto.websocket.PostViewerDto;
 import com.hwans.apiserver.dto.websocket.PostViewersDto;
+import com.hwans.apiserver.dto.websocket.ReadPositionsDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -111,6 +112,17 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     private record ViewerIdentity(String name, String color, long joinedAt) {
     }
 
+    // ───────────── 읽는 위치 ─────────────
+    // 세션 Id -> 지금 보는 글에서 읽고 있는 위치(본문 시작 0 ~ 끝 1). 글을 보는 동안만 보관한다.
+    private final Map<String, Double> sessionReadPosition = new ConcurrentHashMap<>();
+    private final Map<String, Long> readPositionLastAt = new ConcurrentHashMap<>();
+    // 다음 flush 때 읽는 위치를 보낼 글 Id
+    private final Set<String> dirtyReadPosts = ConcurrentHashMap.newKeySet();
+    private volatile long readPositionsFlushedAt = 0L;
+    // 클라이언트는 약 400ms 간격으로 보낸다. 서버 쪽 간격은 스팸 방지용.
+    private static final long READ_POSITION_MIN_INTERVAL_MILLIS = 100L;
+    private static final long READ_POSITIONS_FLUSH_INTERVAL_MILLIS = 300L;
+
     /**
      * 핸드셰이크 시점에 캡처한 세션의 클라이언트 정보.
      */
@@ -189,6 +201,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         cursorLastChatAt.remove(sessionId);
         cursorSelfSent.remove(sessionId);
         cursorDisabledNotified.remove(sessionId);
+        readPositionLastAt.remove(sessionId);
         notifySessionCountChanged();
     }
 
@@ -247,6 +260,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 case CURSOR_MOVE -> handleCursorMove(session, received.getPayload());
                 case CURSOR_CHAT -> handleCursorChat(session, received.getPayload());
                 case CURSOR_LEAVE -> handleCursorLeave(session);
+                case READ_POSITION -> handleReadPosition(session, received.getPayload());
                 case PING -> {
                     // 생존 신호. lastSeen은 위에서 이미 갱신했으므로 추가 처리는 없다.
                 }
@@ -323,11 +337,14 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 sessionViewerIdentity.put(sessionId, new ViewerIdentity(name, color, joinedAt));
                 identityChanged = true;
             } else {
+                sessionReadPosition.remove(sessionId);
                 if (previousPostId != null) {
                     removeViewer(previousPostId, sessionId);
                     affectedPostIds.add(previousPostId);
                 }
                 if (newPostId != null) {
+                    // 새로 들어온 사람이 다른 사람들의 읽는 위치를 받도록 다음 flush 대상에 넣는다.
+                    dirtyReadPosts.add(newPostId);
                     sessionViewingPost.put(sessionId, newPostId);
                     sessionViewerIdentity.put(sessionId, new ViewerIdentity(name, color, System.currentTimeMillis()));
                     postViewers.computeIfAbsent(newPostId, key -> new HashSet<>()).add(sessionId);
@@ -346,6 +363,79 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         affectedPostIds.forEach(this::broadcastPostViewers);
     }
 
+    // 읽는 사람 목록에 실리는 세션 Id (먼저 들어온 순, 최대 개수 제한). presenceLock 보유 상태에서만 호출한다.
+    private List<String> listedViewerIds(Collection<String> viewerIds) {
+        return viewerIds.stream()
+                .filter(sessionViewerIdentity::containsKey)
+                .sorted(Comparator.comparingLong((String id) -> sessionViewerIdentity.get(id).joinedAt())
+                        .thenComparing(Comparator.naturalOrder()))
+                .limit(MAX_LISTED_VIEWERS)
+                .toList();
+    }
+
+    /**
+     * 클라이언트가 보낸 읽는 위치를 보관한다. 실제 전송은 flushReadPositions 가 한다.
+     */
+    private void handleReadPosition(WebSocketSession session, Object payload) {
+        var sessionId = session.getId();
+        var now = System.currentTimeMillis();
+        var last = readPositionLastAt.get(sessionId);
+        if (last != null && now - last < READ_POSITION_MIN_INTERVAL_MILLIS) {
+            return;
+        }
+        readPositionLastAt.put(sessionId, now);
+        var postId = sessionViewingPost.get(sessionId);
+        if (postId == null) {
+            return;
+        }
+        sessionReadPosition.put(sessionId, clamp(asDouble(payload), 0, 1));
+        dirtyReadPosts.add(postId);
+    }
+
+    @Override
+    public void flushReadPositions() {
+        if (dirtyReadPosts.isEmpty()) {
+            return;
+        }
+        var now = System.currentTimeMillis();
+        if (now - readPositionsFlushedAt < READ_POSITIONS_FLUSH_INTERVAL_MILLIS) {
+            return;
+        }
+        readPositionsFlushedAt = now;
+        for (var postId : new ArrayList<>(dirtyReadPosts)) {
+            dirtyReadPosts.remove(postId);
+
+            List<String> viewerIds;
+            List<ReadPositionsDto.Position> positions;
+            synchronized (presenceLock) {
+                var viewers = postViewers.get(postId);
+                // 혼자 읽는 중이면 알릴 사람이 없고, 사람이 너무 많은 글은 커서와 마찬가지로 보내지 않는다.
+                if (viewers == null || viewers.size() < 2 || viewers.size() > MAX_CURSOR_VIEWERS) {
+                    continue;
+                }
+                viewerIds = new ArrayList<>(viewers);
+                positions = listedViewerIds(viewerIds).stream()
+                        .filter(sessionReadPosition::containsKey)
+                        .map(id -> new ReadPositionsDto.Position(id, sessionReadPosition.get(id)))
+                        .toList();
+            }
+            if (positions.isEmpty()) {
+                continue;
+            }
+            var serialized = serialize(MessageDto.builder().type(MessageType.READ_POSITIONS)
+                    .payload(new ReadPositionsDto(postId, positions)).build());
+            if (serialized == null) {
+                continue;
+            }
+            for (var viewerId : viewerIds) {
+                var target = sessions.get(viewerId);
+                if (target != null) {
+                    enqueueSend(target, serialized);
+                }
+            }
+        }
+    }
+
     /**
      * 한 글을 읽고 있는 세션들에게 지금 함께 읽는 사람 목록을 보낸다.
      */
@@ -358,11 +448,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 return;
             }
             viewerIds = new ArrayList<>(viewers);
-            listed = viewerIds.stream()
-                    .filter(sessionViewerIdentity::containsKey)
-                    .sorted(Comparator.comparingLong((String id) -> sessionViewerIdentity.get(id).joinedAt())
-                            .thenComparing(Comparator.naturalOrder()))
-                    .limit(MAX_LISTED_VIEWERS)
+            listed = listedViewerIds(viewerIds).stream()
                     .map(id -> {
                         var identity = sessionViewerIdentity.get(id);
                         return new PostViewerDto(id, identity.name(), identity.color());
@@ -391,6 +477,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         synchronized (presenceLock) {
             previousPostId = sessionViewingPost.remove(sessionId);
             sessionViewerIdentity.remove(sessionId);
+            sessionReadPosition.remove(sessionId);
             if (previousPostId != null) {
                 removeViewer(previousPostId, sessionId);
             }

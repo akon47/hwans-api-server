@@ -17,5 +17,7 @@ public class CursorFlushScheduler {
     @Scheduled(fixedDelay = 100)
     public void flushCursors() {
         webSocketService.flushCursors();
+        // 읽는 위치는 커서보다 느리게 바뀌므로 서비스 쪽에서 더 긴 간격으로 걸러 보낸다.
+        webSocketService.flushReadPositions();
     }
 }
