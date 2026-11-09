@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 public enum MessageType {
     // 서버 -> 클라이언트: 전체 접속 세션 수가 변경됨
     SESSION_COUNT_CHANGED,
-    // 클라이언트 -> 서버: 현재 보고 있는 게시글을 지정(payload: 게시글 Id, 비우면 보지 않음)
+    // 클라이언트 -> 서버: 현재 보고 있는 게시글을 지정
+    // (payload: 게시글 Id 문자열 또는 {postId, name, color}; 비우면 보지 않음. name·color 는 읽는 사람 목록에 쓴다)
     VIEW_POST,
     // 클라이언트 -> 서버: 시청자 수를 알고 싶은 게시글 목록 요청(payload: 게시글 Id 배열)
     WATCH_POSTS,
@@ -35,5 +36,7 @@ public enum MessageType {
     // 서버 -> 클라이언트: 이 세션의 Id(payload: 문자열). 커서 묶음에서 자기 커서를 걸러내는 데 쓴다
     CURSOR_SELF,
     // 서버 -> 클라이언트: 같은 글을 읽는 사람들의 커서 묶음(payload: CursorBatchDto). 약 100ms 마다 한 번
-    CURSOR_BATCH
+    CURSOR_BATCH,
+    // 서버 -> 클라이언트: 지금 보는 글을 함께 읽고 있는 사람들(payload: PostViewersDto). 누가 들어오거나 나갈 때마다
+    POST_VIEWERS
 }

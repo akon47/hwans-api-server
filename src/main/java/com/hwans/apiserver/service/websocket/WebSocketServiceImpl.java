@@ -16,6 +16,8 @@ import com.hwans.apiserver.dto.websocket.CursorStateDto;
 import com.hwans.apiserver.dto.websocket.MessageDto;
 import com.hwans.apiserver.dto.websocket.MessageType;
 import com.hwans.apiserver.dto.websocket.PostViewerCountDto;
+import com.hwans.apiserver.dto.websocket.PostViewerDto;
+import com.hwans.apiserver.dto.websocket.PostViewersDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -97,6 +99,17 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     private static final long CURSOR_STALE_MILLIS = 90_000L;
     private static final int CURSOR_NAME_MAX = 24;
     private static final int CURSOR_MESSAGE_MAX = 120;
+
+    // ───────────── 함께 읽는 사람 목록 ─────────────
+    // 세션 Id -> 읽는 사람 목록에 보일 이름·색·글에 들어온 시각. 글을 보는 동안만 보관한다.
+    private final Map<String, ViewerIdentity> sessionViewerIdentity = new ConcurrentHashMap<>();
+    // 한 번에 알려 주는 읽는 사람 최대 수 (먼저 들어온 순). 나머지는 total 로만 알린다.
+    private static final int MAX_LISTED_VIEWERS = 30;
+    private static final String DEFAULT_VIEWER_NAME = "익명";
+    private static final String DEFAULT_VIEWER_COLOR = "#3b5bdb";
+
+    private record ViewerIdentity(String name, String color, long joinedAt) {
+    }
 
     /**
      * 핸드셰이크 시점에 캡처한 세션의 클라이언트 정보.
@@ -228,7 +241,7 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 return;
             }
             switch (received.getType()) {
-                case VIEW_POST -> updateViewingPost(session.getId(), asPostId(received.getPayload()));
+                case VIEW_POST -> handleViewPost(session, received.getPayload());
                 case WATCH_POSTS -> sendPostViewerCounts(session, asPostIdList(received.getPayload()));
                 case AUTHENTICATE -> authenticate(session, received.getPayload());
                 case CURSOR_MOVE -> handleCursorMove(session, received.getPayload());
@@ -267,28 +280,107 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     }
 
     /**
-     * 세션이 현재 보고 있는 게시글을 갱신하고, 영향을 받은 게시글들의 시청자 수를 브로드캐스트한다.
+     * VIEW_POST 를 처리한다. payload 는 게시글 Id 문자열(예전 클라이언트)이거나 {postId, name, color} 다.
      */
-    private void updateViewingPost(String sessionId, String newPostId) {
+    private void handleViewPost(WebSocketSession session, Object payload) {
+        String postId;
+        var name = DEFAULT_VIEWER_NAME;
+        var color = DEFAULT_VIEWER_COLOR;
+        if (payload instanceof Map<?, ?> map) {
+            postId = asPostId(map.get("postId"));
+            var requestedName = truncate(asString(map.get("name"), DEFAULT_VIEWER_NAME).strip(), CURSOR_NAME_MAX);
+            name = requestedName.isEmpty() ? DEFAULT_VIEWER_NAME : requestedName;
+            color = sanitizeColor(asString(map.get("color"), DEFAULT_VIEWER_COLOR));
+        } else {
+            postId = asPostId(payload);
+        }
+        if (postId != null && cursorSelfSent.add(session.getId())) {
+            // 읽는 사람 목록에서 자기 자신을 알아볼 수 있도록 세션 Id 를 먼저 알려 준다.
+            var serialized = serialize(MessageDto.builder().type(MessageType.CURSOR_SELF).payload(session.getId()).build());
+            if (serialized != null) {
+                enqueueSend(session, serialized);
+            }
+        }
+        updateViewingPost(session.getId(), postId, name, color);
+    }
+
+    /**
+     * 세션이 현재 보고 있는 게시글을 갱신하고, 영향을 받은 게시글들의 시청자 수(전체에게)와
+     * 읽는 사람 목록(그 글을 읽는 세션들에게)을 알린다.
+     */
+    private void updateViewingPost(String sessionId, String newPostId, String name, String color) {
         List<String> affectedPostIds = new ArrayList<>();
+        var identityChanged = false;
         synchronized (presenceLock) {
             var previousPostId = sessionViewingPost.get(sessionId);
             if (Objects.equals(previousPostId, newPostId)) {
-                return;
-            }
-            if (previousPostId != null) {
-                removeViewer(previousPostId, sessionId);
-                affectedPostIds.add(previousPostId);
-            }
-            if (newPostId != null) {
-                sessionViewingPost.put(sessionId, newPostId);
-                postViewers.computeIfAbsent(newPostId, key -> new HashSet<>()).add(sessionId);
-                affectedPostIds.add(newPostId);
+                // 같은 글을 계속 보는 중: 이름·색이 바뀌었을 때만(예: 보던 중 로그인) 목록을 다시 알린다.
+                var identity = sessionViewerIdentity.get(sessionId);
+                if (newPostId == null || (identity != null && identity.name().equals(name) && identity.color().equals(color))) {
+                    return;
+                }
+                var joinedAt = identity != null ? identity.joinedAt() : System.currentTimeMillis();
+                sessionViewerIdentity.put(sessionId, new ViewerIdentity(name, color, joinedAt));
+                identityChanged = true;
             } else {
-                sessionViewingPost.remove(sessionId);
+                if (previousPostId != null) {
+                    removeViewer(previousPostId, sessionId);
+                    affectedPostIds.add(previousPostId);
+                }
+                if (newPostId != null) {
+                    sessionViewingPost.put(sessionId, newPostId);
+                    sessionViewerIdentity.put(sessionId, new ViewerIdentity(name, color, System.currentTimeMillis()));
+                    postViewers.computeIfAbsent(newPostId, key -> new HashSet<>()).add(sessionId);
+                    affectedPostIds.add(newPostId);
+                } else {
+                    sessionViewingPost.remove(sessionId);
+                    sessionViewerIdentity.remove(sessionId);
+                }
             }
         }
+        if (identityChanged) {
+            broadcastPostViewers(newPostId);
+            return;
+        }
         affectedPostIds.forEach(this::broadcastPostViewerCount);
+        affectedPostIds.forEach(this::broadcastPostViewers);
+    }
+
+    /**
+     * 한 글을 읽고 있는 세션들에게 지금 함께 읽는 사람 목록을 보낸다.
+     */
+    private void broadcastPostViewers(String postId) {
+        List<String> viewerIds;
+        List<PostViewerDto> listed;
+        synchronized (presenceLock) {
+            var viewers = postViewers.get(postId);
+            if (viewers == null || viewers.isEmpty()) {
+                return;
+            }
+            viewerIds = new ArrayList<>(viewers);
+            listed = viewerIds.stream()
+                    .filter(sessionViewerIdentity::containsKey)
+                    .sorted(Comparator.comparingLong((String id) -> sessionViewerIdentity.get(id).joinedAt())
+                            .thenComparing(Comparator.naturalOrder()))
+                    .limit(MAX_LISTED_VIEWERS)
+                    .map(id -> {
+                        var identity = sessionViewerIdentity.get(id);
+                        return new PostViewerDto(id, identity.name(), identity.color());
+                    })
+                    .toList();
+        }
+        var message = MessageDto.builder().type(MessageType.POST_VIEWERS)
+                .payload(new PostViewersDto(postId, listed, viewerIds.size())).build();
+        var serialized = serialize(message);
+        if (serialized == null) {
+            return;
+        }
+        for (var viewerId : viewerIds) {
+            var target = sessions.get(viewerId);
+            if (target != null) {
+                enqueueSend(target, serialized);
+            }
+        }
     }
 
     /**
@@ -298,12 +390,14 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         String previousPostId;
         synchronized (presenceLock) {
             previousPostId = sessionViewingPost.remove(sessionId);
+            sessionViewerIdentity.remove(sessionId);
             if (previousPostId != null) {
                 removeViewer(previousPostId, sessionId);
             }
         }
         if (previousPostId != null) {
             broadcastPostViewerCount(previousPostId);
+            broadcastPostViewers(previousPostId);
         }
     }
 
