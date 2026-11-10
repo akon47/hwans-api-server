@@ -45,6 +45,9 @@ public class Report extends BaseEntity {
     private String targetSummary;
     @Column(length = 400)
     private String targetPath;
+    // 신고된 글·댓글을 쓴 사람의 이메일 (손님이 쓴 것이면 비어 있다)
+    @Column(length = 320)
+    private String targetAuthorEmail;
     @Enumerated(EnumType.STRING)
     @Column(length = 16, nullable = false)
     private Reason reason;

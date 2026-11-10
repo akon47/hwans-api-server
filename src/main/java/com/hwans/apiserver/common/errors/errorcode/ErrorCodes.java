@@ -16,6 +16,7 @@ public class ErrorCodes {
         BAD_REQUEST("잘못된 요청입니다."),
         INVALID_PARAMETER("잘못된 파라미터입니다."),
         INVALID_EMAIL_VERIFY_CODE("잘못된 인증 코드입니다."),
+        BANNED_WORD("사용할 수 없는 표현이 들어 있습니다."),
         ;
 
         private final String defaultMessage;
@@ -73,6 +74,7 @@ public class ErrorCodes {
         FORBIDDEN("접근 권한이 없습니다."),
         ACCESS_TOKEN_SCOPE_REQUIRED("이 작업에 필요한 토큰 권한(scope)이 없습니다."),
         ACCESS_TOKEN_NOT_ALLOWED("액세스 토큰으로는 할 수 없는 작업입니다. 웹에서 직접 하세요."),
+        BLOCKED_IP("이용이 제한된 접속입니다."),
         ;
 
         private final String defaultMessage;

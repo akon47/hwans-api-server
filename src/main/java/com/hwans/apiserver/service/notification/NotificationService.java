@@ -63,6 +63,14 @@ public interface NotificationService {
     NotificationDto createCommentNotification(CommentDto comment);
 
     /**
+     * 댓글 본문에서 언급(@블로그Id)된 회원들에게 알림을 만든다.
+     * 댓글을 쓴 본인과, 이미 댓글 알림을 받는 글 작성자(글에 바로 단 댓글일 때)는 건너뛴다.
+     *
+     * @param comment 방금 작성된 댓글
+     */
+    void createMentionNotifications(CommentDto comment);
+
+    /**
      * 새 팔로워 알림을 생성합니다.
      *
      * @param followerAccountId  팔로우를 한 사용자 Id

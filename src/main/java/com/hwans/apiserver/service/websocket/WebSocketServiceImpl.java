@@ -123,6 +123,13 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
     private static final long READ_POSITION_MIN_INTERVAL_MILLIS = 100L;
     private static final long READ_POSITIONS_FLUSH_INTERVAL_MILLIS = 300L;
 
+    // ───────────── 떠오르는 이모지 · 댓글 작성 중 ─────────────
+    // 세션별 마지막 전송 시각 (너무 잦은 전송은 버린다)
+    private final Map<String, Long> reactionBurstLastAt = new ConcurrentHashMap<>();
+    private final Map<String, Long> commentTypingLastAt = new ConcurrentHashMap<>();
+    private static final long REACTION_BURST_MIN_INTERVAL_MILLIS = 250L;
+    private static final long COMMENT_TYPING_MIN_INTERVAL_MILLIS = 1_000L;
+
     /**
      * 핸드셰이크 시점에 캡처한 세션의 클라이언트 정보.
      */
@@ -202,6 +209,8 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         cursorSelfSent.remove(sessionId);
         cursorDisabledNotified.remove(sessionId);
         readPositionLastAt.remove(sessionId);
+        reactionBurstLastAt.remove(sessionId);
+        commentTypingLastAt.remove(sessionId);
         notifySessionCountChanged();
     }
 
@@ -261,6 +270,8 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
                 case CURSOR_CHAT -> handleCursorChat(session, received.getPayload());
                 case CURSOR_LEAVE -> handleCursorLeave(session);
                 case READ_POSITION -> handleReadPosition(session, received.getPayload());
+                case REACTION_BURST -> handleReactionBurst(session, received.getPayload());
+                case COMMENT_TYPING -> handleCommentTyping(session);
                 case PING -> {
                     // 생존 신호. lastSeen은 위에서 이미 갱신했으므로 추가 처리는 없다.
                 }
@@ -361,6 +372,83 @@ public class WebSocketServiceImpl extends TextWebSocketHandler implements WebSoc
         }
         affectedPostIds.forEach(this::broadcastPostViewerCount);
         affectedPostIds.forEach(this::broadcastPostViewers);
+    }
+
+    /**
+     * 한 글을 보고 있는 세션들에게 메시지를 보낸다. excludeSessionId 가 있으면 그 세션은 뺀다.
+     */
+    private void sendToPostViewers(String postId, MessageType type, Object payload, String excludeSessionId) {
+        List<String> viewerIds;
+        synchronized (presenceLock) {
+            var viewers = postViewers.get(postId);
+            if (viewers == null || viewers.isEmpty()) {
+                return;
+            }
+            viewerIds = new ArrayList<>(viewers);
+        }
+        var serialized = serialize(MessageDto.builder().type(type).payload(payload).build());
+        if (serialized == null) {
+            return;
+        }
+        for (var viewerId : viewerIds) {
+            if (viewerId.equals(excludeSessionId)) {
+                continue;
+            }
+            var target = sessions.get(viewerId);
+            if (target != null) {
+                enqueueSend(target, serialized);
+            }
+        }
+    }
+
+    // 세션의 직전 전송 이후 최소 간격이 지났으면 true 를 돌려주고 시각을 갱신한다.
+    private boolean passesInterval(Map<String, Long> lastAtBySession, String sessionId, long minIntervalMillis) {
+        var now = System.currentTimeMillis();
+        var last = lastAtBySession.get(sessionId);
+        if (last != null && now - last < minIntervalMillis) {
+            return false;
+        }
+        lastAtBySession.put(sessionId, now);
+        return true;
+    }
+
+    /**
+     * 글 반응 이모지를 방금 눌렀다는 신호를 같은 글을 읽는 모두에게(보낸 사람 포함) 전한다. 저장하지 않는다.
+     */
+    private void handleReactionBurst(WebSocketSession session, Object payload) {
+        var sessionId = session.getId();
+        var emoji = payload == null ? null : payload.toString();
+        if (!com.hwans.apiserver.service.blog.BlogServiceImpl.isAllowedReactionEmoji(emoji)) {
+            return;
+        }
+        var postId = sessionViewingPost.get(sessionId);
+        if (postId == null || !passesInterval(reactionBurstLastAt, sessionId, REACTION_BURST_MIN_INTERVAL_MILLIS)) {
+            return;
+        }
+        sendToPostViewers(postId, MessageType.REACTION_BURST, Map.of("postId", postId, "emoji", emoji, "id", sessionId), null);
+    }
+
+    /**
+     * 댓글을 쓰는 중이라는 신호를 같은 글을 읽는 다른 사람들에게 전한다.
+     */
+    private void handleCommentTyping(WebSocketSession session) {
+        var sessionId = session.getId();
+        var postId = sessionViewingPost.get(sessionId);
+        if (postId == null || !passesInterval(commentTypingLastAt, sessionId, COMMENT_TYPING_MIN_INTERVAL_MILLIS)) {
+            return;
+        }
+        var identity = sessionViewerIdentity.get(sessionId);
+        var name = identity != null ? identity.name() : DEFAULT_VIEWER_NAME;
+        sendToPostViewers(postId, MessageType.COMMENT_TYPING, Map.of("postId", postId, "id", sessionId, "name", name), sessionId);
+    }
+
+    @Override
+    public void notifyCommentsChanged(java.util.UUID postId) {
+        if (postId == null) {
+            return;
+        }
+        var id = postId.toString();
+        sendToPostViewers(id, MessageType.COMMENTS_CHANGED, Map.of("postId", id), null);
     }
 
     // 읽는 사람 목록에 실리는 세션 Id (먼저 들어온 순, 최대 개수 제한). presenceLock 보유 상태에서만 호출한다.

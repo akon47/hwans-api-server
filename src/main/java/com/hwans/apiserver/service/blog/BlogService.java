@@ -196,6 +196,14 @@ public interface BlogService {
     void deleteComment(UUID commentId);
 
     /**
+     * 손님 댓글을 쓴 IP 를 남깁니다. (스팸 차단용)
+     *
+     * @param commentId 댓글 Id
+     * @param ip        작성한 IP
+     */
+    void setCommentAuthorIp(UUID commentId, String ip);
+
+    /**
      * 댓글 작성자의 Id를 조회합니다.
      *
      * @param commentId 댓글 Id

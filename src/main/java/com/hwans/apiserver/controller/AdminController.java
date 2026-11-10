@@ -37,6 +37,54 @@ public class AdminController {
     private final AdminService adminService;
     private final AdminAuditService adminAuditService;
     private final SiteService siteService;
+    private final com.hwans.apiserver.service.moderation.ModerationService moderationService;
+    private final com.hwans.apiserver.service.stats.StatsService statsService;
+
+    // ───────────── 인사이트 ─────────────
+
+    @Operation(summary = "사이트 인사이트 조회", description = "기간 동안의 날짜별 조회수, 많이 읽힌 글, 많이 찾는 검색어를 조회한다.")
+    @GetMapping(value = "/v1/admin/insights")
+    public com.hwans.apiserver.dto.stats.PostStatsDto.Insights getInsights(@Parameter(description = "조회 기간(일, 7~90)") @RequestParam(required = false, defaultValue = "30") int days) {
+        return statsService.getInsights(days);
+    }
+
+    // ───────────── 차단 ─────────────
+
+    @Operation(summary = "차단한 IP 목록 조회", description = "차단한 IP 를 최근 순으로 조회한다.")
+    @GetMapping(value = "/v1/admin/blocked-ips")
+    public List<AdminModerationDto.BlockedIp> getBlockedIps() {
+        return moderationService.getBlockedIps();
+    }
+
+    @Operation(summary = "IP 차단", description = "IP 를 차단한다. 차단된 IP 는 손님 댓글과 신고를 할 수 없다.")
+    @PostMapping(value = "/v1/admin/blocked-ips")
+    public AdminModerationDto.BlockedIp blockIp(@Parameter(description = "차단 요청", required = true) @RequestBody @Valid final AdminModerationDto.BlockIpRequest request) {
+        return moderationService.blockIp(request.getIp(), request.getReason());
+    }
+
+    @Operation(summary = "IP 차단 해제", description = "IP 차단을 해제한다.")
+    @DeleteMapping(value = "/v1/admin/blocked-ips/{blockedIpId}")
+    public void unblockIp(@Parameter(description = "차단 Id") @PathVariable UUID blockedIpId) {
+        moderationService.unblockIp(blockedIpId);
+    }
+
+    @Operation(summary = "금칙어 조회", description = "금칙어 목록을 조회한다.")
+    @GetMapping(value = "/v1/admin/banned-words")
+    public AdminModerationDto.BannedWords getBannedWords() {
+        return moderationService.getBannedWords();
+    }
+
+    @Operation(summary = "금칙어 저장", description = "금칙어 목록을 통째로 바꾼다. 댓글과 손님 이름에 들어 있으면 등록을 막는다.")
+    @PutMapping(value = "/v1/admin/banned-words")
+    public AdminModerationDto.BannedWords setBannedWords(@Parameter(description = "금칙어 목록", required = true) @RequestBody @Valid final AdminModerationDto.BannedWords request) {
+        return moderationService.setBannedWords(request.getWords());
+    }
+
+    @Operation(summary = "회원 상세 조회", description = "한 회원의 글·댓글·신고 이력을 모아 조회한다.")
+    @GetMapping(value = "/v1/admin/accounts/{accountId}/detail")
+    public AdminAccountDetailDto getAccountDetail(@Parameter(description = "계정 Id") @PathVariable UUID accountId) {
+        return adminService.getAccountDetail(accountId);
+    }
 
     // ───────────── 활동 기록 ─────────────
 

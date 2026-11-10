@@ -32,6 +32,9 @@ public class Comment extends BaseEntity {
     private String content;
     @Column(nullable = false)
     private boolean deleted;
+    // 손님 댓글을 쓴 IP (스팸 차단용. 회원 댓글에는 남기지 않는다)
+    @Column(length = 64)
+    private String authorIp;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Comment parent;
@@ -87,5 +90,9 @@ public class Comment extends BaseEntity {
 
     public void setParent(Comment comment) {
         this.parent = comment;
+    }
+
+    public void setAuthorIp(String authorIp) {
+        this.authorIp = authorIp;
     }
 }

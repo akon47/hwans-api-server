@@ -98,6 +98,13 @@ public class BlogServiceImpl implements BlogService {
         put("👀", "eyes");
     }};
 
+    /**
+     * 글 반응으로 쓸 수 있는 이모지인지 (웹소켓의 떠오르는 이모지도 같은 목록만 받는다)
+     */
+    public static boolean isAllowedReactionEmoji(String emoji) {
+        return emoji != null && EMOJI_TO_KEY.containsKey(emoji);
+    }
+
     private static final java.util.Map<String, String> KEY_TO_EMOJI = EMOJI_TO_KEY.entrySet().stream()
             .collect(Collectors.toMap(java.util.Map.Entry::getValue, java.util.Map.Entry::getKey));
 
@@ -455,6 +462,12 @@ public class BlogServiceImpl implements BlogService {
                 .findByIdAndDeletedIsFalse(commentId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_COMMENT));
         return commentMapper.toDto(foundComment);
+    }
+
+    @Override
+    @Transactional
+    public void setCommentAuthorIp(UUID commentId, String ip) {
+        commentRepository.findById(commentId).ifPresent(comment -> comment.setAuthorIp(ip));
     }
 
     @Override

@@ -39,6 +39,28 @@ public class BlogController {
     private final BlogService blogService;
     private final NotificationService notificationService;
     private final WebSocketService webSocketService;
+    private final com.hwans.apiserver.service.stats.StatsService statsService;
+    private final com.hwans.apiserver.service.moderation.ModerationService moderationService;
+
+    // 댓글이 새로 달린 뒤: 언급된 사람에게 알리고, 그 글을 보고 있는 사람들의 댓글 목록을 새로 고치게 한다.
+    private CommentDto afterCommentCreated(CommentDto comment) {
+        notificationService.createMentionNotifications(comment);
+        notifyCommentsChanged(comment);
+        return comment;
+    }
+
+    private void notifyCommentsChanged(CommentDto comment) {
+        if (comment != null && comment.getPost() != null) {
+            webSocketService.notifyCommentsChanged(comment.getPost().getId());
+        }
+    }
+
+    @Operation(summary = "내 글 통계 조회", description = "내 블로그 글의 기간별 조회수 추이와 글별 조회수·좋아요·댓글 수를 조회한다.")
+    @GetMapping(value = "/v1/blog/me/statistics/posts")
+    public com.hwans.apiserver.dto.stats.PostStatsDto.Mine getMyPostStatistics(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
+                                                                               @Parameter(description = "조회 기간(일, 7~90)") @RequestParam(required = false, defaultValue = "30") int days) {
+        return statsService.getBlogStats(userAuthenticationDetails.getBlogId(), days);
+    }
 
     @Operation(summary = "전체 블로그 게시글 조회", description = "전체 블로그 게시글을 조회한다.")
     @GetMapping(value = "/v1/blog/posts")
@@ -46,6 +68,10 @@ public class BlogController {
                                                @Parameter(description = "조회할 최대 페이지 수") @RequestParam(required = false, defaultValue = "20") int size,
                                                @Parameter(description = "검색어") @RequestParam(required = false) String search,
                                                @Parameter(description = "정렬") @RequestParam(required = false) @Pattern(regexp = "^createdAt|hits$") String sortBy) {
+        // 검색어 통계는 첫 페이지에서만 센다 (더 불러오기로 같은 검색이 여러 번 세어지지 않게)
+        if (cursorId.isEmpty()) {
+            statsService.recordSearch(search);
+        }
         return blogService.getAllPosts(search, cursorId, size, sortBy);
     }
 
@@ -127,8 +153,22 @@ public class BlogController {
             throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST);
         }
         blogService.increasePostHits(post.getId());
+        statsService.recordPostView(post.getId());
 
         return post.withHits(post.getHits() + 1);
+    }
+
+    @Operation(summary = "게시글 댓글 목록 조회", description = "게시글의 댓글만 다시 조회한다. (조회수는 올리지 않는다. 댓글이 실시간으로 바뀌었을 때 목록을 새로 고치는 용도)")
+    @GetMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/comments")
+    public List<SimpleCommentDto> getPostComments(@CurrentAuthenticationDetailsOrElseNull UserAuthenticationDetails userAuthenticationDetails,
+                                                  @Parameter(description = "블로그 Id") @PathVariable String blogId,
+                                                  @Parameter(description = "게시글 Url") @PathVariable String postUrl) {
+        boolean findPublicPostOnly = userAuthenticationDetails == null || !userAuthenticationDetails.getBlogId().equals(blogId);
+        var post = blogService.getPost(blogId, postUrl);
+        if (findPublicPostOnly && post.getOpenType() != OpenType.PUBLIC) {
+            throw new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST);
+        }
+        return new java.util.ArrayList<>(post.getComments());
     }
 
     @Operation(summary = "관련 게시글 조회", description = "해당 게시글과 태그가 겹치는 공개 게시글을 조회한다.")
@@ -153,19 +193,24 @@ public class BlogController {
                                     @Parameter(description = "블로그 Id") @PathVariable String blogId,
                                     @Parameter(description = "게시글 Url") @PathVariable String postUrl,
                                     @Parameter(description = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
+        moderationService.assertCleanText(commentRequestDto.getContent());
         var comment = blogService.createComment(userAuthenticationDetails.getId(), blogId, postUrl, commentRequestDto);
         notificationService.createCommentNotification(comment);
-        return comment;
+        return afterCommentCreated(comment);
     }
 
     @Operation(summary = "비회원 댓글 작성", description = "게시글에 비회원 댓글을 작성한다.")
     @PostMapping(value = "/v1/blog/{blogId}/posts/{postUrl}/comments/guest")
     public CommentDto createComment(@Parameter(description = "블로그 Id") @PathVariable String blogId,
                                     @Parameter(description = "게시글 Url") @PathVariable String postUrl,
-                                    @Parameter(description = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto) {
+                                    @Parameter(description = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto,
+                                    jakarta.servlet.http.HttpServletRequest httpRequest) {
+        moderationService.assertNotBlocked(com.hwans.apiserver.common.security.ClientIp.of(httpRequest));
+        moderationService.assertCleanText(guestCommentRequestDto.getContent(), guestCommentRequestDto.getName());
         var comment = blogService.createGuestComment(blogId, postUrl, guestCommentRequestDto);
+        blogService.setCommentAuthorIp(comment.getId(), com.hwans.apiserver.common.security.ClientIp.of(httpRequest));
         notificationService.createCommentNotification(comment);
-        return comment;
+        return afterCommentCreated(comment);
     }
 
     @Operation(summary = "댓글 수정", description = "댓글을 수정한다.")
@@ -175,7 +220,10 @@ public class BlogController {
                                     @Parameter(description = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto,
                                     @Parameter(description = "비회원 댓글인 경우 비밀번호") @RequestParam(required = false) String password) {
         checkCommentModifyPermission(commentId, userAuthenticationDetails, password);
-        return blogService.modifyComment(commentId, commentRequestDto);
+        moderationService.assertCleanText(commentRequestDto.getContent());
+        var comment = blogService.modifyComment(commentId, commentRequestDto);
+        notifyCommentsChanged(comment);
+        return comment;
     }
 
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제한다.")
@@ -184,7 +232,9 @@ public class BlogController {
                               @Parameter(description = "댓글 Id") @PathVariable UUID commentId,
                               @Parameter(description = "비회원 댓글인 경우 비밀번호") @RequestParam(required = false) String password) {
         checkCommentDeletePermission(commentId, userAuthenticationDetails, password);
+        var comment = blogService.getComment(commentId);
         blogService.deleteComment(commentId);
+        notifyCommentsChanged(comment);
     }
 
     @Operation(summary = "댓글 조회", description = "댓글을 조회한다.")
@@ -198,14 +248,20 @@ public class BlogController {
     public CommentDto createCommentToComment(@CurrentAuthenticationDetails UserAuthenticationDetails userAuthenticationDetails,
                                              @Parameter(description = "댓글 Id") @PathVariable UUID commentId,
                                              @Parameter(description = "댓글", required = true) @RequestBody @Valid final CommentRequestDto commentRequestDto) {
-        return blogService.createComment(userAuthenticationDetails.getId(), commentId, commentRequestDto);
+        moderationService.assertCleanText(commentRequestDto.getContent());
+        return afterCommentCreated(blogService.createComment(userAuthenticationDetails.getId(), commentId, commentRequestDto));
     }
 
     @Operation(summary = "비회원 대댓글 작성", description = "댓글에 댓글을 작성한다.")
     @PostMapping(value = "/v1/blog/comments/{commentId}/guest")
     public CommentDto createCommentToComment(@Parameter(description = "댓글 Id") @PathVariable UUID commentId,
-                                             @Parameter(description = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto) {
-        return blogService.createGuestComment(commentId, guestCommentRequestDto);
+                                             @Parameter(description = "비회원 댓글", required = true) @RequestBody @Valid final GuestCommentRequestDto guestCommentRequestDto,
+                                             jakarta.servlet.http.HttpServletRequest httpRequest) {
+        moderationService.assertNotBlocked(com.hwans.apiserver.common.security.ClientIp.of(httpRequest));
+        moderationService.assertCleanText(guestCommentRequestDto.getContent(), guestCommentRequestDto.getName());
+        var reply = blogService.createGuestComment(commentId, guestCommentRequestDto);
+        blogService.setCommentAuthorIp(reply.getId(), com.hwans.apiserver.common.security.ClientIp.of(httpRequest));
+        return afterCommentCreated(reply);
     }
 
     @Operation(summary = "게시글 좋아요 하기", description = "게시글을 좋아요 한다.")

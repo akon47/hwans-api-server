@@ -2,7 +2,9 @@ package com.hwans.apiserver.mapper;
 
 import com.hwans.apiserver.dto.notification.CommentNotificationDto;
 import com.hwans.apiserver.dto.notification.FollowNotificationDto;
+import com.hwans.apiserver.dto.notification.MentionNotificationDto;
 import com.hwans.apiserver.dto.notification.NotificationDto;
+import com.hwans.apiserver.entity.notification.MentionNotification;
 import com.hwans.apiserver.entity.notification.CommentNotification;
 import com.hwans.apiserver.entity.notification.FollowNotification;
 import com.hwans.apiserver.entity.notification.Notification;
@@ -16,5 +18,6 @@ import org.mapstruct.SubclassMapping;
 public interface NotificationMapper {
     @SubclassMapping(target = CommentNotificationDto.class, source = CommentNotification.class)
     @SubclassMapping(target = FollowNotificationDto.class, source = FollowNotification.class)
+    @SubclassMapping(target = MentionNotificationDto.class, source = MentionNotification.class)
     NotificationDto EntityToNotificationDto(Notification notification);
 }

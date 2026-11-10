@@ -8,6 +8,7 @@ import com.hwans.apiserver.common.security.token.RedisRateLimiter;
 import com.hwans.apiserver.dto.site.AnnouncementDto;
 import com.hwans.apiserver.dto.site.ReportRequestDto;
 import com.hwans.apiserver.service.admin.AdminAuditService;
+import com.hwans.apiserver.service.moderation.ModerationService;
 import com.hwans.apiserver.service.site.SiteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +34,7 @@ public class SiteController {
     private final SiteService siteService;
     private final AdminAuditService adminAuditService;
     private final RedisRateLimiter rateLimiter;
+    private final ModerationService moderationService;
 
     @Operation(summary = "사이트 공지 조회", description = "화면 맨 위에 보여줄 공지를 조회한다. 공지가 없으면 enabled=false.")
     @GetMapping(value = "/v1/site/announcement")
@@ -45,6 +47,7 @@ public class SiteController {
     public void createReport(@Parameter(description = "신고 내용", required = true) @RequestBody @Valid final ReportRequestDto request,
                              HttpServletRequest httpRequest) {
         var clientIp = ClientIp.of(httpRequest);
+        moderationService.assertNotBlocked(clientIp);
         if (!rateLimiter.allow("report", clientIp, REPORTS_PER_MINUTE_PER_IP)) {
             throw new RestApiException(ErrorCodes.TooManyRequests.TOO_MANY_REQUESTS);
         }

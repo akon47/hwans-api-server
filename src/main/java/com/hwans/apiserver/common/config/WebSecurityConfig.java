@@ -116,7 +116,8 @@ public class WebSecurityConfig {
                                 API + "/v1/blog/*/posts/*/bookmarks",
                                 API + "/v1/blog/comments/*/likes",
                                 API + "/v1/blog/me/bookmarks",
-                                API + "/v1/blog/me/statistics")).authenticated()
+                                API + "/v1/blog/me/statistics",
+                                API + "/v1/blog/me/statistics/**")).authenticated()
                         .requestMatchers(matchers(matcher, HttpMethod.GET,
                                 API + "/v1/blog/**",
                                 API + "/v1/site/announcement",

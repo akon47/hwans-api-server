@@ -6,6 +6,7 @@ import com.hwans.apiserver.dto.blog.CommentDto;
 import com.hwans.apiserver.dto.common.SliceDto;
 import com.hwans.apiserver.dto.notification.NotificationDto;
 import com.hwans.apiserver.entity.notification.CommentNotification;
+import com.hwans.apiserver.entity.notification.MentionNotification;
 import com.hwans.apiserver.entity.notification.FollowNotification;
 import com.hwans.apiserver.entity.notification.Notification;
 import com.hwans.apiserver.mapper.NotificationMapper;
@@ -154,6 +155,44 @@ public class NotificationServiceImpl implements NotificationService {
         // 트랜잭션 커밋 이후에 실시간 알림을 전송하여, 롤백 시 유령 알림이 전달되는 것을 방지한다.
         pushNotificationAfterCommit(foundAccount.getEmail(), notificationDto);
         return notificationDto;
+    }
+
+    // 댓글 속 언급: 앞이 글자·@ 가 아닌 @블로그Id (이메일 주소 속 @ 는 제외된다)
+    private static final java.util.regex.Pattern MENTION_PATTERN = java.util.regex.Pattern.compile("(?<![\\w@])@([A-Za-z0-9_-]{2,40})");
+    private static final int MAX_MENTIONS_PER_COMMENT = 10;
+
+    @Override
+    @Transactional
+    public void createMentionNotifications(CommentDto comment) {
+        var foundComment = commentRepository.findById(comment.getId()).orElse(null);
+        if (foundComment == null || foundComment.getContent() == null) {
+            return;
+        }
+        var authorId = foundComment.getAuthor().getId();
+        var postAuthorId = foundComment.getPost().getAuthor().getId();
+        var isTopLevel = foundComment.getParentId() == null;
+        var notified = new java.util.HashSet<UUID>();
+        var matcher = MENTION_PATTERN.matcher(foundComment.getContent());
+        while (matcher.find() && notified.size() < MAX_MENTIONS_PER_COMMENT) {
+            var mentioned = accountRepository.findByBlogId("@" + matcher.group(1))
+                    .flatMap(account -> accountRepository.findByIdAndDeletedIsFalse(account.getId()))
+                    .orElse(null);
+            if (mentioned == null || mentioned.isGuest() || mentioned.getId().equals(authorId)) {
+                continue;
+            }
+            // 글에 바로 단 댓글이면 글 작성자는 이미 댓글 알림을 받는다.
+            if (isTopLevel && mentioned.getId().equals(postAuthorId)) {
+                continue;
+            }
+            if (!notified.add(mentioned.getId())) {
+                continue;
+            }
+            var saved = notificationRepository.save(MentionNotification.builder()
+                    .account(mentioned)
+                    .comment(foundComment)
+                    .build());
+            pushNotificationAfterCommit(mentioned.getEmail(), notificationMapper.EntityToNotificationDto(saved));
+        }
     }
 
     /**

@@ -16,4 +16,8 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
     List<Report> findAllByTargetTypeAndTargetIdAndStatus(Report.TargetType targetType, String targetId, Report.Status status);
 
     long countByStatus(Report.Status status);
+
+    long countByTargetAuthorEmail(String targetAuthorEmail);
+
+    long countByReporterEmail(String reporterEmail);
 }

@@ -73,6 +73,33 @@ public class AdminServiceImpl implements AdminService {
     private final PostMapper postMapper;
     private final AccountMapper accountMapper;
     private final AdminAuditService adminAuditService;
+    private final com.hwans.apiserver.repository.admin.ReportRepository reportRepository;
+
+    @Override
+    public AdminAccountDetailDto getAccountDetail(UUID accountId) {
+        var account = accountRepository
+                .findById(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
+        var posts = postRepository.findAllByBlogId(account.getBlogId(), false);
+        var recentPosts = posts.stream()
+                .sorted(Comparator.comparing(com.hwans.apiserver.entity.blog.Post::getCreatedAt).reversed())
+                .limit(10)
+                .map(postMapper::EntityToSimplePostDto)
+                .toList();
+        var totalHits = posts.stream().mapToLong(post -> post.getHits() == null ? 0 : post.getHits()).sum();
+        var comments = commentRepository.findAllByAccount_IdAndDeletedIsFalse(accountId,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return AdminAccountDetailDto.builder()
+                .account(toAdminAccountDto(account))
+                .postCount(posts.size())
+                .commentCount(comments.getTotalElements())
+                .totalHits(totalHits)
+                .reportedCount(reportRepository.countByTargetAuthorEmail(account.getEmail()))
+                .reportCount(reportRepository.countByReporterEmail(account.getEmail()))
+                .recentPosts(recentPosts)
+                .recentComments(comments.getContent().stream().map(this::toAdminCommentDto).toList())
+                .build();
+    }
     private final Optional<BuildProperties> buildProperties;
     private final Environment environment;
     private final RedisConnectionFactory redisConnectionFactory;
@@ -423,6 +450,7 @@ public class AdminServiceImpl implements AdminService {
                 .postBlogId(postAuthor != null ? postAuthor.getBlogId() : null)
                 .postUrl(post != null ? post.getPostUrl() : null)
                 .postTitle(post != null ? post.getTitle() : null)
+                .authorIp(comment.getAuthorIp())
                 .createdAt(comment.getCreatedAt())
                 .build();
     }

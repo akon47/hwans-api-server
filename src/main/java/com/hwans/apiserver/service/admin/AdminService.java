@@ -32,6 +32,14 @@ public interface AdminService {
     void disableAccount(UUID accountId);
 
     /**
+     * 한 회원의 글·댓글·신고 이력을 모아 조회한다.
+     *
+     * @param accountId 계정 Id
+     * @return 회원 상세
+     */
+    AdminAccountDetailDto getAccountDetail(UUID accountId);
+
+    /**
      * 정지된 회원 계정을 복구한다.
      *
      * @param accountId 복구할 계정 Id

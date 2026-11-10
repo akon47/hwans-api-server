@@ -60,4 +60,11 @@ public interface WebSocketService {
      * 바뀐 읽는 위치를 같은 글을 읽는 세션들에게 묶어 보낸다. 스케줄러가 자주 호출해도 일정 간격으로만 실제로 보낸다.
      */
     void flushReadPositions();
+
+    /**
+     * 글의 댓글이 바뀌었음을(작성·수정·삭제) 그 글을 보고 있는 세션들에게 알린다.
+     *
+     * @param postId 게시글 Id
+     */
+    void notifyCommentsChanged(java.util.UUID postId);
 }

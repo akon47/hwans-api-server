@@ -42,5 +42,13 @@ public enum MessageType {
     // 클라이언트 -> 서버: 지금 보는 글에서 내가 읽고 있는 위치(payload: 본문 시작 0 ~ 끝 1 의 숫자)
     READ_POSITION,
     // 서버 -> 클라이언트: 같은 글을 읽는 사람들의 읽는 위치(payload: ReadPositionsDto). 바뀐 것이 있을 때 묶어서
-    READ_POSITIONS
+    READ_POSITIONS,
+    // 양방향: 글 반응 이모지를 방금 눌렀다. 클라이언트 -> 서버 payload 는 이모지 문자열,
+    // 서버 -> 같은 글을 읽는 세션들 payload 는 {postId, emoji, id(보낸 세션)} (화면에 이모지가 떠오른다)
+    REACTION_BURST,
+    // 양방향: 댓글을 쓰는 중이다. 클라이언트 -> 서버 payload 없음,
+    // 서버 -> 같은 글을 읽는 다른 세션들 payload 는 {postId, id, name}
+    COMMENT_TYPING,
+    // 서버 -> 클라이언트: 이 글의 댓글이 달리거나 고쳐지거나 지워졌다(payload: {postId}). 댓글 목록을 다시 받으면 된다
+    COMMENTS_CHANGED
 }

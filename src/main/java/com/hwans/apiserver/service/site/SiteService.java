@@ -120,17 +120,20 @@ public class SiteService {
         var targetId = request.getTargetId().toString();
         String summary;
         String path;
+        Account targetAuthor;
         if (request.getTargetType() == Report.TargetType.POST) {
             var post = postRepository.findById(request.getTargetId())
                     .filter(x -> !x.isDeleted())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             summary = post.getTitle();
             path = pathOf(post);
+            targetAuthor = post.getAuthor();
         } else {
             var comment = commentRepository.findByIdAndDeletedIsFalse(request.getTargetId())
                     .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
             summary = comment.getContent();
             path = pathOf(comment.getPost());
+            targetAuthor = comment.getAuthor();
         }
         if (reportRepository.existsByTargetTypeAndTargetIdAndReporterIpAndStatus(request.getTargetType(), targetId, reporterIp, Report.Status.OPEN)) {
             return;
@@ -142,6 +145,7 @@ public class SiteService {
                 .targetId(targetId)
                 .targetSummary(truncate(summary, SUMMARY_MAX))
                 .targetPath(path)
+                .targetAuthorEmail(targetAuthor != null && !targetAuthor.isGuest() ? targetAuthor.getEmail() : null)
                 .reason(request.getReason())
                 .detail(detail)
                 .reporterName(reporter.map(Account::getName).orElse(null))

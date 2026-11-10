@@ -32,6 +32,8 @@ public class AdminCommentDto implements Serializable {
     String postUrl;
     @Schema(description = "댓글이 달린 글의 제목")
     String postTitle;
+    @Schema(description = "작성한 IP (손님 댓글만 남긴다. 차단에 쓴다)")
+    String authorIp;
     @Schema(description = "작성 시각", requiredMode = Schema.RequiredMode.REQUIRED)
     LocalDateTime createdAt;
 }
