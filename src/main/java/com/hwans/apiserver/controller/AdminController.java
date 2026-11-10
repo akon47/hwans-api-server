@@ -5,7 +5,11 @@ import com.hwans.apiserver.dto.admin.*;
 import com.hwans.apiserver.dto.blog.SimplePostDto;
 import com.hwans.apiserver.dto.common.PageDto;
 import com.hwans.apiserver.dto.common.SliceDto;
+import com.hwans.apiserver.dto.site.AnnouncementDto;
+import com.hwans.apiserver.entity.admin.Report;
 import com.hwans.apiserver.entity.blog.OpenType;
+import com.hwans.apiserver.service.admin.AdminAuditService;
+import com.hwans.apiserver.service.site.SiteService;
 import com.hwans.apiserver.service.admin.AdminService;
 import com.hwans.apiserver.service.authentication.CurrentAuthenticationDetails;
 import com.hwans.apiserver.service.authentication.UserAuthenticationDetails;
@@ -31,6 +35,48 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AdminController {
     private final AdminService adminService;
+    private final AdminAuditService adminAuditService;
+    private final SiteService siteService;
+
+    // ───────────── 활동 기록 ─────────────
+
+    @Operation(summary = "관리자 활동 기록 조회", description = "관리자가 바꾼 것(정지·삭제·권한·공지·신고 처리 등)의 기록을 최근 순으로 조회한다.")
+    @GetMapping(value = "/v1/admin/audit-logs")
+    public PageDto<AdminAuditLogDto> getAuditLogs(@Parameter(description = "페이지 번호 (0부터)") @RequestParam(required = false, defaultValue = "0") int page,
+                                                  @Parameter(description = "페이지 크기") @RequestParam(required = false, defaultValue = "30") int size) {
+        return adminAuditService.getLogs(page, size);
+    }
+
+    // ───────────── 공지 ─────────────
+
+    @Operation(summary = "사이트 공지 조회", description = "저장된 공지를 조회한다. (꺼져 있어도 내용이 보인다)")
+    @GetMapping(value = "/v1/admin/announcement")
+    public AnnouncementDto getAnnouncement() {
+        return siteService.getAnnouncement();
+    }
+
+    @Operation(summary = "사이트 공지 저장", description = "화면 맨 위 공지 배너의 내용·종류·링크·표시 여부를 저장한다.")
+    @PutMapping(value = "/v1/admin/announcement")
+    public AnnouncementDto setAnnouncement(@Parameter(description = "공지", required = true) @RequestBody @Valid final AnnouncementDto request) {
+        return siteService.setAnnouncement(request);
+    }
+
+    // ───────────── 신고 ─────────────
+
+    @Operation(summary = "신고 목록 조회", description = "글·댓글 신고를 최근 순으로 조회한다. status 를 주면 그 상태만 본다.")
+    @GetMapping(value = "/v1/admin/reports")
+    public PageDto<AdminReportDto> getReports(@Parameter(description = "처리 상태 필터") @RequestParam(required = false) Optional<Report.Status> status,
+                                              @Parameter(description = "페이지 번호 (0부터)") @RequestParam(required = false, defaultValue = "0") int page,
+                                              @Parameter(description = "페이지 크기") @RequestParam(required = false, defaultValue = "20") int size) {
+        return siteService.getReports(status, page, size);
+    }
+
+    @Operation(summary = "신고 처리", description = "신고를 처리 완료/기각/다시 열기로 바꾼다. deleteTarget 이면 신고된 글·댓글도 삭제한다.")
+    @PutMapping(value = "/v1/admin/reports/{reportId}")
+    public AdminReportDto handleReport(@Parameter(description = "신고 Id") @PathVariable UUID reportId,
+                                       @Parameter(description = "처리 요청", required = true) @RequestBody @Valid final AdminReportHandleRequestDto request) {
+        return siteService.handleReport(reportId, request.getStatus(), request.isDeleteTarget());
+    }
 
     // ───────────── 대시보드 ─────────────
 

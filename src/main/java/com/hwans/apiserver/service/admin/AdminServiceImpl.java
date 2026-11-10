@@ -72,6 +72,7 @@ public class AdminServiceImpl implements AdminService {
     private final WebSocketService webSocketService;
     private final PostMapper postMapper;
     private final AccountMapper accountMapper;
+    private final AdminAuditService adminAuditService;
     private final Optional<BuildProperties> buildProperties;
     private final Environment environment;
     private final RedisConnectionFactory redisConnectionFactory;
@@ -106,6 +107,7 @@ public class AdminServiceImpl implements AdminService {
         }
         account.disable();
         accountRepository.save(account);
+        adminAuditService.record("ACCOUNT_DISABLE", "ACCOUNT", account.getId(), "회원 정지: " + describe(account));
     }
 
     @Override
@@ -116,6 +118,7 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         account.restore();
         accountRepository.save(account);
+        adminAuditService.record("ACCOUNT_RESTORE", "ACCOUNT", account.getId(), "회원 정지 해제: " + describe(account));
     }
 
     @Override
@@ -140,6 +143,8 @@ public class AdminServiceImpl implements AdminService {
                     .findByAccount_IdAndRole_Name(account.getId(), RoleType.ADMIN.getName())
                     .ifPresent(accountRoleRepository::delete);
         }
+        adminAuditService.record(admin ? "ROLE_GRANT_ADMIN" : "ROLE_REVOKE_ADMIN", "ACCOUNT", account.getId(),
+                (admin ? "관리자 지정: " : "관리자 해제: ") + describe(account));
         return toAdminAccountDto(account);
     }
 
@@ -219,7 +224,10 @@ public class AdminServiceImpl implements AdminService {
                 .findById(postId)
                 .filter(x -> !x.isDeleted())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
+        var previousOpenType = post.getOpenType();
         post.setOpenType(openType);
+        adminAuditService.record("POST_OPEN_TYPE", "POST", post.getId(),
+                "글 공개 유형 변경 " + previousOpenType + " → " + openType + ": " + post.getTitle());
         return postMapper.EntityToSimplePostDto(post);
     }
 
@@ -231,6 +239,7 @@ public class AdminServiceImpl implements AdminService {
                 .filter(x -> !x.isDeleted())
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND_POST));
         post.setDeleted();
+        adminAuditService.record("POST_DELETE", "POST", post.getId(), "글 삭제: " + post.getTitle());
     }
 
     @Override
@@ -244,7 +253,12 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public void deleteComment(UUID commentId) {
+        var excerpt = commentRepository.findById(commentId)
+                .map(Comment::getContent)
+                .map(content -> content.length() <= 80 ? content : content.substring(0, 80) + "…")
+                .orElse("");
         blogService.deleteComment(commentId);
+        adminAuditService.record("COMMENT_DELETE", "COMMENT", commentId, "댓글 삭제: " + excerpt);
     }
 
     @Override
@@ -260,6 +274,7 @@ public class AdminServiceImpl implements AdminService {
                 .findById(tokenId)
                 .orElseThrow(() -> new RestApiException(ErrorCodes.NotFound.NOT_FOUND));
         token.revoke();
+        adminAuditService.record("TOKEN_REVOKE", "TOKEN", token.getId(), "액세스 토큰 폐기");
     }
 
     @Override
@@ -389,6 +404,11 @@ public class AdminServiceImpl implements AdminService {
                 .roles(account.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
                 .createdAt(account.getCreatedAt())
                 .build();
+    }
+
+    // 활동 기록에 남길 회원 표시 (이름 <이메일>)
+    private String describe(Account account) {
+        return account.getName() + " <" + account.getEmail() + ">";
     }
 
     private AdminCommentDto toAdminCommentDto(Comment comment) {

@@ -119,6 +119,7 @@ public class WebSecurityConfig {
                                 API + "/v1/blog/me/statistics")).authenticated()
                         .requestMatchers(matchers(matcher, HttpMethod.GET,
                                 API + "/v1/blog/**",
+                                API + "/v1/site/announcement",
                                 API + "/v1/attachments/**")).permitAll()
                         .requestMatchers(matchers(matcher, HttpMethod.PUT,
                                 API + "/v1/accounts/password",
@@ -135,7 +136,9 @@ public class WebSecurityConfig {
                                 API + "/v1/authentication/device/code",
                                 API + "/v1/authentication/device/token",
                                 API + "/v1/blog/*/posts/*/comments/guest",
-                                API + "/v1/blog/comments/*/guest")).permitAll()
+                                API + "/v1/blog/comments/*/guest",
+                                // 글·댓글 신고는 손님도 할 수 있다 (IP 당 횟수 제한)
+                                API + "/v1/site/reports")).permitAll()
                         .requestMatchers(matchers(matcher, null, API + "/v1/admin/**")).hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .with(new JwtSecurityConfig(tokenProvider, redisTemplate,
