@@ -29,7 +29,7 @@ public class ModifyAccountDto implements Serializable {
     @Schema(description = "위치", example = "seoul")
     @Length(max = 64)
     String location;
-    @Schema(description = "홈페이지", example = "https://kimhwan.kr")
+    @Schema(description = "홈페이지", example = "https://kimhwan.com")
     @Length(max = 255)
     String homepage;
 }

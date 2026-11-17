@@ -1,7 +1,7 @@
 # hwans-api-server
 
 <p>
-  <img src="https://counter.kimhwan.kr/?key=github-akon47-hwans-api-server" />
+  <img src="https://counter.kimhwan.com/?key=github-akon47-hwans-api-server" />
   <img alt="GitHub starts" src="https://img.shields.io/github/stars/akon47/hwans-api-server">
 </p>
 

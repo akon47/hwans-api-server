@@ -44,7 +44,7 @@ public class AccountDto implements Serializable {
     @Schema(description = "위치", example = "seoul")
     @Length(max = 64)
     String location;
-    @Schema(description = "홈페이지", example = "https://kimhwan.kr")
+    @Schema(description = "홈페이지", example = "https://kimhwan.com")
     @Length(max = 255)
     String homepage;
     @Schema(description = "비회원인지 여부", requiredMode = Schema.RequiredMode.REQUIRED)
