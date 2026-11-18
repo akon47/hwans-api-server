@@ -231,15 +231,15 @@ class AiCoverBatchTest {
 
     @Test
     void validatesTheRequest() {
-        assertThrows(RestApiException.class, () -> AiCoverBatch.validate(null));
-        assertThrows(RestApiException.class, () -> AiCoverBatch.validate(List.of()));
-        assertThrows(RestApiException.class, () -> AiCoverBatch.validate(Arrays.asList(" ", null)));
+        assertThrows(RestApiException.class, () -> AiBatchSupport.validatePostUrls(null));
+        assertThrows(RestApiException.class, () -> AiBatchSupport.validatePostUrls(List.of()));
+        assertThrows(RestApiException.class, () -> AiBatchSupport.validatePostUrls(Arrays.asList(" ", null)));
         var tooMany = new ArrayList<String>();
-        for (var i = 0; i <= AiCoverBatch.MAX_POSTS; i++) {
+        for (var i = 0; i <= AiBatchSupport.MAX_POSTS; i++) {
             tooMany.add("p" + i);
         }
-        assertThrows(RestApiException.class, () -> AiCoverBatch.validate(tooMany));
-        assertEquals(List.of("a", "b"), AiCoverBatch.validate(List.of(" a ", "b", "a")));
+        assertThrows(RestApiException.class, () -> AiBatchSupport.validatePostUrls(tooMany));
+        assertEquals(List.of("a", "b"), AiBatchSupport.validatePostUrls(List.of(" a ", "b", "a")));
     }
 
     @Test

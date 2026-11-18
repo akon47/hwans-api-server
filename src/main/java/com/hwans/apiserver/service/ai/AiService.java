@@ -38,4 +38,19 @@ public interface AiService {
      * 여러 글의 커버를 차례로 만들어 썸네일로 지정하거나 본문 앞에 넣는다 (SSE: status·item·done·error)
      */
     ResponseEntity<ResponseBodyEmitter> coverBatch(UUID accountId, AiCoverBatchRequestDto request);
+
+    /**
+     * 태그가 없거나 요약이 40자 미만인 내 글 (공개 유형 무관, 최신 글부터 최대 500개)
+     */
+    AiMetaCandidatesDto metaCandidates(UUID accountId);
+
+    /**
+     * 여러 글의 제목·요약·태그 제안을 차례로 만든다. 글은 바꾸지 않는다 (SSE: status·item·done·error)
+     */
+    ResponseEntity<ResponseBodyEmitter> metaBatch(UUID accountId, AiMetaBatchRequestDto request);
+
+    /**
+     * 고른 제목·요약·태그를 적용한다. 온 필드만 바꾼다(AI 호출 없음)
+     */
+    AiMetaApplyResultDto metaApply(UUID accountId, AiMetaApplyRequestDto request);
 }

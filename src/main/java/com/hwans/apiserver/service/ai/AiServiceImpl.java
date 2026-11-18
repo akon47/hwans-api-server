@@ -104,6 +104,7 @@ public class AiServiceImpl implements AiService {
     private final RedisRateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
     private final AiPostCovers postCovers;
+    private final AiPostMeta postMeta;
     private final String coverFooterHost;
     // 본문에 넣는 커버 이미지의 절대 URL 앞부분 (프론트가 넣는 것과 같게: https://api.hwanstory.kr/api/v1 + 첨부 url)
     private final String imageUrlPrefix;
@@ -117,7 +118,7 @@ public class AiServiceImpl implements AiService {
                          AiSettingRepository aiSettingRepository, AiUsageRepository aiUsageRepository,
                          AccountRepository accountRepository, PostRepository postRepository, TagRepository tagRepository,
                          AttachmentService attachmentService, CoverRenderer coverRenderer, RedisRateLimiter rateLimiter,
-                         ObjectMapper objectMapper, AiPostCovers postCovers,
+                         ObjectMapper objectMapper, AiPostCovers postCovers, AiPostMeta postMeta,
                          @Value("${blog.web-base-url:https://hwanstory.kr}") String webBaseUrl,
                          @Value("${blog.api-base-url:https://api.hwanstory.kr}") String apiBaseUrl) {
         this.cipher = cipher;
@@ -133,6 +134,7 @@ public class AiServiceImpl implements AiService {
         this.rateLimiter = rateLimiter;
         this.objectMapper = objectMapper;
         this.postCovers = postCovers;
+        this.postMeta = postMeta;
         this.coverFooterHost = footerHost(webBaseUrl);
         this.imageUrlPrefix = apiBaseUrl.replaceAll("/+$", "") + "/api/v1";
     }
@@ -361,8 +363,23 @@ public class AiServiceImpl implements AiService {
         var title = request.getTitle() == null ? null : cut(request.getTitle(), 300);
         var ctx = prepare(accountId);
         requireQuota(ctx);
-        var existingTags = tagRepository.findTagNamesByAccountId(accountId, PageRequest.of(0, 100));
+        var existingTags = existingTags(accountId);
+        return gateway.withClient(ctx.apiKey(), client -> suggestMeta(client, ctx, title, content, existingTags, usage -> {
+        }));
+    }
 
+    private List<String> existingTags(UUID accountId) {
+        return tagRepository.findTagNamesByAccountId(accountId, PageRequest.of(0, 100));
+    }
+
+    /**
+     * 제목·요약·태그·주소 제안(7번 /meta 와 제안 일괄 만들기가 함께 쓴다): 구조화 출력, effort low,
+     * 태그는 그 블로그의 기존 표기 우선. 사용량은 meta 로 기록하고 usageSink 로도 알린다.
+     *
+     * @param content 본문 (40000자까지만 보낸다)
+     */
+    private AiMetaDto suggestMeta(AnthropicClient client, CallContext ctx, String title, String content, List<String> existingTags,
+                                  Consumer<AiTokenUsage> usageSink) {
         var schema = objectSchema(Map.of(
                 "title", Map.of("type", "string", "description", "제목 (60자 안팎)"),
                 "summary", Map.of("type", "string", "description", "요약 80~160자"),
@@ -370,10 +387,9 @@ public class AiServiceImpl implements AiService {
                 "postUrl", Map.of("type", "string", "description", "영어 소문자·숫자·하이픈 slug")));
         var params = AnthropicGateway.baseParams(ctx.model(), 4000, AnthropicGateway.jsonOutput(BetaOutputConfig.Effort.LOW, schema))
                 .system(AiPrompts.META_SYSTEM)
-                .addUserMessage(AiPrompts.metaUser(title, content, existingTags))
+                .addUserMessage(AiPrompts.metaUser(title == null ? null : cut(title, 300), cut(content, 40000), existingTags))
                 .build();
-        var json = gateway.withClient(ctx.apiKey(), client -> structuredCall(client, ctx, AiUsageKind.META, params, usage -> {
-        }));
+        var json = structuredCall(client, ctx, AiUsageKind.META, params, usageSink);
 
         return AiMetaDto.builder()
                 .title(cut(json.path("title").asText("").strip(), 100))
@@ -495,6 +511,62 @@ public class AiServiceImpl implements AiService {
         return attachmentService.saveBytes(ctx.accountId(), png, "cover.png", "image/png");
     }
 
+    // ===================== 제목·요약·태그 한꺼번에 채우기 =====================
+
+    @Override
+    public AiMetaCandidatesDto metaCandidates(UUID accountId) {
+        return postMeta.candidates(accountId);
+    }
+
+    @Override
+    public ResponseEntity<ResponseBodyEmitter> metaBatch(UUID accountId, AiMetaBatchRequestDto request) {
+        requireEnabled();
+        var postUrls = AiBatchSupport.validatePostUrls(request.getPostUrls());
+        var fields = AiMetaBatch.validateFields(request.getFields());
+        var ctx = prepare(accountId);
+        // 분당 요청 제한은 일괄 요청 한 번을 1회로 센다. 한도는 시작 전(JSON 오류)과 글마다(SSE error) 확인한다.
+        requireQuota(ctx);
+
+        return startStream(ctx, AiUsageKind.META, (client, session, meter) -> {
+            var tags = existingTags(accountId);
+            var batch = new AiMetaBatch(
+                    postUrl -> postMeta.find(ctx.blogId(), postUrl),
+                    (post, usage) -> suggestMeta(client, ctx, post.title(), post.content(), tags, usage),
+                    () -> requireMonthlyLimit(ctx),
+                    ctx.model());
+            // 사용량은 글마다 meta 로 이미 기록하므로 meter 에는 넣지 않는다(중복 기록 방지).
+            batch.run(postUrls, fields, session);
+        });
+    }
+
+    @Override
+    public AiMetaApplyResultDto metaApply(UUID accountId, AiMetaApplyRequestDto request) {
+        var items = request.getItems();
+        if (items == null || items.isEmpty() || items.size() > AiBatchSupport.MAX_POSTS) {
+            throw new RestApiException(ErrorCodes.BadRequest.INVALID_PARAMETER, "items 는 1~" + AiBatchSupport.MAX_POSTS + "개여야 해요.");
+        }
+        var blogId = accountRepository.findByIdAndDeletedIsFalse(accountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED))
+                .getBlogId();
+        var applied = 0;
+        var failed = new ArrayList<AiMetaApplyResultDto.Failure>();
+        // 글마다 따로 반영한다(한 글이 실패해도 나머지는 적용). AI 호출 없음.
+        for (var item : items) {
+            var postUrl = item == null || item.getPostUrl() == null ? "" : item.getPostUrl().strip();
+            try {
+                var change = AiPostMeta.validate(item);
+                postMeta.apply(blogId, postUrl, change);
+                applied++;
+            } catch (RestApiException e) {
+                failed.add(AiMetaApplyResultDto.Failure.builder().postUrl(postUrl).message(e.getMessage()).build());
+            } catch (RuntimeException e) {
+                log.warn("applying AI meta to post {} failed", postUrl, e);
+                failed.add(AiMetaApplyResultDto.Failure.builder().postUrl(postUrl).message("적용하지 못했어요.").build());
+            }
+        }
+        return AiMetaApplyResultDto.builder().applied(applied).failed(failed).build();
+    }
+
     // ===================== 커버 일괄 만들기 =====================
 
     @Override
@@ -505,7 +577,7 @@ public class AiServiceImpl implements AiService {
     @Override
     public ResponseEntity<ResponseBodyEmitter> coverBatch(UUID accountId, AiCoverBatchRequestDto request) {
         requireEnabled();
-        var postUrls = AiCoverBatch.validate(request.getPostUrls());
+        var postUrls = AiBatchSupport.validatePostUrls(request.getPostUrls());
         var useAsThumbnail = request.getUseAsThumbnail() == null || request.getUseAsThumbnail();
         var insertIntoContent = Boolean.TRUE.equals(request.getInsertIntoContent());
         var ctx = prepare(accountId);

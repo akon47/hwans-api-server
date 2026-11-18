@@ -111,6 +111,27 @@ public class AiController {
         return aiService.coverBatch(user.getId(), request);
     }
 
+    @Operation(summary = "제목·요약·태그를 채울 내 글 목록", description = "내 글(모든 공개 유형) 중 태그가 없거나 요약이 40자 미만인 글을 최신 글부터 최대 500개 조회한다. total 은 전체 수.")
+    @GetMapping(value = "/meta/candidates")
+    public AiMetaCandidatesDto metaCandidates(@CurrentAuthenticationDetails UserAuthenticationDetails user) {
+        return aiService.metaCandidates(user.getId());
+    }
+
+    @Operation(summary = "제목·요약·태그 일괄 제안 (SSE)", description = "글(1~100개)마다 제안을 만든다. 글은 바꾸지 않는다(조회수도 올리지 않음). "
+            + "이벤트: status·item·done·error. 한도는 글마다 확인하고, 분당 요청 제한은 한 번으로 센다.")
+    @PostMapping(value = "/meta/batch")
+    public ResponseEntity<ResponseBodyEmitter> metaBatch(@CurrentAuthenticationDetails UserAuthenticationDetails user,
+                                                         @Parameter(description = "일괄 제안 요청", required = true) @RequestBody AiMetaBatchRequestDto request) {
+        return aiService.metaBatch(user.getId(), request);
+    }
+
+    @Operation(summary = "고른 제목·요약·태그 적용", description = "글(1~100개)마다 온 필드만 바꾼다. 본문·공개 상태·시리즈·예약·썸네일·주소는 그대로. AI 호출 없음.")
+    @PostMapping(value = "/meta/apply")
+    public AiMetaApplyResultDto metaApply(@CurrentAuthenticationDetails UserAuthenticationDetails user,
+                                          @Parameter(description = "적용 요청", required = true) @RequestBody AiMetaApplyRequestDto request) {
+        return aiService.metaApply(user.getId(), request);
+    }
+
     // 스트리밍 요청은 Accept: text/event-stream 으로 올 수 있다. 오류 응답의 Content-Type 을 JSON 으로 못박아
     // 내용 협상(406) 없이 일반 JSON 오류 형식으로 돌려준다.
 

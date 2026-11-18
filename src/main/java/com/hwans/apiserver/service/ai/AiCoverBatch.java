@@ -1,6 +1,5 @@
 package com.hwans.apiserver.service.ai;
 
-import com.hwans.apiserver.common.errors.errorcode.ErrorCodes;
 import com.hwans.apiserver.common.errors.exception.RestApiException;
 import com.hwans.apiserver.dto.attachment.FileDto;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +25,6 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class AiCoverBatch {
-    public static final int MAX_POSTS = 100;
-
     /**
      * 그 회원의 글만 다룬다.
      */
@@ -135,16 +132,12 @@ public class AiCoverBatch {
     }
 
     static Map<String, Object> donePayload(Result result, AiModel model) {
-        var usageMap = new LinkedHashMap<String, Object>();
-        usageMap.put("inputTokens", result.usage().totalInputTokens());
-        usageMap.put("outputTokens", result.usage().outputTokens());
-        usageMap.put("costUsd", result.usage().costUsd(model).doubleValue());
         var payload = new LinkedHashMap<String, Object>();
         payload.put("total", result.total());
         payload.put("created", result.created());
         payload.put("skipped", result.skipped());
         payload.put("failed", result.failed());
-        payload.put("usage", usageMap);
+        payload.put("usage", AiBatchSupport.usageMap(result.usage(), model));
         return payload;
     }
 
@@ -176,26 +169,5 @@ public class AiCoverBatch {
         item.put("ok", false);
         item.put("message", message == null || message.isBlank() ? "커버를 만들지 못했어요." : message);
         return item;
-    }
-
-    /**
-     * 요청 검증: 1~100개, 빈 값 제외
-     */
-    static List<String> validate(List<String> postUrls) {
-        if (postUrls == null || postUrls.size() > MAX_POSTS) {
-            throw new RestApiException(ErrorCodes.BadRequest.INVALID_PARAMETER, "postUrls 는 1~" + MAX_POSTS + "개여야 해요.");
-        }
-        var cleaned = postUrls.stream()
-                .filter(url -> url != null && !url.isBlank())
-                .map(String::strip)
-                .distinct()
-                .toList();
-        if (cleaned.isEmpty()) {
-            throw new RestApiException(ErrorCodes.BadRequest.INVALID_PARAMETER, "postUrls 는 1~" + MAX_POSTS + "개여야 해요.");
-        }
-        if (cleaned.stream().anyMatch(url -> url.length() > 320)) {
-            throw new RestApiException(ErrorCodes.BadRequest.INVALID_PARAMETER, "postUrls 에 너무 긴 주소가 있어요.");
-        }
-        return cleaned;
     }
 }

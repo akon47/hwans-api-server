@@ -140,4 +140,24 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("select count(x) from Post as x where x.deleted = false and x.account.id = :accountId and x.thumbnailImage is null")
     long countWithoutThumbnailByAccountId(@Param("accountId") UUID accountId);
+
+    // === AI 제목·요약·태그 일괄 제안용: 그 회원의 모든 글 요약 정보 (공개 유형 무관, 최신 순, 본문은 읽지 않는다) ===
+    // 요약 길이(40자 미만)는 DB 함수(MySQL LENGTH 는 바이트 수)에 맡기지 않고 Java 에서 글자 수로 판단한다.
+
+    interface MetaRow {
+        UUID getId();
+
+        String getPostUrl();
+
+        String getTitle();
+
+        OpenType getOpenType();
+
+        LocalDateTime getCreatedAt();
+
+        String getSummary();
+    }
+
+    @Query("select x.id as id, x.postUrl as postUrl, x.title as title, x.openType as openType, x.createdAt as createdAt, x.summary as summary from Post as x where x.deleted = false and x.account.id = :accountId order by x.createdAt desc, x.id desc")
+    List<MetaRow> findMetaRowsByAccountId(@Param("accountId") UUID accountId);
 }
