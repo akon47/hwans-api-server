@@ -133,6 +133,39 @@ class AiStreamCollectorTest {
         assertEquals(2, collector.searchedSources().size());
     }
 
+    /**
+     * web_search_20260209 는 입력을 content_block_start 에 다 담고 input_json_delta 없이 블록을 끝내기도 한다.
+     * SDK 누적기는 그때 "Missing input JSON" 을 던지므로 수집기가 시작 입력을 delta 로 넣어 준다(2026-11-18 실제 호출에서 발견).
+     */
+    @Test
+    void serverToolInputOnlyInBlockStart() {
+        var recorder = new Recorder();
+        var collector = new AiStreamCollector(recorder, true, true);
+        collector.beginMessage();
+        List.of(MESSAGE_START,
+                """
+                        {"type":"content_block_start","index":0,"content_block":{"type":"server_tool_use","id":"srvtoolu_9","name":"web_search","input":{"query":"CVE-2026-114938 Java"}}}""",
+                """
+                        {"type":"content_block_stop","index":0}""",
+                """
+                        {"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}""",
+                """
+                        {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"본문"}}""",
+                """
+                        {"type":"content_block_stop","index":1}""",
+                """
+                        {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"output_tokens":5}}""",
+                """
+                        {"type":"message_stop"}""").forEach(json -> collector.accept(parse(json)));
+        var message = collector.endMessage();
+        collector.finish();
+
+        assertEquals(List.of("웹에서 'CVE-2026-114938 Java' 찾는 중"), recorder.statuses);
+        var toolUse = message.content().get(0).asServerToolUse();
+        assertEquals("CVE-2026-114938 Java", ObjectMappers.jsonMapper().valueToTree(toolUse._input()).get("query").asText());
+        assertEquals("본문", recorder.text.toString());
+    }
+
     @Test
     void longTextBeforeAnyToolIsBody() {
         var recorder = new Recorder();

@@ -3,6 +3,7 @@ package com.hwans.apiserver.service.ai;
 import com.anthropic.core.JsonValue;
 import com.anthropic.core.ObjectMappers;
 import com.anthropic.helpers.BetaMessageAccumulator;
+import com.anthropic.models.beta.messages.BetaInputJsonDelta;
 import com.anthropic.models.beta.messages.BetaMessage;
 import com.anthropic.models.beta.messages.BetaRawContentBlockDeltaEvent;
 import com.anthropic.models.beta.messages.BetaRawContentBlockStartEvent;
@@ -93,6 +94,7 @@ public class AiStreamCollector {
     }
 
     public void accept(BetaRawMessageStreamEvent event) {
+        event.contentBlockStop().ifPresent(e -> feedInitialInputIfNoDeltas(e.index()));
         accumulator.accumulate(event);
         event.messageStart().ifPresent(e -> messageUsage = AiTokenUsage.of(e.message().usage()));
         event.messageDelta().ifPresent(this::onMessageDelta);
@@ -277,6 +279,35 @@ public class AiStreamCollector {
         }
         body.append(text);
         listener.text(text);
+    }
+
+    /**
+     * SDK 3.x 의 {@link BetaMessageAccumulator} 는 server_tool_use 블록이 끝날 때 input_json_delta 를 하나도 받지 못했으면
+     * "Missing input JSON for index N" 을 던진다. 그런데 web_search_20260209(동적 필터링)는 입력을 content_block_start 에
+     * 다 담아 보내고 delta 를 보내지 않는 경우가 있다(2026-11-18 실제 호출에서 확인, SDK main 브랜치도 같은 코드).
+     * 그때는 시작 때 받은 입력을 delta 하나로 만들어 먼저 넣어 준다 — 이어 받기(pause_turn)에 쓸 assistant 내용도 그대로 맞는다.
+     */
+    private void feedInitialInputIfNoDeltas(long index) {
+        var call = toolCalls.get(index);
+        if (call == null || !call.json().isEmpty()) {
+            return;
+        }
+        String json = "{}";
+        try {
+            if (call.initialInput() != null && !call.initialInput().isMissing()) {
+                json = ObjectMappers.jsonMapper().writeValueAsString(call.initialInput());
+            }
+        } catch (Exception ex) {
+            log.debug("could not serialize server tool input: {}", ex.getMessage());
+        }
+        if (json.isBlank() || "null".equals(json)) {
+            json = "{}";
+        }
+        call.json().append(json);
+        accumulator.accumulate(BetaRawMessageStreamEvent.ofContentBlockDelta(BetaRawContentBlockDeltaEvent.builder()
+                .index(index)
+                .delta(BetaInputJsonDelta.builder().partialJson(json).build())
+                .build()));
     }
 
     private static JsonNode parseInput(ToolCall call) {

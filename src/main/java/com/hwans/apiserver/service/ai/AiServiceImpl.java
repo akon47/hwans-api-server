@@ -463,7 +463,8 @@ public class AiServiceImpl implements AiService {
             design = new CoverDesign(CoverDesign.of(title, "", "", "", "").headline(), design.subhead(), design.badge(), design.theme(), design.icon());
         }
 
-        var png = coverRenderer.renderPng(design, coverFooterHost + "/@" + ctx.blogId());
+        // blogId 는 이미 '@' 로 시작한다(예: @kim-hwan) — 한 번만 붙인다
+        var png = coverRenderer.renderPng(design, coverFooterHost + "/@" + ctx.blogId().replaceFirst("^@+", ""));
         var file = attachmentService.saveBytes(accountId, png, "cover.png", "image/png");
         return AiCoverDto.builder()
                 .fileId(file.getId().toString())
