@@ -76,6 +76,12 @@ dependencies {
 	// Log
 	implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
 
+	// Anthropic Claude API (AI 글쓰기: 회원이 등록한 자기 API 키로 서버에서 호출)
+	implementation('com.anthropic:anthropic-java:3.3.0') {
+		// springdoc 의 swagger-annotations-jakarta 와 같은 패키지(io.swagger.v3.oas.annotations)라 버전이 섞이지 않게 뺀다.
+		exclude group: 'io.swagger.core.v3', module: 'swagger-annotations'
+	}
+
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'

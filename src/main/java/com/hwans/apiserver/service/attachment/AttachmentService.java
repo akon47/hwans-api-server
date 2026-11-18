@@ -27,6 +27,17 @@ public interface AttachmentService {
     FileDto saveFileFromUrl(UUID uploaderAccountId, String fileUrl);
 
     /**
+     * 서버에서 만든 파일(예: AI 커버 이미지)을 업로드한 파일과 같은 방식으로 저장한다.
+     *
+     * @param uploaderAccountId 소유자 계정 Id
+     * @param content           파일 내용
+     * @param fileName          파일 이름
+     * @param contentType       MIME 타입 (업로드와 같은 허용 목록)
+     * @return 저장된 파일의 데이터 모델
+     */
+    FileDto saveBytes(UUID uploaderAccountId, byte[] content, String fileName, String contentType);
+
+    /**
      * 파일 Id로 파일 데이터 모델을 얻는다.
      *
      * @param fileId 파일 Id

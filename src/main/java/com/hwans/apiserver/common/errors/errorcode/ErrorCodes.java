@@ -17,6 +17,9 @@ public class ErrorCodes {
         INVALID_PARAMETER("잘못된 파라미터입니다."),
         INVALID_EMAIL_VERIFY_CODE("잘못된 인증 코드입니다."),
         BANNED_WORD("사용할 수 없는 표현이 들어 있습니다."),
+        AI_NO_KEY("AI 를 쓰려면 먼저 설정에서 Anthropic API 키를 등록해 주세요."),
+        AI_INVALID_KEY("Anthropic 에서 이 API 키를 받아 주지 않았어요. 키를 다시 확인해 주세요."),
+        AI_NOT_ENOUGH_POSTS("문체를 분석하려면 본문이 300자 이상인 글(임시저장 제외)이 2개 이상 있어야 해요."),
         ;
 
         private final String defaultMessage;
@@ -169,6 +172,8 @@ public class ErrorCodes {
     @RequiredArgsConstructor
     public enum TooManyRequests implements ErrorCode {
         TOO_MANY_REQUESTS("요청이 너무 많습니다. 잠시 후 다시 시도하세요."),
+        AI_LIMIT_EXCEEDED("이번 달 AI 사용 한도에 닿았어요. 설정에서 한도를 늘릴 수 있어요."),
+        AI_RATE_LIMITED("AI 요청이 너무 잦아요. 1분쯤 뒤에 다시 해 주세요."),
         ;
 
         private final String defaultMessage;
@@ -207,6 +212,58 @@ public class ErrorCodes {
         @Override
         public HttpStatus getStatus() {
             return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+
+        @Override
+        public String getDefaultMessage() {
+            return this.defaultMessage;
+        }
+    }
+
+    /**
+     * Bad Gateway (502) — 외부 서비스(Anthropic) 호출 실패
+     */
+    @RequiredArgsConstructor
+    public enum BadGateway implements ErrorCode {
+        AI_UPSTREAM("AI 호출에 실패했어요. 잠시 후 다시 해 주세요."),
+        ;
+
+        private final String defaultMessage;
+
+        @Override
+        public String getName() {
+            return this.name().toLowerCase();
+        }
+
+        @Override
+        public HttpStatus getStatus() {
+            return HttpStatus.BAD_GATEWAY;
+        }
+
+        @Override
+        public String getDefaultMessage() {
+            return this.defaultMessage;
+        }
+    }
+
+    /**
+     * Service Unavailable (503) — 서버 설정상 꺼진 기능
+     */
+    @RequiredArgsConstructor
+    public enum ServiceUnavailable implements ErrorCode {
+        AI_DISABLED("이 서버에서는 AI 글쓰기 기능이 꺼져 있어요."),
+        ;
+
+        private final String defaultMessage;
+
+        @Override
+        public String getName() {
+            return this.name().toLowerCase();
+        }
+
+        @Override
+        public HttpStatus getStatus() {
+            return HttpStatus.SERVICE_UNAVAILABLE;
         }
 
         @Override

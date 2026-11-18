@@ -11,6 +11,7 @@ import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2Authentic
 import com.hwans.apiserver.service.authentication.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.hwans.apiserver.service.authentication.oauth2.repository.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.hwans.apiserver.service.token.AccessTokenService;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -106,10 +107,15 @@ public class WebSecurityConfig {
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler(jwtAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
+                        // 비동기 디스패치(AI 글쓰기 SSE 가 끝날 때)는 첫 요청에서 이미 인가를 마쳤다. 스트림 도중 JWT 가 만료돼도
+                        // 끝맺음 디스패치가 401 로 막혀 "응답이 이미 커밋됨" 오류가 나지 않게 허용한다.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(matchers(matcher, null, SWAGGER_PERMIT_URL_ARRAY)).permitAll()
                         .requestMatchers(matchers(matcher, null, "/stomp/**", "/ws/**")).permitAll()
                         .requestMatchers(matchers(matcher, HttpMethod.GET, "/rss", "/rss/**", "/sitemap.xml")).permitAll()
                         .requestMatchers(matchers(matcher, HttpMethod.GET, AGENT_DOCS_PERMIT_URL_ARRAY)).permitAll()
+                        // AI 글쓰기는 로그인(JWT) 필수 (액세스 토큰은 AccessTokenAccessRules 에서 거부)
+                        .requestMatchers(matchers(matcher, null, API + "/v1/ai/**")).authenticated()
                         // 사용자별 GET 은 blog/** permitAll 보다 먼저 authenticated 로 명시해야 한다 (순서 중요)
                         .requestMatchers(matchers(matcher, HttpMethod.GET,
                                 API + "/v1/blog/*/posts/*/likes",

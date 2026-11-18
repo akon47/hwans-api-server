@@ -112,4 +112,14 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     long sumHitsForAdmin();
 
     long countByDeletedIsFalseAndOpenType(OpenType openType);
+
+    // === AI 글쓰기(문체 분석)용 ===
+
+    // 그 회원의 임시저장(DRAFT)이 아닌 글 (최근 순)
+    @Query("select x from Post as x where x.deleted = false and x.openType <> 'DRAFT' and x.account.id = :accountId order by x.createdAt desc, x.id desc")
+    List<Post> findRecentNonDraftByAccountId(@Param("accountId") UUID accountId, Pageable page);
+
+    // 그 회원이 since 뒤에 쓴 임시저장이 아닌 글 수
+    @Query("select count(x) from Post as x where x.deleted = false and x.openType <> 'DRAFT' and x.account.id = :accountId and x.createdAt > :since")
+    long countNonDraftByAccountIdSince(@Param("accountId") UUID accountId, @Param("since") LocalDateTime since);
 }

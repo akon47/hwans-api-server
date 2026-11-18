@@ -44,7 +44,16 @@ public class LoggingFilter extends OncePerRequestFilter {
     private static final List<String> SECRET_URI_PREFIXES = List.of(
             Constants.API_PREFIX + "/v1/authentication/",
             Constants.API_PREFIX + "/v1/tokens",
-            Constants.API_PREFIX + "/v1/accounts/password"
+            Constants.API_PREFIX + "/v1/accounts/password",
+            Constants.API_PREFIX + "/v1/ai/"
+    );
+
+    /**
+     * 응답을 감싸지 않을 URI 접두어. AI 글쓰기는 SSE 로 조금씩 흘려보내는데, ContentCachingResponseWrapper 로 감싸면
+     * 본문이 버퍼에 쌓여 클라이언트에 바로 가지 않는다. (본문은 어차피 남기지 않는다 — API 키·글 내용)
+     */
+    private static final List<String> UNWRAPPED_URI_PREFIXES = List.of(
+            Constants.API_PREFIX + "/v1/ai/"
     );
 
     @Override
@@ -58,6 +67,8 @@ public class LoggingFilter extends OncePerRequestFilter {
 
             if (isAsyncDispatch(request)) {
                 filterChain.doFilter(request, response);
+            } else if (isUnwrappedUri(request)) {
+                doFilterUnwrapped(request, response, filterChain);
             } else {
                 doFilterWrapped(new RequestWrapper(request), new ResponseWrapper(response), filterChain);
             }
@@ -69,14 +80,26 @@ public class LoggingFilter extends OncePerRequestFilter {
     protected void doFilterWrapped(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response, FilterChain filterChain) throws ServletException, IOException {
         try {
             filterChain.doFilter(request, response);
-            logRequest(request);
+            logRequest(request, request.getContentAsByteArray());
         } finally {
-            logResponse(request, response);
+            logResponse(request, response, response.getContentSize(), response.getContentAsByteArray());
             response.copyBodyToResponse();
         }
     }
 
-    private static void logRequest(ContentCachingRequestWrapper request) {
+    /**
+     * 감싸지 않고 그대로 넘기고, 본문 없이 메타데이터만 남긴다.
+     */
+    protected void doFilterUnwrapped(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            filterChain.doFilter(request, response);
+            logRequest(request, null);
+        } finally {
+            logResponse(request, response, -1, null);
+        }
+    }
+
+    private static void logRequest(HttpServletRequest request, byte[] body) {
         var headers = Collections.list(request.getHeaderNames()).stream()
                 .distinct().collect(Collectors.toMap(name -> name, name -> maskHeader(name, Collections.list(request.getHeaders(name)))));
 
@@ -91,7 +114,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .method(request.getMethod().toUpperCase())
                 .contentType(request.getContentType())
                 .contentLength(request.getContentLength())
-                .payload(secretBody ? null : getPayloadString(request.getContentType(), request.getContentAsByteArray()))
+                .payload(secretBody || body == null ? null : getPayloadString(request.getContentType(), body))
                 .headers(headers)
                 .parameters(parameters)
                 .build());
@@ -99,7 +122,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         log.info(marker, null);
     }
 
-    private static void logResponse(ContentCachingRequestWrapper request, ContentCachingResponseWrapper response) {
+    private static void logResponse(HttpServletRequest request, HttpServletResponse response, int contentSize, byte[] body) {
         var headers = response.getHeaderNames().stream()
                 .distinct().collect(Collectors.toMap(name -> name, name -> maskHeader(name, response.getHeaders(name))));
 
@@ -109,9 +132,9 @@ public class LoggingFilter extends OncePerRequestFilter {
                 .uri(getUri(request))
                 .method(request.getMethod().toUpperCase())
                 .contentType(response.getContentType())
-                .contentLength(response.getContentSize())
+                .contentLength(contentSize)
                 .httpStatus(response.getStatus())
-                .payload(isSecretUri(request) ? null : getPayloadString(response.getContentType(), response.getContentAsByteArray()))
+                .payload(isSecretUri(request) || body == null ? null : getPayloadString(response.getContentType(), body))
                 .headers(headers)
                 .build());
 
@@ -134,6 +157,11 @@ public class LoggingFilter extends OncePerRequestFilter {
     private static boolean isSecretUri(HttpServletRequest request) {
         var uri = request.getRequestURI();
         return SECRET_URI_PREFIXES.stream().anyMatch(uri::startsWith);
+    }
+
+    private static boolean isUnwrappedUri(HttpServletRequest request) {
+        var uri = request.getRequestURI();
+        return UNWRAPPED_URI_PREFIXES.stream().anyMatch(uri::startsWith);
     }
 
     private static String getRemoteAddr(HttpServletRequest request) {

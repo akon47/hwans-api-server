@@ -98,6 +98,11 @@ mail:
     from: "Hwan'Story <noreply@hwanstory.kr>"
 attachments:
   path: /var/attachments/
+# AI 글쓰기: 회원이 등록한 Anthropic API 키를 AES-256-GCM 으로 암호화하는 마스터 키 (base64 로 쓴 32바이트).
+# 운영은 VM 의 application-secret.yml(ai.encryption-key) 또는 환경변수 AI_ENCRYPTION_KEY 로 준다(이미지에 넣지 않는다).
+# 비어 있으면 AI 기능만 꺼지고(available=false, 503 AI_DISABLED) 서버는 정상 기동한다. 바꾸면 저장된 키를 못 읽으니 회원이 키를 다시 등록해야 한다.
+ai:
+  encryption-key: ${AI_ENCRYPTION_KEY:}
 blog:
   # RSS 피드의 item link 및 guid 생성, 기기 로그인 승인 주소(/device)에 사용할 블로그 웹 주소
   web-base-url: https://hwanstory.kr

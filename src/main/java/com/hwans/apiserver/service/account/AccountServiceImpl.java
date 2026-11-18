@@ -11,6 +11,8 @@ import com.hwans.apiserver.dto.account.ResetPasswordDto;
 import com.hwans.apiserver.entity.account.role.RoleType;
 import com.hwans.apiserver.mapper.AccountMapper;
 import com.hwans.apiserver.repository.account.AccountRepository;
+import com.hwans.apiserver.repository.ai.AiSettingRepository;
+import com.hwans.apiserver.repository.ai.AiUsageRepository;
 import com.hwans.apiserver.repository.attachment.AttachmentRepository;
 import com.hwans.apiserver.repository.role.RoleRepository;
 import com.hwans.apiserver.repository.token.AccessTokenRepository;
@@ -39,6 +41,8 @@ public class AccountServiceImpl implements AccountService {
     private final AttachmentRepository attachmentRepository;
     private final AccessTokenRepository accessTokenRepository;
     private final DeviceAuthorizationRepository deviceAuthorizationRepository;
+    private final AiSettingRepository aiSettingRepository;
+    private final AiUsageRepository aiUsageRepository;
     private final AccountMapper accountMapper;
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtTokenProvider jwtTokenProvider;
@@ -137,6 +141,9 @@ public class AccountServiceImpl implements AccountService {
         // 계정이 발급한 개인 액세스 토큰과 승인한 기기 로그인 요청도 함께 지운다.
         accessTokenRepository.deleteAllByAccount_Id(accountId);
         deviceAuthorizationRepository.deleteAllByAccount_Id(accountId);
+        // AI 글쓰기 설정(암호화된 API 키·문체 프로필)과 사용 기록도 지운다.
+        aiSettingRepository.deleteAllByAccountId(accountId);
+        aiUsageRepository.deleteAllByAccountId(accountId);
         accountRepository.delete(foundAccount);
     }
 

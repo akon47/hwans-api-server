@@ -68,6 +68,9 @@ logging:
         type:
           descriptor:
             sql: trace
+# AI 글쓰기 개발용 고정 마스터 키 (로컬 전용, 운영에서 쓰지 말 것)
+ai:
+  encryption-key: Rzw8ZOdDDxy9uy9/M7krKw/JsniYpPqPj4ONEfdvNpk=
 blog:
   web-base-url: http://localhost:8081
   api-base-url: http://localhost:8080

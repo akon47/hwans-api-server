@@ -14,6 +14,7 @@ import java.util.Set;
  *   <li>게시글·시리즈·파일 쓰기는 {@code posts} 권한</li>
  *   <li>댓글·좋아요·북마크·이모지 반응·팔로우·알림 쓰기는 {@code social} 권한</li>
  *   <li>계정 정보/비밀번호 변경, 탈퇴, 토큰 발급·폐기(자기 토큰 폐기 제외), 기기 로그인 승인, 관리자 기능은 토큰으로 불가 — 사람이 웹에서 한다</li>
+ *   <li>AI 글쓰기({@code /v1/ai/**})는 조회까지 모두 불가 — 회원이 등록한 Anthropic 키로 비용이 나가므로 에이전트가 쓰지 못하게 한다</li>
  * </ul>
  */
 public final class AccessTokenAccessRules {
@@ -45,6 +46,8 @@ public final class AccessTokenAccessRules {
             new Rule(null, API + "/v1/authentication/**", Decision.DENY),
             new Rule(null, API + "/v1/tokens/**", Decision.DENY),
             new Rule(null, API + "/chat/**", Decision.DENY),
+            // AI 글쓰기: 회원의 Anthropic 키로 돈이 나가므로 토큰으로는 읽기도 불가
+            new Rule(null, API + "/v1/ai/**", Decision.DENY),
             // 읽기는 모두 허용
             new Rule(READ, "/**", Decision.ALLOW),
             // posts: 게시글·시리즈·파일

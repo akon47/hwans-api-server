@@ -101,6 +101,26 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
+    @Transactional
+    public FileDto saveBytes(UUID uploaderAccountId, byte[] content, String fileName, String contentType) {
+        if (!isSavableContentType(contentType) || content == null || content.length == 0 || content.length > Constants.MAX_ATTACHMENT_FILE_SIZE) {
+            throw new RestApiException(ErrorCodes.BadRequest.BAD_REQUEST, BAD_ATTACHMENT_CONTENT_TYPE);
+        }
+        var uploaderAccount = accountRepository
+                .findByIdAndDeletedIsFalse(uploaderAccountId)
+                .orElseThrow(() -> new RestApiException(ErrorCodes.Unauthorized.UNAUTHORIZED));
+        var savePath = Paths.get(getAttachmentDirectoryPath() + File.separator + UUID.randomUUID());
+        try {
+            Files.write(savePath, content);
+        } catch (IOException e) {
+            throw new RestApiException(ErrorCodes.InternalServerError.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+        var attachment = attachmentRepository
+                .save(new Attachment(uploaderAccount, savePath.toFile(), fileName, contentType));
+        return fileMapper.EntityToFileDto(attachment);
+    }
+
+    @Override
     public FileDto getFile(UUID fileId) {
         var foundFile = attachmentRepository
                 .findById(fileId)
