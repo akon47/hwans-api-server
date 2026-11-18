@@ -97,6 +97,20 @@ public class AiController {
         return aiService.cover(user.getId(), request);
     }
 
+    @Operation(summary = "썸네일 없는 내 글 목록", description = "내 글(공개·비공개·임시저장·예약 모두) 중 썸네일이 없는 글을 최신 글부터 최대 500개 조회한다. total 은 전체 수.")
+    @GetMapping(value = "/covers/missing")
+    public AiMissingCoversDto missingCovers(@CurrentAuthenticationDetails UserAuthenticationDetails user) {
+        return aiService.missingCovers(user.getId());
+    }
+
+    @Operation(summary = "커버 일괄 만들기 (SSE)", description = "글(1~100개)마다 커버를 만들어 썸네일로 지정하거나 본문 맨 앞에 넣는다. "
+            + "다른 필드는 그대로 둔다. 이벤트: status·item·done·error. 한도는 글마다 확인하고, 분당 요청 제한은 한 번으로 센다.")
+    @PostMapping(value = "/covers/batch")
+    public ResponseEntity<ResponseBodyEmitter> coverBatch(@CurrentAuthenticationDetails UserAuthenticationDetails user,
+                                                          @Parameter(description = "일괄 요청", required = true) @RequestBody AiCoverBatchRequestDto request) {
+        return aiService.coverBatch(user.getId(), request);
+    }
+
     // 스트리밍 요청은 Accept: text/event-stream 으로 올 수 있다. 오류 응답의 Content-Type 을 JSON 으로 못박아
     // 내용 협상(406) 없이 일반 JSON 오류 형식으로 돌려준다.
 

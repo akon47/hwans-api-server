@@ -21,6 +21,8 @@ class AccessTokenAccessRulesTest {
                 {"POST", "/api/v1/ai/meta"},
                 {"POST", "/api/v1/ai/translate"},
                 {"POST", "/api/v1/ai/cover"},
+                {"GET", "/api/v1/ai/covers/missing"},
+                {"POST", "/api/v1/ai/covers/batch"},
                 {"HEAD", "/api/v1/ai/settings"},
         };
         for (var c : cases) {

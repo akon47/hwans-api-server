@@ -122,4 +122,22 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     // 그 회원이 since 뒤에 쓴 임시저장이 아닌 글 수
     @Query("select count(x) from Post as x where x.deleted = false and x.openType <> 'DRAFT' and x.account.id = :accountId and x.createdAt > :since")
     long countNonDraftByAccountIdSince(@Param("accountId") UUID accountId, @Param("since") LocalDateTime since);
+
+    // === AI 커버 일괄 만들기용: 그 회원의 썸네일 없는 글 (공개 유형 무관, 최신 순, 본문은 읽지 않는다) ===
+
+    interface MissingCoverRow {
+        String getPostUrl();
+
+        String getTitle();
+
+        OpenType getOpenType();
+
+        LocalDateTime getCreatedAt();
+    }
+
+    @Query("select x.postUrl as postUrl, x.title as title, x.openType as openType, x.createdAt as createdAt from Post as x where x.deleted = false and x.account.id = :accountId and x.thumbnailImage is null order by x.createdAt desc, x.id desc")
+    List<MissingCoverRow> findWithoutThumbnailByAccountId(@Param("accountId") UUID accountId, Pageable page);
+
+    @Query("select count(x) from Post as x where x.deleted = false and x.account.id = :accountId and x.thumbnailImage is null")
+    long countWithoutThumbnailByAccountId(@Param("accountId") UUID accountId);
 }

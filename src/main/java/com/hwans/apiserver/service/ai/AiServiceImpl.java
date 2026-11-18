@@ -28,6 +28,7 @@ import com.hwans.apiserver.service.ai.cover.CoverDesign;
 import com.hwans.apiserver.service.ai.cover.CoverIcon;
 import com.hwans.apiserver.service.ai.cover.CoverRenderer;
 import com.hwans.apiserver.service.ai.cover.CoverTheme;
+import com.hwans.apiserver.dto.attachment.FileDto;
 import com.hwans.apiserver.service.attachment.AttachmentService;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -101,7 +103,10 @@ public class AiServiceImpl implements AiService {
     private final CoverRenderer coverRenderer;
     private final RedisRateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
+    private final AiPostCovers postCovers;
     private final String coverFooterHost;
+    // 본문에 넣는 커버 이미지의 절대 URL 앞부분 (프론트가 넣는 것과 같게: https://api.hwanstory.kr/api/v1 + 첨부 url)
+    private final String imageUrlPrefix;
 
     // 스트림 하나가 스레드 하나를 쓴다(SDK 스트림은 블로킹). 동시에 32개를 넘으면 받지 않는다.
     private final ThreadPoolExecutor streamExecutor = new ThreadPoolExecutor(2, 32, 60, TimeUnit.SECONDS,
@@ -112,8 +117,9 @@ public class AiServiceImpl implements AiService {
                          AiSettingRepository aiSettingRepository, AiUsageRepository aiUsageRepository,
                          AccountRepository accountRepository, PostRepository postRepository, TagRepository tagRepository,
                          AttachmentService attachmentService, CoverRenderer coverRenderer, RedisRateLimiter rateLimiter,
-                         ObjectMapper objectMapper,
-                         @Value("${blog.web-base-url:https://hwanstory.kr}") String webBaseUrl) {
+                         ObjectMapper objectMapper, AiPostCovers postCovers,
+                         @Value("${blog.web-base-url:https://hwanstory.kr}") String webBaseUrl,
+                         @Value("${blog.api-base-url:https://api.hwanstory.kr}") String apiBaseUrl) {
         this.cipher = cipher;
         this.gateway = gateway;
         this.store = store;
@@ -126,7 +132,9 @@ public class AiServiceImpl implements AiService {
         this.coverRenderer = coverRenderer;
         this.rateLimiter = rateLimiter;
         this.objectMapper = objectMapper;
+        this.postCovers = postCovers;
         this.coverFooterHost = footerHost(webBaseUrl);
+        this.imageUrlPrefix = apiBaseUrl.replaceAll("/+$", "") + "/api/v1";
     }
 
     @PreDestroy
@@ -364,7 +372,8 @@ public class AiServiceImpl implements AiService {
                 .system(AiPrompts.META_SYSTEM)
                 .addUserMessage(AiPrompts.metaUser(title, content, existingTags))
                 .build();
-        var json = structuredCall(ctx, AiUsageKind.META, params);
+        var json = gateway.withClient(ctx.apiKey(), client -> structuredCall(client, ctx, AiUsageKind.META, params, usage -> {
+        }));
 
         return AiMetaDto.builder()
                 .title(cut(json.path("title").asText("").strip(), 100))
@@ -437,10 +446,28 @@ public class AiServiceImpl implements AiService {
         requireEnabled();
         var title = cut(required(request.getTitle(), "title", 2000), 300);
         var summary = request.getSummary() == null ? "" : cut(request.getSummary(), 500);
-        var tags = request.getTags() == null ? List.<String>of() : request.getTags().stream()
-                .filter(Objects::nonNull).map(String::strip).filter(t -> !t.isEmpty()).limit(20).toList();
+        var tags = request.getTags() == null ? List.<String>of() : request.getTags();
         var ctx = prepare(accountId);
         requireQuota(ctx);
+
+        var file = gateway.withClient(ctx.apiKey(), client -> createCover(client, ctx, title, summary, tags, usage -> {
+        }));
+        return AiCoverDto.builder()
+                .fileId(file.getId().toString())
+                .url(file.getUrl())
+                .build();
+    }
+
+    /**
+     * 커버 하나를 만든다(9번 /cover 와 일괄 만들기가 함께 쓴다): Claude 가 문구·테마·그림을 고르고(구조화 출력, effort low)
+     * → 1200×630 PNG 를 그려 → 그 회원 첨부로 저장. 사용량은 cover 로 기록하고 usageSink 로도 알린다.
+     */
+    private FileDto createCover(AnthropicClient client, CallContext ctx, String rawTitle, String rawSummary, List<String> rawTags,
+                                Consumer<AiTokenUsage> usageSink) {
+        var title = cut(rawTitle == null ? "" : rawTitle.strip(), 300);
+        var summary = rawSummary == null ? "" : cut(rawSummary, 500);
+        var tags = rawTags == null ? List.<String>of() : rawTags.stream()
+                .filter(Objects::nonNull).map(String::strip).filter(t -> !t.isEmpty()).limit(20).toList();
 
         var schema = objectSchema(Map.of(
                 "headline", Map.of("type", "string", "description", "28자 이내"),
@@ -452,7 +479,7 @@ public class AiServiceImpl implements AiService {
                 .system(AiPrompts.COVER_SYSTEM)
                 .addUserMessage(AiPrompts.coverUser(title, summary, tags))
                 .build();
-        var json = structuredCall(ctx, AiUsageKind.COVER, params);
+        var json = structuredCall(client, ctx, AiUsageKind.COVER, params, usageSink);
         var design = CoverDesign.of(
                 json.path("headline").asText(title),
                 json.path("subhead").asText(""),
@@ -465,11 +492,46 @@ public class AiServiceImpl implements AiService {
 
         // blogId 는 이미 '@' 로 시작한다(예: @kim-hwan) — 한 번만 붙인다
         var png = coverRenderer.renderPng(design, coverFooterHost + "/@" + ctx.blogId().replaceFirst("^@+", ""));
-        var file = attachmentService.saveBytes(accountId, png, "cover.png", "image/png");
-        return AiCoverDto.builder()
-                .fileId(file.getId().toString())
-                .url(file.getUrl())
-                .build();
+        return attachmentService.saveBytes(ctx.accountId(), png, "cover.png", "image/png");
+    }
+
+    // ===================== 커버 일괄 만들기 =====================
+
+    @Override
+    public AiMissingCoversDto missingCovers(UUID accountId) {
+        return postCovers.missing(accountId);
+    }
+
+    @Override
+    public ResponseEntity<ResponseBodyEmitter> coverBatch(UUID accountId, AiCoverBatchRequestDto request) {
+        requireEnabled();
+        var postUrls = AiCoverBatch.validate(request.getPostUrls());
+        var useAsThumbnail = request.getUseAsThumbnail() == null || request.getUseAsThumbnail();
+        var insertIntoContent = Boolean.TRUE.equals(request.getInsertIntoContent());
+        var ctx = prepare(accountId);
+        // 분당 요청 제한은 일괄 요청 한 번을 1회로 센다. 한도는 시작 전(JSON 오류)과 글마다(SSE error) 확인한다.
+        requireQuota(ctx);
+
+        return startStream(ctx, AiUsageKind.COVER, (client, session, meter) -> {
+            var batch = new AiCoverBatch(
+                    new AiCoverBatch.Posts() {
+                        @Override
+                        public Optional<AiPostCovers.Target> find(String postUrl) {
+                            return postCovers.find(ctx.blogId(), postUrl);
+                        }
+
+                        @Override
+                        public void apply(String postUrl, UUID fileId, String imageUrl, boolean thumbnail, boolean insert) {
+                            postCovers.apply(ctx.blogId(), postUrl, fileId, imageUrl, thumbnail, insert);
+                        }
+                    },
+                    (post, usage) -> createCover(client, ctx, post.title(), post.summary(), post.tags(), usage),
+                    () -> requireMonthlyLimit(ctx),
+                    ctx.model(),
+                    imageUrlPrefix);
+            // 사용량은 글마다 cover 로 이미 기록하므로 meter 에는 넣지 않는다(중복 기록 방지).
+            batch.run(postUrls, useAsThumbnail, insertIntoContent, session);
+        });
     }
 
     // ===================== 공통 =====================
@@ -506,6 +568,13 @@ public class AiServiceImpl implements AiService {
      */
     private void requireQuota(CallContext ctx) {
         requireRate(ctx.accountId());
+        requireMonthlyLimit(ctx);
+    }
+
+    /**
+     * 이번 달 비용 합계가 한도 이상이면 {@code AI_LIMIT_EXCEEDED}.
+     */
+    private void requireMonthlyLimit(CallContext ctx) {
         var since = YearMonth.now().atDay(1).atStartOfDay();
         var spent = Optional.ofNullable(aiUsageRepository.sumCostSince(ctx.accountId(), since)).orElse(BigDecimal.ZERO);
         var limit = monthlyLimit(ctx.setting());
@@ -532,25 +601,26 @@ public class AiServiceImpl implements AiService {
     }
 
     /**
-     * 구조화 출력 요청을 보내고 JSON 을 돌려준다. 사용량은 결과와 상관없이 남긴다.
+     * 구조화 출력 요청을 보내고 JSON 을 돌려준다. 사용량은 결과와 상관없이 기록하고 usageSink 로도 알린다.
      */
-    private JsonNode structuredCall(CallContext ctx, AiUsageKind kind, MessageCreateParams params) {
-        return gateway.withClient(ctx.apiKey(), client -> {
-            BetaMessage message;
-            try {
-                message = client.beta().messages().create(params);
-            } catch (RuntimeException e) {
-                throw AnthropicGateway.upstream(e);
-            }
-            recordUsage(ctx, kind, AiTokenUsage.of(message.usage()));
-            AnthropicGateway.requireCompleted(message);
-            try {
-                return objectMapper.readTree(AnthropicGateway.text(message));
-            } catch (Exception e) {
-                log.warn("AI returned invalid JSON for {}: {}", kind, e.getMessage());
-                throw new RestApiException(ErrorCodes.BadGateway.AI_UPSTREAM, "AI 응답을 읽지 못했어요. 다시 해 주세요.");
-            }
-        });
+    private JsonNode structuredCall(AnthropicClient client, CallContext ctx, AiUsageKind kind, MessageCreateParams params,
+                                    Consumer<AiTokenUsage> usageSink) {
+        BetaMessage message;
+        try {
+            message = client.beta().messages().create(params);
+        } catch (RuntimeException e) {
+            throw AnthropicGateway.upstream(e);
+        }
+        var usage = AiTokenUsage.of(message.usage());
+        recordUsage(ctx, kind, usage);
+        usageSink.accept(usage);
+        AnthropicGateway.requireCompleted(message);
+        try {
+            return objectMapper.readTree(AnthropicGateway.text(message));
+        } catch (Exception e) {
+            log.warn("AI returned invalid JSON for {}: {}", kind, e.getMessage());
+            throw new RestApiException(ErrorCodes.BadGateway.AI_UPSTREAM, "AI 응답을 읽지 못했어요. 다시 해 주세요.");
+        }
     }
 
     private void recordUsage(CallContext ctx, AiUsageKind kind, AiTokenUsage usage) {
@@ -616,8 +686,7 @@ public class AiServiceImpl implements AiService {
             if (session.isCancelled()) {
                 log.info("AI {} stream cancelled by client (account {})", kind.getKey(), ctx.accountId());
             } else {
-                var error = AnthropicGateway.upstream(e);
-                session.error(error.getErrorCode().getName().toUpperCase(Locale.ROOT), error.getMessage());
+                reportStreamFailure(session, e);
             }
         } finally {
             if (client != null) {
@@ -629,6 +698,14 @@ public class AiServiceImpl implements AiService {
                 recordUsage(ctx, kind, usage);
             }
         }
+    }
+
+    /**
+     * 스트림 도중의 오류를 {@code error} 이벤트로 보내고 끝낸다 (code 는 계약대로 대문자, 예 AI_UPSTREAM·AI_LIMIT_EXCEEDED).
+     */
+    static void reportStreamFailure(AiSseSession session, Throwable e) {
+        var error = AnthropicGateway.upstream(e);
+        session.error(error.getErrorCode().getName().toUpperCase(Locale.ROOT), error.getMessage());
     }
 
     /**

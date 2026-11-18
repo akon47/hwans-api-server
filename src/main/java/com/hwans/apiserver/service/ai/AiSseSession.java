@@ -130,6 +130,13 @@ public class AiSseSession {
     }
 
     /**
+     * 커버 일괄 만들기의 글 하나 결과
+     */
+    public void item(Map<String, Object> data) {
+        event("item", data);
+    }
+
+    /**
      * {@code done} 을 보내고 연결을 끝낸다.
      */
     public void done(Map<String, Object> payload) {

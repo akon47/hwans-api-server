@@ -28,4 +28,14 @@ public interface AiService {
     ResponseEntity<ResponseBodyEmitter> translate(UUID accountId, AiTranslateRequestDto request);
 
     AiCoverDto cover(UUID accountId, AiCoverRequestDto request);
+
+    /**
+     * 썸네일이 없는 내 글 (공개 유형 무관, 최신 글부터 최대 500개)
+     */
+    AiMissingCoversDto missingCovers(UUID accountId);
+
+    /**
+     * 여러 글의 커버를 차례로 만들어 썸네일로 지정하거나 본문 앞에 넣는다 (SSE: status·item·done·error)
+     */
+    ResponseEntity<ResponseBodyEmitter> coverBatch(UUID accountId, AiCoverBatchRequestDto request);
 }
